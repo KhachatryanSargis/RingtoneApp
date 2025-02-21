@@ -4,16 +4,20 @@
 import PackageDescription
 
 let package = Package(
-    name: "RingtoneKit",
+    name: "RingtoneUIKit",
     products: [
         .library(
-            name: "RingtoneKit",
-            targets: ["RingtoneKit"]
+            name: "RingtoneUIKit",
+            targets: ["RingtoneUIKit"]
         ),
+    ],
+    dependencies: [
+        .package(path: "RingtoneKit")
     ],
     targets: [
         .target(
-            name: "RingtoneKit"
+            name: "RingtoneUIKit",
+            dependencies: ["RingtoneKit"]
         ),
         
     ]
