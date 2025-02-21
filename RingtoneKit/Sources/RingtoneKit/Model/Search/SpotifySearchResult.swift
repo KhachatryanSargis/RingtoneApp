@@ -1,0 +1,10 @@
+//
+//  SpotifySearchResult.swift
+//  RingtoneKit
+//
+//  Created by Sargis Khachatryan on 21.02.25.
+//
+
+public struct SpotifySearchResult {
+    
+}
