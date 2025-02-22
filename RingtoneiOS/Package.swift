@@ -5,17 +5,18 @@ import PackageDescription
 
 let package = Package(
     name: "RingtoneiOS",
+    platforms: [.iOS(.v13)],
     products: [
-        // Products define the executables and libraries a package produces, making them visible to other packages.
         .library(
             name: "RingtoneiOS",
-            targets: ["RingtoneiOS"]),
+            targets: ["RingtoneiOS"]
+        ),
     ],
+    dependencies: [.package(path: "RingtoneKit")],
     targets: [
-        // Targets are the basic building blocks of a package, defining a module or a test suite.
-        // Targets can depend on other targets in this package and products from dependencies.
         .target(
-            name: "RingtoneiOS"),
-
+            name: "RingtoneiOS",
+            dependencies: ["RingtoneKit"]
+        ),
     ]
 )
