@@ -12,7 +12,7 @@ open class BaseCoordinator: Coordinator {
     // MARK: - Properties
     public private(set) final var children: [AnyCancellable : any Coordinator]
     public private(set) final var statePublisher: CurrentValueSubject<CoordinatorState, Never>
-    public private(set) var presentable: Presentable
+    open private(set) var presentable: Presentable
     private var cancellables: Set<AnyCancellable> = []
     
     // MARK: - Methods
