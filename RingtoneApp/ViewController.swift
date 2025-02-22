@@ -45,8 +45,7 @@ fileprivate var accessToken: AccessToken? {
 class ViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = .red
-        fetchArtist()
+        fetchCategories()
     }
 }
 
@@ -129,6 +128,61 @@ extension ViewController {
             guard let dataString = String(data: data, encoding: .utf8)
             else {
                 print("!!! fetchArtist failed !!! no data string")
+                return
+            }
+            
+            print("=== Spotify Data ===")
+            print(dataString)
+            print("=== Spotify Data ===")
+        }
+        .resume()
+    }
+}
+
+// MARK: - Categories
+extension ViewController {
+    private func fetchCategories() {
+        guard let currentToken = accessToken else {
+            regenerateAccessToken { [weak self] in
+                guard let self = self else { return }
+                self.fetchArtist()
+            }
+            return
+        }
+        
+        let url = URL(string: "\(baseURL)/browse/categories")!
+        
+        var urlRequest = URLRequest(url: url)
+        urlRequest.setValue(
+            "\(currentToken.type) \(currentToken.token)",
+            forHTTPHeaderField: "Authorization"
+        )
+        
+        URLSession.shared.dataTask(with: urlRequest) { [weak self] data, response, error in
+            guard let self = self else { return }
+            guard let httpResponse = response as? HTTPURLResponse else {
+                print("!!! fetchCategories failed !!! no HTTP response")
+                return
+            }
+            
+            guard httpResponse.statusCode != 401 else {
+                print("Regenerating access token ...")
+                self.regenerateAccessToken { [weak self] in
+                    guard let self = self else { return }
+                    self.fetchCategories()
+                }
+                return
+            }
+            
+            guard let data = data
+            else {
+                print("!!! fetchCategories failed !!! no data")
+                return
+            }
+            
+            guard let dataString = String(data: data, encoding: .utf8)
+            else {
+                print("!!! fetchCategories failed !!! no data string")
                 return
             }
             
