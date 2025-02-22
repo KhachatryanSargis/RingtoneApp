@@ -14,6 +14,7 @@
 		0FEBB7E22D6886F500BB0043 /* RingtoneApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = RingtoneApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		0FEBB7FB2D68897600BB0043 /* RingtoneKit */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = RingtoneKit; sourceTree = "<group>"; };
 		0FEBB7FF2D688B3100BB0043 /* RingtoneUIKit */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = RingtoneUIKit; sourceTree = "<group>"; };
+		0FEBB80B2D6A00EF00BB0043 /* RingtoneiOS */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = RingtoneiOS; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -53,6 +54,7 @@
 			isa = PBXGroup;
 			children = (
 				0FEBB7E42D6886F500BB0043 /* RingtoneApp */,
+				0FEBB80B2D6A00EF00BB0043 /* RingtoneiOS */,
 				0FEBB7FF2D688B3100BB0043 /* RingtoneUIKit */,
 				0FEBB7FB2D68897600BB0043 /* RingtoneKit */,
 				0FEBB7E32D6886F500BB0043 /* Products */,
