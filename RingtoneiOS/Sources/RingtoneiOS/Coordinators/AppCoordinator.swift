@@ -9,7 +9,7 @@ import RingtoneUIKit
 
 public final class AppCoordinator: BaseCoordinator {
     // MARK: - Properties
-    private let tabBarController = NiblessTabBarController()
+    private let tabBarController: NiblessTabBarController
     public override var presentable: any Presentable {
         return tabBarController
     }
@@ -19,11 +19,24 @@ public final class AppCoordinator: BaseCoordinator {
     // MARK: - Methods
     public init(container: AppDependencyContainer) {
         self.container = container
+        self.tabBarController = NiblessTabBarController()
         super.init()
     }
     
     public override func start() {
         super.start()
-        tabBarController.view.backgroundColor = .red
+        
+        let ringtoneDiscoverViewController = container.makeRingtoneDiscoverViewController()
+        let ringtoneFavoritesViewController = container.makeRingtoneFavoritesViewController()
+        let ringtoneCreatedViewController = container.makeRingtoneCreatedViewController()
+        
+        tabBarController.addChild(ringtoneDiscoverViewController)
+        tabBarController.addChild(ringtoneFavoritesViewController)
+        tabBarController.addChild(ringtoneCreatedViewController)
+        
+        // TODO: come up with a better way to preload child view controllers.
+        _ = ringtoneDiscoverViewController.view
+        _ = ringtoneFavoritesViewController.view
+        _ = ringtoneCreatedViewController.view
     }
 }

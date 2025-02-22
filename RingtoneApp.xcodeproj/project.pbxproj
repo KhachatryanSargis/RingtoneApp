@@ -11,10 +11,13 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		0FE4EDD42D6A14B800BF3635 /* RingtoneFavoritesScreen */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = RingtoneFavoritesScreen; sourceTree = "<group>"; };
+		0FE4EDD52D6A1CD100BF3635 /* RingtoneCreatedScreen */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = RingtoneCreatedScreen; sourceTree = "<group>"; };
 		0FEBB7E22D6886F500BB0043 /* RingtoneApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = RingtoneApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		0FEBB7FB2D68897600BB0043 /* RingtoneKit */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = RingtoneKit; sourceTree = "<group>"; };
 		0FEBB7FF2D688B3100BB0043 /* RingtoneUIKit */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = RingtoneUIKit; sourceTree = "<group>"; };
 		0FEBB80B2D6A00EF00BB0043 /* RingtoneiOS */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = RingtoneiOS; sourceTree = "<group>"; };
+		0FEBB80F2D6A0F7F00BB0043 /* RingtoneDiscoverScreen */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = RingtoneDiscoverScreen; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -55,6 +58,9 @@
 			children = (
 				0FEBB7E42D6886F500BB0043 /* RingtoneApp */,
 				0FEBB80B2D6A00EF00BB0043 /* RingtoneiOS */,
+				0FE4EDD52D6A1CD100BF3635 /* RingtoneCreatedScreen */,
+				0FE4EDD42D6A14B800BF3635 /* RingtoneFavoritesScreen */,
+				0FEBB80F2D6A0F7F00BB0043 /* RingtoneDiscoverScreen */,
 				0FEBB7FF2D688B3100BB0043 /* RingtoneUIKit */,
 				0FEBB7FB2D68897600BB0043 /* RingtoneKit */,
 				0FEBB7E32D6886F500BB0043 /* Products */,
