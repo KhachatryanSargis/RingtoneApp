@@ -9,7 +9,7 @@ import RingtoneUIKit
 
 public final class AppCoordinator: BaseCoordinator {
     // MARK: - Properties
-    private let tabBarController: NiblessTabBarController
+    private let tabBarController: RingtoneTabBarController
     public override var presentable: any Presentable {
         return tabBarController
     }
@@ -19,7 +19,7 @@ public final class AppCoordinator: BaseCoordinator {
     // MARK: - Methods
     public init(container: AppDependencyContainer) {
         self.container = container
-        self.tabBarController = NiblessTabBarController()
+        self.tabBarController = RingtoneTabBarController()
         super.init()
     }
     
