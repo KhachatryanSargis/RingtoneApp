@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		0FEBB7FE2D688AA800BB0043 /* RingtoneKit in Frameworks */ = {isa = PBXBuildFile; productRef = 0FEBB7FD2D688AA800BB0043 /* RingtoneKit */; };
+		0FEBB80E2D6A036D00BB0043 /* RingtoneiOS in Frameworks */ = {isa = PBXBuildFile; productRef = 0FEBB80D2D6A036D00BB0043 /* RingtoneiOS */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -43,7 +43,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				0FEBB7FE2D688AA800BB0043 /* RingtoneKit in Frameworks */,
+				0FEBB80E2D6A036D00BB0043 /* RingtoneiOS in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -89,7 +89,7 @@
 			);
 			name = RingtoneApp;
 			packageProductDependencies = (
-				0FEBB7FD2D688AA800BB0043 /* RingtoneKit */,
+				0FEBB80D2D6A036D00BB0043 /* RingtoneiOS */,
 			);
 			productName = RingtoneApp;
 			productReference = 0FEBB7E22D6886F500BB0043 /* RingtoneApp.app */;
@@ -347,9 +347,9 @@
 /* End XCConfigurationList section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		0FEBB7FD2D688AA800BB0043 /* RingtoneKit */ = {
+		0FEBB80D2D6A036D00BB0043 /* RingtoneiOS */ = {
 			isa = XCSwiftPackageProductDependency;
-			productName = RingtoneKit;
+			productName = RingtoneiOS;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
