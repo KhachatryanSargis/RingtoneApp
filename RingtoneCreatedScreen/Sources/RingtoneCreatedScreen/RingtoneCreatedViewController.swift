@@ -7,17 +7,27 @@
 
 import UIKit
 import RingtoneUIKit
+import RingtoneKit
 
 public final class RingtoneCreatedViewController: NiblessViewController {
-    public override init(enableKeyboardNotificationObservers: Bool = false) {
-        super.init(enableKeyboardNotificationObservers: enableKeyboardNotificationObservers)
+    // MARK: - Properties
+    private let viewModelFactory: RingtoneCreatedViewModelFactory
+    
+    // MARK: - Methods
+    public init(viewModelFactory: RingtoneCreatedViewModelFactory) {
+        self.viewModelFactory = viewModelFactory
+        super.init()
         configureNavigationItem()
+    }
+    
+    public override func loadView() {
+        let viewModel = viewModelFactory.makeRingtoneCreatedViewModel()
+        view = RingtoneCreatedView(viewModel: viewModel)
     }
     
     public override func viewDidLoad() {
         super.viewDidLoad()
         configureTabBarItem()
-        view.backgroundColor = .systemBackground
     }
 }
 

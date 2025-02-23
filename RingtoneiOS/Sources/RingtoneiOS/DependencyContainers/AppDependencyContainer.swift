@@ -43,10 +43,14 @@ extension AppDependencyContainer {
     }
 }
 
-// MARK: - Ringtone
-extension AppDependencyContainer {
+// MARK: - Created
+extension AppDependencyContainer: RingtoneCreatedViewModelFactory {
     @MainActor
     internal func makeRingtoneCreatedViewController() -> RingtoneCreatedViewController {
-        RingtoneCreatedViewController()
+        RingtoneCreatedViewController(viewModelFactory: self)
+    }
+    
+    public func makeRingtoneCreatedViewModel() -> RingtoneCreatedViewModel {
+        RingtoneCreatedViewModel()
     }
 }

@@ -10,5 +10,5 @@ public protocol RingtoneCreatedViewModelFactory {
 }
 
 public final class RingtoneCreatedViewModel {
-    
+    public init () {}
 }
