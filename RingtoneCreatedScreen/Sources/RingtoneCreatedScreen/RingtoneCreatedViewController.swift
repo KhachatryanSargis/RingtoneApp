@@ -11,6 +11,7 @@ import RingtoneUIKit
 public final class RingtoneCreatedViewController: NiblessViewController {
     public override init(enableKeyboardNotificationObservers: Bool = false) {
         super.init(enableKeyboardNotificationObservers: enableKeyboardNotificationObservers)
+        configureNavigationItem()
     }
     
     public override func viewDidLoad() {
@@ -26,5 +27,15 @@ extension RingtoneCreatedViewController {
         guard let tabBarItem = tabBarItem else { return }
         tabBarItem.title = "My Ringtones"
         tabBarItem.image = UIImage(systemName: "music.note.house")
+    }
+}
+
+// MARK: - Navigation Item
+extension RingtoneCreatedViewController {
+    private func configureNavigationItem() {
+        navigationItem.title = String(
+            localized: "My Ringtones",
+            comment: "The title of the ringtone created screen."
+        )
     }
 }

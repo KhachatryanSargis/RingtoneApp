@@ -7,7 +7,13 @@
 
 import Foundation
 
-public struct RingtoneCategory {
-    public let name: String
-    public let url: URL
+public struct RingtoneCategory: Sendable, Equatable, Hashable {
+    public struct Color: Sendable, Equatable, Hashable {
+        public let lightHex: String
+        public let darkHex: String
+    }
+    
+    public let displayName: String
+    public let folderName: String
+    public let color: Color
 }

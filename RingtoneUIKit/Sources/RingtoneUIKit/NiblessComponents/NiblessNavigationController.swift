@@ -9,7 +9,7 @@ import UIKit
 
 open class NiblessNavigationController: UINavigationController {
     // MARK: - Methods
-    public init(rootViewController: NiblessViewController? = nil, prefersLargeTitles: Bool = true) {
+    public init(rootViewController: UIViewController? = nil, prefersLargeTitles: Bool = true) {
         if let rootViewController = rootViewController {
             super.init(rootViewController: rootViewController)
         } else {

@@ -10,13 +10,15 @@ import UIKit
 public final class RingtoneTabBarController: NiblessTabBarController {
     public override init() {
         super.init()
-        setRingtoneTabBar()
+        setTabBarAppearance()
     }
 }
 
 // MARK: - Style
 extension RingtoneTabBarController {
-    private func setRingtoneTabBar() {
-        setValue(RingtoneTabBar(frame: tabBar.frame), forKey: "tabBar")
+    private func setTabBarAppearance() {
+//        setValue(RingtoneTabBar(frame: tabBar.frame), forKey: "tabBar")
+        tabBar.standardAppearance = UITabBarAppearance()
+        tabBar.scrollEdgeAppearance = UITabBarAppearance()
     }
 }

@@ -27,10 +27,11 @@ public final class AppCoordinator: BaseCoordinator {
         super.start()
         
         let ringtoneDiscoverViewController = container.makeRingtoneDiscoverViewController()
+        let nc = NiblessNavigationController(rootViewController: ringtoneDiscoverViewController)
         let ringtoneFavoritesViewController = container.makeRingtoneFavoritesViewController()
         let ringtoneCreatedViewController = container.makeRingtoneCreatedViewController()
         
-        tabBarController.addChild(ringtoneDiscoverViewController)
+        tabBarController.addChild(nc)
         tabBarController.addChild(ringtoneFavoritesViewController)
         tabBarController.addChild(ringtoneCreatedViewController)
         

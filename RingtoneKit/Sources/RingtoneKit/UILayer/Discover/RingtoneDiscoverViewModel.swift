@@ -20,9 +20,10 @@ public final class RingtoneDiscoverViewModel {
     // MARK: - Methods
     public init(categoreisRepository: IRingtoneCategoriesRepository) {
         self.categoreisRepository = categoreisRepository
+        getCategories()
     }
     
-    public func getCategories() {
+    private func getCategories() {
         categoreisRepository.getCategories()
             .sink { completion in
                 guard case .failure(let error) = completion else { return }

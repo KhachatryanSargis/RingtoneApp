@@ -12,7 +12,6 @@ import RingtoneKit
 public final class RingtoneDiscoverViewController: NiblessViewController {
     // MARK: - Properties
     private let viewModelFactory: RingtoneDiscoverViewModelFactory
-    private var viewModel: RingtoneDiscoverViewModel?
     
     // MARK: - Methods
     public init(viewModelFactory: RingtoneDiscoverViewModelFactory) {
@@ -20,10 +19,15 @@ public final class RingtoneDiscoverViewController: NiblessViewController {
         super.init(enableKeyboardNotificationObservers: false)
     }
     
+    public override func loadView() {
+        let viewModel = viewModelFactory.makeRingtoneDiscoverViewModel()
+        view = RingtoneDiscoverView(viewModel: viewModel)
+    }
+    
     public override func viewDidLoad() {
         super.viewDidLoad()
         configureTabBarItem()
-        view.backgroundColor = .systemBackground
+        configureNavigationItem()
     }
 }
 
@@ -33,5 +37,15 @@ extension RingtoneDiscoverViewController {
         guard let tabBarItem = tabBarItem else { return }
         tabBarItem.title = "Discover"
         tabBarItem.image = UIImage(systemName: "waveform.badge.magnifyingglass")
+    }
+}
+
+// MARK: - Navigation Item
+extension RingtoneDiscoverViewController {
+    private func configureNavigationItem() {
+        navigationItem.title = String(
+            localized: "Discover",
+            comment: "The title of the ringtone discover screen."
+        )
     }
 }
