@@ -18,7 +18,7 @@ fileprivate enum RingtoneDiscoverItem: Hashable {
     case category(RingtoneCategory)
 }
 
-class RingtoneDiscoverView: NiblessView {
+final class RingtoneDiscoverView: NiblessView {
     // MARK: - Properties
     private let collectionView: UICollectionView = {
         let collectionView = UICollectionView(
@@ -119,7 +119,7 @@ extension RingtoneDiscoverView {
             
             let section = NSCollectionLayoutSection(group: group)
             section.interGroupSpacing = 16
-            section.contentInsets = .init(top: 8, leading: 8, bottom: 8, trailing: 8)
+            section.contentInsets = .init(top: 8, leading: 16, bottom: 8, trailing: 16)
             section.orthogonalScrollingBehavior = .continuous
             
             return section
