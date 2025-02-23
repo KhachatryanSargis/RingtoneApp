@@ -7,10 +7,17 @@
 
 import UIKit
 import RingtoneUIKit
+import RingtoneKit
 
 public final class RingtoneDiscoverViewController: NiblessViewController {
-    public override init(enableKeyboardNotificationObservers: Bool = false) {
-        super.init(enableKeyboardNotificationObservers: enableKeyboardNotificationObservers)
+    // MARK: - Properties
+    private let viewModelFactory: RingtoneDiscoverViewModelFactory
+    private var viewModel: RingtoneDiscoverViewModel?
+    
+    // MARK: - Methods
+    public init(viewModelFactory: RingtoneDiscoverViewModelFactory) {
+        self.viewModelFactory = viewModelFactory
+        super.init(enableKeyboardNotificationObservers: false)
     }
     
     public override func viewDidLoad() {

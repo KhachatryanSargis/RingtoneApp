@@ -8,16 +8,16 @@
 import Combine
 
 public final class RingtoneCategoriesRepository: IRingtoneCategoriesRepository {
-    private let api: IRingtoneCategoriesAPI
+    private let store: IRingtoneCategoriesStore
     
     // MARK: - Methods
-    public init(api: IRingtoneCategoriesAPI) {
-        self.api = api
+    public init(store: IRingtoneCategoriesStore) {
+        self.store = store
     }
     
     public func getCategories() -> AnyPublisher<[RingtoneCategory], RingtoneCategoriesRepositoryError> {
-        api.getCategories()
-            .mapError { .api($0) }
+        store.getCategories()
+            .mapError { .store($0) }
             .eraseToAnyPublisher()
     }
 }

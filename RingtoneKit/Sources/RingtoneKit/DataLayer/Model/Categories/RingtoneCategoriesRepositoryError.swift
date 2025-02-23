@@ -6,5 +6,5 @@
 //
 
 public enum RingtoneCategoriesRepositoryError: Error {
-    case api(RingtoneCategoriesAPIError)
+    case store(RingtoneCategoriesStoreError)
 }

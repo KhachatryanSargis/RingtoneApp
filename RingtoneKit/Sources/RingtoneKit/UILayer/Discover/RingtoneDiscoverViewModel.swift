@@ -1,5 +1,5 @@
 //
-//  DiscoverViewModel.swift
+//  RingtoneDiscoverViewModel.swift
 //  RingtoneKit
 //
 //  Created by Sargis Khachatryan on 22.02.25.
@@ -7,11 +7,11 @@
 
 import Combine
 
-public protocol DiscoverViewModelFactory {
-    func makeDiscoverViewModel() -> DiscoverViewModel
+public protocol RingtoneDiscoverViewModelFactory {
+    func makeRingtoneDiscoverViewModel() -> RingtoneDiscoverViewModel
 }
 
-public final class DiscoverViewModel {
+public final class RingtoneDiscoverViewModel {
     // MARK: - Properties
     @Published public private(set) var categories: [RingtoneCategory] = []
     private var cancellables: Set<AnyCancellable> = []
