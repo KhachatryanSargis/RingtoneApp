@@ -1,3 +1,12 @@
+//
+//  CreatedCoordinator.swift
+//  RingtoneiOS
+//
+//  Created by Sargis Khachatryan on 25.02.25.
+//
+
+import RingtoneUIKit
+
 final class CreatedCoordinator: BaseCoordinator {
     private let navigationController: RingtoneNavigationController
     override var presentable: any Presentable {

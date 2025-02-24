@@ -26,22 +26,15 @@ public final class AppCoordinator: BaseCoordinator {
     public override func start() {
         super.start()
         
-        let ringtoneDiscoverViewController = container.makeRingtoneDiscoverViewController()
-        let discoverNC = RingtoneNavigationController(rootViewController: ringtoneDiscoverViewController)
+        let discoverCoordinator = DiscoverCoordinator(container: container)
+        addChild(discoverCoordinator)
         
-        let ringtoneFavoritesViewController = container.makeRingtoneFavoritesViewController()
-        let favoritesNC = RingtoneNavigationController(rootViewController: ringtoneFavoritesViewController)
+        let favoritesCoordinator = FavoritesCoordinator(container: container)
+        addChild(favoritesCoordinator)
         
-        let ringtoneCreatedViewController = container.makeRingtoneCreatedViewController()
-        let createdNC = RingtoneNavigationController(rootViewController: ringtoneCreatedViewController)
-        
-        tabBarController.addChild(discoverNC)
-        tabBarController.addChild(favoritesNC)
-        tabBarController.addChild(createdNC)
-        
-        // TODO: come up with a better way to preload child view controllers.
-        _ = ringtoneDiscoverViewController.view
-        _ = ringtoneFavoritesViewController.view
-        _ = ringtoneCreatedViewController.view
+        let createdCoordinator = CreatedCoordinator(container: container)
+        addChild(createdCoordinator)
     }
 }
+
+
