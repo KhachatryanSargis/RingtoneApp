@@ -39,13 +39,18 @@ extension BaseCoordinator {
         completion: (() -> Void)? = nil
     ) {
         coordinator.start()
-        coordinator.toViewController().modalPresentationStyle = modalPresentationStyle
         
-        presentable.toViewController().present(
-            coordinator.toViewController(),
-            animated: true,
-            completion: completion
-        )
+        if let tabBarController = toViewController() as? RingtoneTabBarController {
+            tabBarController.addChild(coordinator.toViewController())
+        } else {
+            coordinator.toViewController().modalPresentationStyle = modalPresentationStyle
+            
+            presentable.toViewController().present(
+                coordinator.toViewController(),
+                animated: true,
+                completion: completion
+            )
+        }
         
         let cancellable = coordinator.statePublisher
             .sink { [weak self] state in
