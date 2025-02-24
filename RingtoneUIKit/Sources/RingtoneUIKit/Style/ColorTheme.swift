@@ -28,14 +28,21 @@ public struct ColorTheme {
         }
     }
     
-    public let background = UIColor(named: "AppBackground")!
-    public let secondayBackground = UIColor(named: "AppSecondaryBackground")!
-    public let shadow = UIColor(named: "AppShadow")!
+    public let background = UIColor.systemBackground
+    public let secondayBackground = UIColor.secondarySystemBackground
     public let label = UIColor.label
     public let secondaryLabel = UIColor.secondaryLabel
     public let green = UIColor.systemGreen
     public let orange = UIColor.systemOrange
     public let accent = UIColor(named: "AccentColor")!
+    public let shadowColor = UIColor { collection in
+        switch collection.userInterfaceStyle {
+        case .dark:
+            return UIColor.white
+        default:
+            return UIColor.black
+        }
+    }
 }
 
 // MARK: - HEX
