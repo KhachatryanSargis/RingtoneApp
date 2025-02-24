@@ -12,6 +12,16 @@ public final class RingtoneTabBarController: NiblessTabBarController {
         super.init()
         setTabBarAppearance()
     }
+    
+    public override func addChild(_ childController: UIViewController) {
+        super.addChild(childController)
+        // TODO: Find a better way to preload child controller.
+        if let navigationController = childController as? UINavigationController {
+            _ = navigationController.topViewController?.view
+        } else {
+            _ = childController.view
+        }
+    }
 }
 
 // MARK: - Style
