@@ -17,8 +17,8 @@ public final class RingtoneTabBarController: NiblessTabBarController {
 // MARK: - Style
 extension RingtoneTabBarController {
     private func setTabBarAppearance() {
-//        setValue(RingtoneTabBar(frame: tabBar.frame), forKey: "tabBar")
-        tabBar.standardAppearance = UITabBarAppearance()
-        tabBar.scrollEdgeAppearance = UITabBarAppearance()
+        let appearance = UITabBarAppearance()
+        tabBar.standardAppearance = appearance
+        tabBar.scrollEdgeAppearance = appearance
     }
 }

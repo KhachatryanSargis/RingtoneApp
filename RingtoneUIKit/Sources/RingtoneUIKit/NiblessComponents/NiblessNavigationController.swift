@@ -9,13 +9,12 @@ import UIKit
 
 open class NiblessNavigationController: UINavigationController {
     // MARK: - Methods
-    public init(rootViewController: UIViewController? = nil, prefersLargeTitles: Bool = true) {
-        if let rootViewController = rootViewController {
-            super.init(rootViewController: rootViewController)
-        } else {
-            super.init()
-        }
-        if prefersLargeTitles { setNavigationBarprefersLargeTitles() }
+    public init() {
+        super.init(nibName: nil, bundle: nil)
+    }
+    
+    public override init(rootViewController: UIViewController) {
+        super.init(rootViewController: rootViewController)
     }
     
     @available(
@@ -34,12 +33,5 @@ open class NiblessNavigationController: UINavigationController {
     )
     required public init?(coder aDecoder: NSCoder) {
         fatalError("Loading this navigation controller from a nib is unsupported.")
-    }
-}
-
-// MARK: - Style
-extension NiblessNavigationController {
-    private func setNavigationBarprefersLargeTitles() {
-        navigationBar.prefersLargeTitles = true
     }
 }

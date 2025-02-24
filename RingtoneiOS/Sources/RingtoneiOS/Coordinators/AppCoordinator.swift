@@ -27,13 +27,17 @@ public final class AppCoordinator: BaseCoordinator {
         super.start()
         
         let ringtoneDiscoverViewController = container.makeRingtoneDiscoverViewController()
-        let nc = NiblessNavigationController(rootViewController: ringtoneDiscoverViewController)
-        let ringtoneFavoritesViewController = container.makeRingtoneFavoritesViewController()
-        let ringtoneCreatedViewController = container.makeRingtoneCreatedViewController()
+        let discoverNC = RingtoneNavigationController(rootViewController: ringtoneDiscoverViewController)
         
-        tabBarController.addChild(nc)
-        tabBarController.addChild(ringtoneFavoritesViewController)
-        tabBarController.addChild(ringtoneCreatedViewController)
+        let ringtoneFavoritesViewController = container.makeRingtoneFavoritesViewController()
+        let favoritesNC = RingtoneNavigationController(rootViewController: ringtoneFavoritesViewController)
+        
+        let ringtoneCreatedViewController = container.makeRingtoneCreatedViewController()
+        let createdNC = RingtoneNavigationController(rootViewController: ringtoneCreatedViewController)
+        
+        tabBarController.addChild(discoverNC)
+        tabBarController.addChild(favoritesNC)
+        tabBarController.addChild(createdNC)
         
         // TODO: come up with a better way to preload child view controllers.
         _ = ringtoneDiscoverViewController.view
