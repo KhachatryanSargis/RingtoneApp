@@ -18,8 +18,28 @@ final class RingtoneDiscoverCategoryCell: NiblessCollectionViewCell {
         }
     }
     
-    private let stackView: UIStackView = {
+    override var isSelected: Bool {
+        didSet {
+            UIViewPropertyAnimator(duration: 0.3, dampingRatio: 0.6) { [weak self] in
+                guard let self = self else { return }
+                self.selectionView.alpha = self.isSelected ? 1 : 0
+                self.selectionView.isHidden = !self.isSelected
+                self.layoutIfNeeded()
+            }.startAnimation()
+        }
+    }
+    
+    private let containerStackView: UIStackView = {
         let stackView = UIStackView()
+        stackView.spacing = 4
+        stackView.axis = .horizontal
+        stackView.alignment = .center
+        return stackView
+    }()
+    
+    private let nameAndIconStackView: UIStackView = {
+        let stackView = UIStackView()
+        stackView.spacing = 4
         stackView.axis = .vertical
         stackView.alignment = .center
         return stackView
@@ -37,6 +57,13 @@ final class RingtoneDiscoverCategoryCell: NiblessCollectionViewCell {
         return imageView
     }()
     
+    private let selectionView: UIView = {
+        let view = UIView()
+        view.backgroundColor = .theme.accent
+        view.isHidden = true
+        return view
+    }()
+    
     // MARK: - Methods
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -46,47 +73,55 @@ final class RingtoneDiscoverCategoryCell: NiblessCollectionViewCell {
     override func layoutSubviews() {
         super.layoutSubviews()
         configureLayer()
+        configureSelectionViewLayer()
     }
 }
 
 // MARK: - Style
 extension RingtoneDiscoverCategoryCell {
     private func configureLayer() {
-        let shadowColor = UIColor { collection in
-            switch collection.userInterfaceStyle {
-            case .dark:
-                return UIColor.white
-            default:
-                return UIColor.black
-            }
-        }.cgColor
-        layer.shadowColor = shadowColor
+        layer.shadowColor = UIColor.theme.shadowColor.cgColor
         layer.shadowOffset = .init(width: 0, height: 2)
         layer.shadowRadius = 4
         layer.shadowOpacity = 0.2
         layer.cornerRadius = 4
+    }
+    
+    private func configureSelectionViewLayer() {
+        selectionView.layer.shadowColor = UIColor.theme.shadowColor.cgColor
+        selectionView.layer.shadowOffset = .init(width: 0, height: 3)
+        selectionView.layer.shadowRadius = 6
+        selectionView.layer.shadowOpacity = 0.2
+        selectionView.layer.cornerRadius = 6
     }
 }
 
 // MARK: - Hierarchy
 extension RingtoneDiscoverCategoryCell {
     private func constructHierarchy() {
-        stackView.translatesAutoresizingMaskIntoConstraints = false
-        contentView.addSubview(stackView)
+        containerStackView.translatesAutoresizingMaskIntoConstraints = false
+        contentView.addSubview(containerStackView)
         NSLayoutConstraint.activate([
-            stackView.leftAnchor.constraint(equalTo: contentView.leftAnchor, constant: 4),
-            stackView.rightAnchor.constraint(equalTo: contentView.rightAnchor, constant: -4),
-            stackView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 4),
-            stackView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -4)
+            containerStackView.leftAnchor.constraint(equalTo: contentView.leftAnchor, constant: 4),
+            containerStackView.rightAnchor.constraint(equalTo: contentView.rightAnchor, constant: -4),
+            containerStackView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 4),
+            containerStackView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -4),
         ])
         
-        stackView.addArrangedSubview(iconImageView)
+        containerStackView.addArrangedSubview(nameAndIconStackView)
+        
+        nameAndIconStackView.addArrangedSubview(iconImageView)
         NSLayoutConstraint.activate([
-            iconImageView.widthAnchor.constraint(equalToConstant: 50),
-            iconImageView.heightAnchor.constraint(equalToConstant: 50)
+            iconImageView.heightAnchor.constraint(equalTo: iconImageView.widthAnchor)
         ])
         
-        stackView.addArrangedSubview(nameLabel)
+        nameAndIconStackView.addArrangedSubview(nameLabel)
+        
+        nameAndIconStackView.insertArrangedSubview(selectionView, at: 1)
+        NSLayoutConstraint.activate([
+            selectionView.widthAnchor.constraint(equalToConstant: 12),
+            selectionView.heightAnchor.constraint(equalToConstant: 12)
+        ])
     }
 }
 
