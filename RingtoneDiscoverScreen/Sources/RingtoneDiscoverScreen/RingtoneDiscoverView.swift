@@ -151,8 +151,8 @@ extension RingtoneDiscoverView {
             
             let group = NSCollectionLayoutGroup.horizontal(
                 layoutSize: NSCollectionLayoutSize(
-                    widthDimension: .fractionalWidth(0.25),
-                    heightDimension: .fractionalWidth(0.25)
+                    widthDimension: .fractionalWidth(0.3),
+                    heightDimension: .fractionalWidth(0.3)
                 ),
                 subitems: [item]
             )
