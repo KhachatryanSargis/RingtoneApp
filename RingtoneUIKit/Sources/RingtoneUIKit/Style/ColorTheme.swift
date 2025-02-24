@@ -29,7 +29,7 @@ public struct ColorTheme {
     }
     
     public let background = UIColor.systemBackground
-    public let secondayBackground = UIColor.secondarySystemBackground
+    public let secondaryBackground = UIColor.secondarySystemBackground
     public let label = UIColor.label
     public let secondaryLabel = UIColor.secondaryLabel
     public let green = UIColor.systemGreen
