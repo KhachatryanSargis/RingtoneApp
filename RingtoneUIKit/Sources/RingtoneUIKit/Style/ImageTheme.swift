@@ -13,11 +13,15 @@ extension UIImage {
 
 @MainActor
 public struct ImageTheme {
-    private static let symbolConfiguration = UIImage.SymbolConfiguration(scale: .large)
+    private static let configuration = UIImage.SymbolConfiguration(scale: .large)
     
-    public let play = UIImage(systemName: "play.circle.fill")!.withConfiguration(symbolConfiguration)
-    public let puase = UIImage(systemName: "pause.circle")!.withConfiguration(symbolConfiguration)
-    public let edit = UIImage(systemName: "gearshape")!.withConfiguration(symbolConfiguration)
-    public let unlike = UIImage(systemName: "heart.slash.circle.fill")!.withConfiguration(symbolConfiguration)
-    public let like = UIImage(systemName: "heart.circle.fill")!.withConfiguration(symbolConfiguration)
+    // MARK: - RingtoneDiscoverCategoryCell
+    public let icon = UIImage(systemName: "waveform")!.withConfiguration(configuration)
+    
+    // MARK: - RingtoneDiscoverAudioCell
+    public let play = UIImage(systemName: "play.circle.fill")!.withConfiguration(configuration)
+    public let puase = UIImage(systemName: "pause.circle")!.withConfiguration(configuration)
+    public let edit = UIImage(systemName: "gearshape")!.withConfiguration(configuration)
+    public let unlike = UIImage(systemName: "heart.slash.circle.fill")!.withConfiguration(configuration)
+    public let like = UIImage(systemName: "heart.circle.fill")!.withConfiguration(configuration)
 }
