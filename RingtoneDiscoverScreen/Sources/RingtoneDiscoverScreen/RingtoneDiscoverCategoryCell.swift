@@ -31,7 +31,6 @@ final class RingtoneDiscoverCategoryCell: NiblessCollectionViewCell {
     
     private let containerStackView: UIStackView = {
         let stackView = UIStackView()
-        stackView.spacing = 4
         stackView.axis = .horizontal
         stackView.alignment = .center
         return stackView
@@ -81,16 +80,16 @@ final class RingtoneDiscoverCategoryCell: NiblessCollectionViewCell {
 extension RingtoneDiscoverCategoryCell {
     private func configureLayer() {
         layer.shadowColor = UIColor.theme.shadowColor.cgColor
-        layer.shadowOffset = .init(width: 0, height: 2)
+        layer.shadowOffset = .init(width: 0, height: 1)
         layer.shadowRadius = 4
         layer.shadowOpacity = 0.2
         layer.cornerRadius = 4
     }
     
     private func configureSelectionViewLayer() {
-        selectionView.layer.shadowColor = UIColor.theme.shadowColor.cgColor
-        selectionView.layer.shadowOffset = .init(width: 0, height: 3)
-        selectionView.layer.shadowRadius = 6
+        selectionView.layer.shadowColor = UIColor.black.cgColor
+        selectionView.layer.shadowOffset = .init(width: 0, height: 1)
+        selectionView.layer.shadowRadius = 4
         selectionView.layer.shadowOpacity = 0.2
         selectionView.layer.cornerRadius = 6
     }
@@ -128,16 +127,11 @@ extension RingtoneDiscoverCategoryCell {
 // MARK: - Set Category
 extension RingtoneDiscoverCategoryCell {
     private func setCategory(_ category: RingtoneCategory) {
-        let color = UIColor { collection in
-            switch collection.userInterfaceStyle {
-            case .dark:
-                return UIColor(hex: category.color.darkHex)
-            default:
-                return UIColor(hex: category.color.lightHex)
-            }
-        }
-        backgroundColor = color
         nameLabel.text = category.displayName
-        iconImageView.image = UIImage(systemName: "music.note")
+        iconImageView.image = .theme.icon
+        let color = UIColor(hex: category.color.lightHex)
+        backgroundColor = color
+        nameLabel.textColor = color.inverse
+        iconImageView.tintColor = color.inverse
     }
 }
