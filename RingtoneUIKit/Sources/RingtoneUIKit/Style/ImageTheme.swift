@@ -15,8 +15,9 @@ extension UIImage {
 public struct ImageTheme {
     private static let symbolConfiguration = UIImage.SymbolConfiguration(scale: .large)
     
-    public let challengeIncomplete = UIImage(systemName: "checkmark.circle")!
-    public let challengeComplete = UIImage(systemName: "checkmark.circle.fill")!.withConfiguration(symbolConfiguration)
-    public let addChallenge = UIImage(systemName: "plus.circle.fill")!.withConfiguration(symbolConfiguration)
-    public let close = UIImage(systemName: "xmark.circle.fill")!
+    public let play = UIImage(systemName: "play.circle.fill")!.withConfiguration(symbolConfiguration)
+    public let puase = UIImage(systemName: "pause.circle")!.withConfiguration(symbolConfiguration)
+    public let edit = UIImage(systemName: "gearshape")!.withConfiguration(symbolConfiguration)
+    public let unlike = UIImage(systemName: "heart.slash.circle.fill")!.withConfiguration(symbolConfiguration)
+    public let like = UIImage(systemName: "heart.circle.fill")!.withConfiguration(symbolConfiguration)
 }
