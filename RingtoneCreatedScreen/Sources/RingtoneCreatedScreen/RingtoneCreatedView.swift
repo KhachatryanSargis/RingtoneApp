@@ -17,5 +17,6 @@ final class RingtoneCreatedView: NiblessView {
     init(viewModel: RingtoneCreatedViewModel) {
         self.viewModel = viewModel
         super.init()
+        backgroundColor = .theme.background
     }
 }
