@@ -36,7 +36,7 @@ extension RingtoneDiscoverViewController {
     private func configureTabBarItem() {
         guard let tabBarItem = tabBarItem else { return }
         tabBarItem.title = "Discover"
-        tabBarItem.image = UIImage(systemName: "waveform.badge.magnifyingglass")
+        tabBarItem.image = .theme.discover
     }
 }
 

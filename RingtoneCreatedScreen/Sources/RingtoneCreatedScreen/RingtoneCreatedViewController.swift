@@ -36,7 +36,7 @@ extension RingtoneCreatedViewController {
     private func configureTabBarItem() {
         guard let tabBarItem = tabBarItem else { return }
         tabBarItem.title = "My Ringtones"
-        tabBarItem.image = UIImage(systemName: "music.note.house")
+        tabBarItem.image = .theme.myRingtones
     }
 }
 

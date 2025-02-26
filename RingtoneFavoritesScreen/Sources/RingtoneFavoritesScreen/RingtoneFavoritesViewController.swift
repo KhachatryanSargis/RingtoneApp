@@ -26,7 +26,7 @@ extension RingtoneFavoritesViewController {
     private func configureTabBarItem() {
         guard let tabBarItem = tabBarItem else { return }
         tabBarItem.title = "Favorites"
-        tabBarItem.image = UIImage(systemName: "heart.square")
+        tabBarItem.image = .theme.favorites
     }
 }
 
