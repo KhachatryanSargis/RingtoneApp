@@ -80,15 +80,15 @@ final class RingtoneDiscoverCategoryCell: NiblessCollectionViewCell {
 extension RingtoneDiscoverCategoryCell {
     private func configureLayer() {
         layer.shadowColor = UIColor.theme.shadowColor.cgColor
-        layer.shadowOffset = .init(width: 0, height: 1)
+        layer.shadowOffset = .init(width: 0, height: 0.5)
         layer.shadowRadius = 4
         layer.shadowOpacity = 0.2
-        layer.cornerRadius = 4
+        layer.cornerRadius = 8
     }
     
     private func configureSelectionViewLayer() {
         selectionView.layer.shadowColor = UIColor.black.cgColor
-        selectionView.layer.shadowOffset = .init(width: 0, height: 1)
+        selectionView.layer.shadowOffset = .init(width: 0, height: 0.5)
         selectionView.layer.shadowRadius = 4
         selectionView.layer.shadowOpacity = 0.2
         selectionView.layer.cornerRadius = 6

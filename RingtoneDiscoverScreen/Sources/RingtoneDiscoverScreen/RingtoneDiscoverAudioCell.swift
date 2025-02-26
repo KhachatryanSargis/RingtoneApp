@@ -11,54 +11,19 @@ import RingtoneKit
 
 final class RingtoneDiscoverAudioCell: NiblessCollectionViewCell {
     // MARK: - Properties
+    var audio: RingtoneAudio? {
+        didSet {
+            guard let audio = audio else { return }
+            titleLabel.text = "\(audio.title) and \(audio.title)"
+        }
+    }
+    
     private let stackView: UIStackView = {
         let stackView = UIStackView()
-        stackView.axis = .vertical
-        stackView.spacing = 4
-        stackView.alignment = .top
-        return stackView
-    }()
-    
-    // MARK: - Title, Edit
-    private let titleAndEditStackView: UIStackView = {
-        let stackView = UIStackView()
         stackView.axis = .horizontal
-        stackView.alignment = .top
+        stackView.alignment = .center
         stackView.spacing = 4
         return stackView
-    }()
-    
-    private let titleLabel: UILabel = {
-        let label = UILabel()
-        label.numberOfLines = 2
-        label.font = .theme.subheadline
-        label.textColor = .theme.label
-        return label
-    }()
-    
-    private let editButton: UIButton = {
-        let button = UIButton(type: .system)
-        button.contentVerticalAlignment = .fill
-        button.contentHorizontalAlignment = .fill
-        button.setImage(.theme.edit, for: .normal)
-        return button
-    }()
-    
-    // MARK: - Like, Play, Duration
-    private let likePlayDurationStackView: UIStackView = {
-        let stackView = UIStackView()
-        stackView.axis = .horizontal
-        stackView.alignment = .bottom
-        stackView.spacing = 4
-        return stackView
-    }()
-    
-    private let likeUnlikeButton: UIButton = {
-        let button = UIButton(type: .system)
-        button.contentVerticalAlignment = .fill
-        button.contentHorizontalAlignment = .fill
-        button.setImage(.theme.like, for: .normal)
-        return button
     }()
     
     private let playPauseButton: UIButton = {
@@ -69,13 +34,67 @@ final class RingtoneDiscoverAudioCell: NiblessCollectionViewCell {
         return button
     }()
     
-    private let durationLabel: UILabel = {
+    // MARK: - tile and description
+    private let titleAndDescriptionStackView: UIStackView = {
+        let stackView = UIStackView()
+        stackView.axis = .vertical
+        stackView.alignment = .top
+        stackView.spacing = 4
+        return stackView
+    }()
+    
+    private let titleLabel: UILabel = {
         let label = UILabel()
-        label.numberOfLines = 1
-        label.textAlignment = .right
+        label.numberOfLines = 2
+        label.font = .theme.headline
+        label.textColor = .theme.label
+        return label
+    }()
+    
+    private let descriptionLabel: UILabel = {
+        let label = UILabel()
+        label.numberOfLines = 2
         label.font = .theme.subheadline
         label.textColor = .theme.secondaryLabel
+        // TODO: Remove!
+        label.text = "01:20 | 1.2 MB"
         return label
+    }()
+    
+    // MARK: - like, use and edit
+    private let likeUseEditStackView: UIStackView = {
+        let stackView = UIStackView()
+        stackView.axis = .horizontal
+        stackView.distribution = .fillEqually
+        stackView.spacing = 4
+        return stackView
+    }()
+    
+    private let likeUnlikeButton: UIButton = {
+        var configuration = UIButton.Configuration.borderedTinted()
+        configuration.imagePlacement = .top
+        let button = UIButton(configuration: configuration)
+        button.setImage(.theme.like, for: .normal)
+        button.setTitle("Like", for: .normal)
+        return button
+    }()
+    
+    private let useButton: UIButton = {
+        var configuration = UIButton.Configuration.borderedTinted()
+        configuration.imagePlacement = .top
+        let button = UIButton(configuration: configuration)
+        button.setImage(.theme.use, for: .normal)
+        button.setTitle("Use", for: .normal)
+        return button
+    }()
+    
+    private let editButton: UIButton = {
+        var configuration = UIButton.Configuration.borderedTinted()
+        configuration.imagePlacement = .top
+        let button = UIButton(configuration: configuration)
+        button.setImage(.theme.edit, for: .normal)
+        button.setTitle("Edit", for: .normal)
+        return button
     }()
     
     // MARK: - Methods
@@ -98,11 +117,7 @@ extension RingtoneDiscoverAudioCell {
     }
     
     private func configureLayer() {
-        layer.shadowColor = UIColor.theme.shadowColor.cgColor
-        layer.shadowOffset = .init(width: 0, height: 1)
-        layer.shadowRadius = 4
-        layer.shadowOpacity = 0.2
-        layer.cornerRadius = 4
+        layer.cornerRadius = 8
     }
 }
 
@@ -118,32 +133,24 @@ extension RingtoneDiscoverAudioCell {
             stackView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -4)
         ])
         
-        titleAndEditStackView.addArrangedSubview(titleLabel)
-        titleAndEditStackView.addArrangedSubview(editButton)
-        NSLayoutConstraint.activate([
-            editButton.widthAnchor.constraint(equalToConstant: 40),
-            editButton.heightAnchor.constraint(equalToConstant: 40)
-        ])
+        titleLabel.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        titleAndDescriptionStackView.addArrangedSubview(titleLabel)
         
-        likePlayDurationStackView.addArrangedSubview(likeUnlikeButton)
-        NSLayoutConstraint.activate([
-            likeUnlikeButton.widthAnchor.constraint(equalToConstant: 40),
-            likeUnlikeButton.heightAnchor.constraint(equalToConstant: 40)
-        ])
-        likePlayDurationStackView.addArrangedSubview(playPauseButton)
+        descriptionLabel.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        titleAndDescriptionStackView.addArrangedSubview(descriptionLabel)
+        
+        likeUseEditStackView.addArrangedSubview(likeUnlikeButton)
+        likeUseEditStackView.addArrangedSubview(useButton)
+        likeUseEditStackView.addArrangedSubview(editButton)
+        
+        stackView.addArrangedSubview(playPauseButton)
         NSLayoutConstraint.activate([
             playPauseButton.widthAnchor.constraint(equalToConstant: 40),
             playPauseButton.heightAnchor.constraint(equalToConstant: 40)
         ])
-        likePlayDurationStackView.addArrangedSubview(durationLabel)
         
-        stackView.addArrangedSubview(titleAndEditStackView)
-        NSLayoutConstraint.activate([
-            titleAndEditStackView.widthAnchor.constraint(equalTo: stackView.widthAnchor)
-        ])
-        stackView.addArrangedSubview(likePlayDurationStackView)
-        NSLayoutConstraint.activate([
-            likePlayDurationStackView.widthAnchor.constraint(equalTo: stackView.widthAnchor)
-        ])
+        stackView.addArrangedSubview(titleAndDescriptionStackView)
+        
+        stackView.addArrangedSubview(likeUseEditStackView)
     }
 }

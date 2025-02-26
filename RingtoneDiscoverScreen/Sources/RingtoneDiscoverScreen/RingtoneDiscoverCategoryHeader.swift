@@ -7,26 +7,39 @@
 
 import UIKit
 import RingtoneUIKit
+import RingtoneKit
 
 class RingtoneDiscoverCategoryHeader: NiblessCollectionReusableView {
     // MARK: - Properties
-    var title: String? {
+    var categories: [RingtoneCategory] = [] {
         didSet {
-            titleLabel.text = title
+            var snapshot = NSDiffableDataSourceSnapshot<Int, RingtoneCategory>()
+            snapshot.appendSections([0])
+            snapshot.appendItems(categories, toSection: 0)
+            
+            self.dataSource.apply(snapshot, animatingDifferences: true)
         }
     }
     
-    private let titleLabel: UILabel = {
-        let label = UILabel()
-        label.numberOfLines = 1
-        label.font = .theme.headline
-        return label
+    private let collectionView: UICollectionView = {
+        let collectionView = UICollectionView(
+            frame: .zero,
+            collectionViewLayout: UICollectionViewLayout()
+        )
+        collectionView.showsVerticalScrollIndicator = false
+        collectionView.showsHorizontalScrollIndicator = false
+        collectionView.backgroundColor = .clear
+        return collectionView
     }()
+    
+    private lazy var dataSource = makeDataSource()
     
     // MARK: - Methods
     override init(frame: CGRect) {
         super.init(frame: frame)
         constructHierarchy()
+        setCollectionViewDataSourceAndDelegate()
+        setCollectionViewLayout()
     }
     
     override func layoutSubviews() {
@@ -37,12 +50,16 @@ class RingtoneDiscoverCategoryHeader: NiblessCollectionReusableView {
 
 // MARK: - Style
 extension RingtoneDiscoverCategoryHeader {
+    private func setBackgroudColor() {
+        backgroundColor = .theme.secondaryBackground
+    }
+    
     private func setBlurEffect() {
         if let existingBlurView = subviews.first(where: { $0 is UIVisualEffectView }) {
             existingBlurView.removeFromSuperview()
         }
         
-        let blurEffect = UIBlurEffect(style: .systemChromeMaterial)
+        let blurEffect = UIBlurEffect(style: .systemUltraThinMaterial)
         let blurView = UIVisualEffectView(effect: blurEffect)
         
         blurView.frame = bounds
@@ -55,13 +72,71 @@ extension RingtoneDiscoverCategoryHeader {
 // MARK: - Hierarchy
 extension RingtoneDiscoverCategoryHeader {
     private func constructHierarchy() {
-        titleLabel.translatesAutoresizingMaskIntoConstraints = false
-        addSubview(titleLabel)
+        collectionView.translatesAutoresizingMaskIntoConstraints = false
+        addSubview(collectionView)
         NSLayoutConstraint.activate([
-            titleLabel.leftAnchor.constraint(equalTo: leftAnchor, constant: 8),
-            titleLabel.rightAnchor.constraint(equalTo: rightAnchor, constant: -8),
-            titleLabel.topAnchor.constraint(equalTo: topAnchor, constant: 8),
-            titleLabel.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -8)
+            collectionView.leftAnchor.constraint(equalTo: leftAnchor),
+            collectionView.rightAnchor.constraint(equalTo: rightAnchor),
+            collectionView.topAnchor.constraint(equalTo: topAnchor),
+            collectionView.bottomAnchor.constraint(equalTo: bottomAnchor)
         ])
+    }
+}
+
+// MARK: - Collection View
+extension RingtoneDiscoverCategoryHeader {
+    private func setCollectionViewDataSourceAndDelegate() {
+        collectionView.dataSource = dataSource
+    }
+    
+    private func setCollectionViewLayout() {
+        collectionView.collectionViewLayout = makeLayout()
+    }
+    
+    private func makeDataSource() -> UICollectionViewDiffableDataSource<Int, RingtoneCategory> {
+        let categoryCellRegistration = UICollectionView.CellRegistration<RingtoneDiscoverCategoryCell, RingtoneCategory> {
+            cell, indexPath, category in
+            
+            cell.category = category
+        }
+        
+        let dataSource =  UICollectionViewDiffableDataSource<Int, RingtoneCategory>(
+            collectionView: collectionView
+        ) { collectionView, indexPath, category in
+            collectionView.dequeueConfiguredReusableCell(
+                using: categoryCellRegistration,
+                for: indexPath,
+                item: category
+            )
+        }
+        
+        return dataSource
+    }
+    
+    private func makeLayout() -> UICollectionViewCompositionalLayout {
+        let layout = UICollectionViewCompositionalLayout { sectionIndex, environment in
+            let item = NSCollectionLayoutItem(
+                layoutSize: NSCollectionLayoutSize(
+                    widthDimension: .fractionalWidth(1),
+                    heightDimension: .fractionalHeight(1)
+                )
+            )
+            
+            let group = NSCollectionLayoutGroup.horizontal(
+                layoutSize: NSCollectionLayoutSize(
+                    widthDimension: .fractionalWidth(0.3),
+                    heightDimension: .fractionalHeight(1)
+                ),
+                subitems: [item]
+            )
+            group.contentInsets = .init(top: 8, leading: 8, bottom: 8, trailing: 8)
+            
+            let section = NSCollectionLayoutSection(group: group)
+            section.orthogonalScrollingBehavior = .continuous
+            
+            return section
+        }
+        
+        return layout
     }
 }

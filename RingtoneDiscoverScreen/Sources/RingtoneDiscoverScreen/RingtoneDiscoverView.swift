@@ -10,21 +10,6 @@ import Combine
 import RingtoneUIKit
 import RingtoneKit
 
-fileprivate enum RingtoneDiscoverSection: Int {
-    case genres
-    
-    var title: String {
-        switch self {
-        case .genres:
-            return "Genres"
-        }
-    }
-}
-
-fileprivate enum RingtoneDiscoverItem: Hashable {
-    case category(RingtoneCategory)
-}
-
 final class RingtoneDiscoverView: NiblessView {
     // MARK: - Properties
     private let collectionView: UICollectionView = {
@@ -34,7 +19,7 @@ final class RingtoneDiscoverView: NiblessView {
         )
         collectionView.showsVerticalScrollIndicator = false
         collectionView.showsHorizontalScrollIndicator = false
-        collectionView.backgroundColor = .systemBackground
+        collectionView.backgroundColor = .clear
         return collectionView
     }()
     
@@ -49,7 +34,7 @@ final class RingtoneDiscoverView: NiblessView {
         super.init()
         setBackgroundColor()
         constructHierarchy()
-        setCollectionViewDataSource()
+        setCollectionViewDataSourceAndDelegate()
         setCollectionViewLayout()
         observeViewModel()
     }
@@ -58,7 +43,7 @@ final class RingtoneDiscoverView: NiblessView {
 // MARK: - Style
 extension RingtoneDiscoverView {
     private func setBackgroundColor() {
-        backgroundColor = .systemBackground
+        backgroundColor = .theme.background
     }
 }
 
@@ -78,63 +63,46 @@ extension RingtoneDiscoverView {
 
 // MARK: - Collection View
 extension RingtoneDiscoverView {
-    private func setCollectionViewDataSource() {
+    private func setCollectionViewDataSourceAndDelegate() {
         collectionView.dataSource = dataSource
+        collectionView.delegate = self
     }
     
     private func setCollectionViewLayout() {
         collectionView.collectionViewLayout = makeLayout()
     }
     
-    private func makeDataSource() -> UICollectionViewDiffableDataSource<RingtoneDiscoverSection, RingtoneDiscoverItem> {
-        let categoryCellRegistration = UICollectionView.CellRegistration<RingtoneDiscoverCategoryCell, RingtoneCategory> {
-            cell, indexPath, category in
-            
-            cell.category = category
+    private func makeDataSource() -> UICollectionViewDiffableDataSource<Int, RingtoneAudio> {
+        let audioCellRegistration = UICollectionView.CellRegistration<RingtoneDiscoverAudioCell, RingtoneAudio> {
+            cell, indexPath, audio in
+            cell.audio = audio
         }
         
-        let dataSource =  UICollectionViewDiffableDataSource<RingtoneDiscoverSection, RingtoneDiscoverItem>(
+        let dataSource =  UICollectionViewDiffableDataSource<Int, RingtoneAudio>(
             collectionView: collectionView
-        ) { collectionView, indexPath, item in
-            switch item {
-            case .category(let category):
-                collectionView.dequeueConfiguredReusableCell(
-                    using: categoryCellRegistration,
-                    for: indexPath,
-                    item: category
-                )
-            }
+        ) { collectionView, indexPath, audio in
+            
+            collectionView.dequeueConfiguredReusableCell(
+                using: audioCellRegistration,
+                for: indexPath,
+                item: audio
+            )
         }
         
         let categoryHeaderRegistration = UICollectionView.SupplementaryRegistration<RingtoneDiscoverCategoryHeader>(
             elementKind: UICollectionView.elementKindSectionHeader
-        ) {
-            supplementaryView, elementKind, indexPath in
+        ) { [weak self] supplementaryView, elementKind, indexPath in
             
-            switch elementKind {
-            case UICollectionView.elementKindSectionHeader:
-                guard let section = RingtoneDiscoverSection(rawValue: indexPath.section) else {
-                    fatalError("unexpected section in ringtone discover view")
-                }
-                
-                supplementaryView.title = section.title
-            default:
-                return
-            }
+            guard let self = self else { return }
+            
+            supplementaryView.categories = self.categories
         }
         
         dataSource.supplementaryViewProvider = { collectionView, kind, indexPath in
-            guard let section = RingtoneDiscoverSection(rawValue: indexPath.section) else {
-                fatalError("unexpected section in ringtone discover view")
-            }
-            
-            switch section {
-            case .genres:
-                return collectionView.dequeueConfiguredReusableSupplementary(
-                    using: categoryHeaderRegistration,
-                    for: indexPath
-                )
-            }
+            return collectionView.dequeueConfiguredReusableSupplementary(
+                using: categoryHeaderRegistration,
+                for: indexPath
+            )
         }
         
         return dataSource
@@ -149,19 +117,20 @@ extension RingtoneDiscoverView {
                 )
             )
             
-            let group = NSCollectionLayoutGroup.horizontal(
+            let group = NSCollectionLayoutGroup.vertical(
                 layoutSize: NSCollectionLayoutSize(
-                    widthDimension: .fractionalWidth(0.3),
-                    heightDimension: .fractionalWidth(0.3)
+                    widthDimension: .fractionalWidth(1),
+                    heightDimension: .estimated(100)
                 ),
                 subitems: [item]
             )
-            group.contentInsets = .init(top: 8, leading: 8, bottom: 8, trailing: 8)
+            group.contentInsets = .init(top: 0, leading: 8, bottom: 0, trailing: 8)
+            group.interItemSpacing = .fixed(8)
             
             let header = NSCollectionLayoutBoundarySupplementaryItem(
                 layoutSize: NSCollectionLayoutSize(
                     widthDimension: .fractionalWidth(1),
-                    heightDimension: .estimated(44)
+                    heightDimension: .fractionalWidth(0.3)
                 ),
                 elementKind: UICollectionView.elementKindSectionHeader,
                 alignment: .top
@@ -170,12 +139,21 @@ extension RingtoneDiscoverView {
             
             let section = NSCollectionLayoutSection(group: group)
             section.boundarySupplementaryItems = [header]
-            section.orthogonalScrollingBehavior = .continuous
+            section.interGroupSpacing = 8
+            section.contentInsets = .init(top: 16, leading: 0, bottom: 16, trailing: 0)
             
             return section
         }
         
         return layout
+    }
+}
+
+// MARK: - Collection View Delegate
+extension RingtoneDiscoverView: UICollectionViewDelegate {
+    func collectionView(_ collectionView: UICollectionView, shouldSelectItemAt indexPath: IndexPath) -> Bool {
+        // TODO: Think of a usecase.
+        return true
     }
 }
 
@@ -188,11 +166,12 @@ extension RingtoneDiscoverView {
                 
                 self.categories = categories
                 
-                var snapshot = NSDiffableDataSourceSnapshot<RingtoneDiscoverSection, RingtoneDiscoverItem>()
-                snapshot.appendSections([.genres])
+                // TODO: Replace dummy data with real data.
+                var snapshot = NSDiffableDataSourceSnapshot<Int, RingtoneAudio>()
+                snapshot.appendSections([0])
                 
-                let categoryItems = categories.map { RingtoneDiscoverItem.category($0) }
-                snapshot.appendItems(categoryItems, toSection: .genres)
+                let audioItems = categories.map { RingtoneAudio(title: $0.displayName) }
+                snapshot.appendItems(audioItems, toSection: 0)
                 
                 self.dataSource.apply(snapshot, animatingDifferences: true)
                 
