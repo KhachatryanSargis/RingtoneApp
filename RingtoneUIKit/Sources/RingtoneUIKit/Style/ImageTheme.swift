@@ -23,5 +23,15 @@ public struct ImageTheme {
     public let puase = UIImage(systemName: "pause.circle")!.withConfiguration(configuration)
     public let edit = UIImage(systemName: "gearshape")!.withConfiguration(configuration)
     public let unlike = UIImage(systemName: "heart.slash.circle.fill")!.withConfiguration(configuration)
-    public let like = UIImage(systemName: "heart.circle.fill")!.withConfiguration(configuration)
+    public let like = UIImage(systemName: "heart")!.withConfiguration(configuration)
+    public let use = UIImage(systemName: "plus.app")!.withConfiguration(configuration)
+    
+    // MARK: - RingtoneDiscoverViewContrller
+    public let discover = UIImage(systemName: "waveform.badge.magnifyingglass")!
+    
+    // MARK: - RingtoneFavoritesViewContrller
+    public let favorites = UIImage(systemName: "heart.square")!
+    
+    // MARK: - RingtoneCreatedViewContrller
+    public let myRingtones = UIImage(systemName: "music.note.house")
 }
