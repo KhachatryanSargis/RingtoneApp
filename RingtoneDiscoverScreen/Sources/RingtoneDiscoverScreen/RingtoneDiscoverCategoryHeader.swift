@@ -21,6 +21,27 @@ class RingtoneDiscoverCategoryHeader: NiblessCollectionReusableView {
         }
     }
     
+    var categorySelectionResponder: RingtoneDiscoverCategorySelectionResponder? {
+        didSet {
+            // Preselecting first category.
+            // TODO: Find a better way to do this, this causes:
+            // - UICollectionView client error: attempting to perform update while UICollectionView is updating its visible views.
+            guard collectionView.indexPathsForSelectedItems?.isEmpty == true,
+                  categories.isEmpty == false,
+                  let categorySelectionResponder = categorySelectionResponder
+            else { return }
+            
+            let category = categories[0]
+            categorySelectionResponder.selectCategory(category)
+            
+            collectionView.selectItem(
+                at: IndexPath(item: 0, section: 0),
+                animated: false,
+                scrollPosition: []
+            )
+        }
+    }
+    
     private let collectionView: UICollectionView = {
         let collectionView = UICollectionView(
             frame: .zero,
@@ -40,6 +61,7 @@ class RingtoneDiscoverCategoryHeader: NiblessCollectionReusableView {
         constructHierarchy()
         setCollectionViewDataSourceAndDelegate()
         setCollectionViewLayout()
+        
     }
     
     override func layoutSubviews() {
@@ -87,6 +109,7 @@ extension RingtoneDiscoverCategoryHeader {
 extension RingtoneDiscoverCategoryHeader {
     private func setCollectionViewDataSourceAndDelegate() {
         collectionView.dataSource = dataSource
+        collectionView.delegate = self
     }
     
     private func setCollectionViewLayout() {
@@ -138,5 +161,22 @@ extension RingtoneDiscoverCategoryHeader {
         }
         
         return layout
+    }
+}
+
+// MARK: - Collection View Delegate
+extension RingtoneDiscoverCategoryHeader: UICollectionViewDelegate {
+    func collectionView(_ collectionView: UICollectionView, shouldSelectItemAt indexPath: IndexPath) -> Bool {
+        let category = categories[indexPath.item]
+        return selectCategory(category)
+    }
+    
+    private func selectCategory(_ category: RingtoneCategory) -> Bool {
+        if let categorySelectionResponder = categorySelectionResponder {
+            categorySelectionResponder.selectCategory(category)
+            return true
+        } else {
+            return false
+        }
     }
 }

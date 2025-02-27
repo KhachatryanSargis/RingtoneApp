@@ -25,6 +25,7 @@ final class RingtoneDiscoverView: NiblessView {
     
     private lazy var dataSource = makeDataSource()
     private var categories: [RingtoneCategory] = []
+    private var audios: [RingtoneAudio] = []
     private var cancellables: Set<AnyCancellable> = []
     private let viewModel: RingtoneDiscoverViewModel
     
@@ -96,6 +97,7 @@ extension RingtoneDiscoverView {
             guard let self = self else { return }
             
             supplementaryView.categories = self.categories
+            supplementaryView.categorySelectionResponder = viewModel
         }
         
         dataSource.supplementaryViewProvider = { collectionView, kind, indexPath in
@@ -161,20 +163,32 @@ extension RingtoneDiscoverView: UICollectionViewDelegate {
 extension RingtoneDiscoverView {
     private func observeViewModel() {
         viewModel.$categories
+            .receive(on: DispatchQueue.main)
             .sink { [weak self] categories in
                 guard let self = self else { return }
                 
                 self.categories = categories
                 
-                // TODO: Replace dummy data with real data.
                 var snapshot = NSDiffableDataSourceSnapshot<Int, RingtoneAudio>()
                 snapshot.appendSections([0])
                 
-                let audioItems = categories.map { RingtoneAudio(title: $0.displayName) }
-                snapshot.appendItems(audioItems, toSection: 0)
-                
                 self.dataSource.apply(snapshot, animatingDifferences: true)
                 
+            }
+            .store(in: &cancellables)
+        
+        viewModel.$audios
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] audios in
+                guard let self = self else { return }
+                
+                self.audios = audios
+                
+                var snapshot = NSDiffableDataSourceSnapshot<Int, RingtoneAudio>()
+                snapshot.appendSections([0])
+                snapshot.appendItems(audios, toSection: 0)
+                
+                self.dataSource.apply(snapshot, animatingDifferences: true)
             }
             .store(in: &cancellables)
     }

@@ -1,8 +1,10 @@
 //
-//  File.swift
+//  RingtoneDiscoverCategorySelectionResponder.swift
 //  RingtoneKit
 //
 //  Created by Sargis Khachatryan on 27.02.25.
 //
 
-import Foundation
+public protocol RingtoneDiscoverCategorySelectionResponder {
+    func selectCategory(_ category: RingtoneCategory)
+}

@@ -8,6 +8,9 @@
 import Combine
 
 public final class RingtoneAudioStore: IRingtoneAudioStore {
+    // MARK: - Methods
+    public init() {}
+    
     public func getRingtoneAudiosInCategory(_ category: RingtoneCategory) -> AnyPublisher<[RingtoneAudio], RingtoneAudioRepositoryError> {
         let filteredAudios = ringtoneAudios.filter { $0.categoryID == category.displayName }
         return Just(filteredAudios)

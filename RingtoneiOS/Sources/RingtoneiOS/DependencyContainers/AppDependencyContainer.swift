@@ -13,11 +13,15 @@ import RingtoneCreatedScreen
 public final class AppDependencyContainer {
     // MARK: - Properties
     private let categoreisRepository: IRingtoneCategoriesRepository
+    private let audioRepository: IRingtoneAudioRepository
     
     // MARK: - Methods
     public init () {
         let ringtoneCategoriesStore = RingtoneCategoriesStore()
         self.categoreisRepository = RingtoneCategoriesRepository(store: ringtoneCategoriesStore)
+        
+        let ringtoneAudioStore = RingtoneAudioStore()
+        self.audioRepository = RingtoneAudioRepository(store: ringtoneAudioStore)
     }
 }
 
@@ -31,7 +35,10 @@ extension AppDependencyContainer: RingtoneDiscoverViewModelFactory {
     
     // MARK: - DiscoverViewModelFactory
     public func makeRingtoneDiscoverViewModel() -> RingtoneDiscoverViewModel {
-        RingtoneDiscoverViewModel(categoreisRepository: categoreisRepository)
+        RingtoneDiscoverViewModel(
+            categoreisRepository: categoreisRepository,
+            audioRepository: audioRepository
+        )
     }
 }
 
