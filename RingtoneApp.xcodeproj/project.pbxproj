@@ -59,9 +59,9 @@
 			children = (
 				0FEBB7E42D6886F500BB0043 /* RingtoneApp */,
 				0FEBB80B2D6A00EF00BB0043 /* RingtoneiOS */,
-				0FE4EDD52D6A1CD100BF3635 /* RingtoneCreatedScreen */,
-				0FE4EDD42D6A14B800BF3635 /* RingtoneFavoritesScreen */,
 				0FEBB80F2D6A0F7F00BB0043 /* RingtoneDiscoverScreen */,
+				0FE4EDD42D6A14B800BF3635 /* RingtoneFavoritesScreen */,
+				0FE4EDD52D6A1CD100BF3635 /* RingtoneCreatedScreen */,
 				0FE4EE2B2D70B1DA00BF3635 /* RingtoneImportScreens */,
 				0FEBB7FF2D688B3100BB0043 /* RingtoneUIKit */,
 				0FEBB7FB2D68897600BB0043 /* RingtoneKit */,
