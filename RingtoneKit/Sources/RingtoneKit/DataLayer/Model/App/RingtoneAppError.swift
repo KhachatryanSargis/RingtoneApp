@@ -6,5 +6,5 @@
 //
 
 public enum RingtoneAppError: Error {
-    case spotifySearch(SpotifySearchError)
+    case categoriesRepository(RingtoneCategoriesRepositoryError)
 }
