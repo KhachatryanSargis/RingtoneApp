@@ -162,6 +162,11 @@ extension RingtoneDiscoverView: UICollectionViewDelegate {
 // MARK: - View Model
 extension RingtoneDiscoverView {
     private func observeViewModel() {
+        observeCategories()
+        observeAudios()
+    }
+    
+    private func observeCategories() {
         viewModel.$categories
             .receive(on: DispatchQueue.main)
             .sink { [weak self] categories in
@@ -176,7 +181,9 @@ extension RingtoneDiscoverView {
                 
             }
             .store(in: &cancellables)
-        
+    }
+    
+    private func observeAudios() {
         viewModel.$audios
             .receive(on: DispatchQueue.main)
             .sink { [weak self] audios in
