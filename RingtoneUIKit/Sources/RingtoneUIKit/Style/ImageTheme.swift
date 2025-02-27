@@ -34,4 +34,7 @@ public struct ImageTheme {
     
     // MARK: - RingtoneCreatedViewContrller
     public let myRingtones = UIImage(systemName: "music.note.house")
+    
+    // MARK: - RingtoneCreatedEmptyCell
+    public let `import` = UIImage(systemName: "square.and.arrow.down")!.withConfiguration(configuration)
 }
