@@ -1,5 +1,5 @@
 //
-//  RingtoneCreatedEmptyView.swift
+//  RingtoneCreatedEmptyCell.swift
 //  RingtoneCreatedScreen
 //
 //  Created by Sargis Khachatryan on 26.02.25.
@@ -10,25 +10,92 @@ import RingtoneUIKit
 
 final class RingtoneCreatedEmptyCell: NiblessCollectionViewCell {
     // MARK: - Properties
+    var onImportButtonTapped: (() -> Void)?
+    
+    private let stackView: UIStackView = {
+        let stackView = UIStackView()
+        stackView.axis = .vertical
+        stackView.spacing = 8
+        stackView.alignment = .center
+        return stackView
+    }()
+    
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.font = .theme.headline
+        label.font = .theme.title2
         label.textColor = .theme.label
+        label.text = "You have no ringtones."
         label.textAlignment = .center
         label.numberOfLines = 0
-        label.text = "You have not created any ringtones yet."
         return label
     }()
     
+    private let descriptionLabel: UILabel = {
+        let label = UILabel()
+        label.font = .theme.title3
+        label.textColor = .theme.secondaryLabel
+        label.text = "Import a video or audio file to create your first ringtone."
+        label.textAlignment = .center
+        label.numberOfLines = 0
+        return label
+    }()
+    
+    private let importButton: UIButton = {
+        var configuration = UIButton.Configuration.borderedProminent()
+        configuration.imagePlacement = .top
+        let button = UIButton(configuration: configuration)
+        button.setImage(.theme.import, for: .normal)
+        button.setTitle("Import", for: .normal)
+        return button
+    }()
+    
     // MARK: - Methods
-    override init() {
-        super.init()
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        constructHierarchy()
+        setImportButtonTarget()
     }
 }
 
 // MARK: - Style
 extension RingtoneCreatedEmptyCell {
     private func setBackgroundColor() {
-        backgroundView
+        backgroundColor = .theme.background
+    }
+}
+
+// MARK: - Hierarchy
+extension RingtoneCreatedEmptyCell {
+    private func constructHierarchy() {
+        stackView.translatesAutoresizingMaskIntoConstraints = false
+        contentView.addSubview(stackView)
+        
+        NSLayoutConstraint.activate([
+            stackView.leftAnchor.constraint(equalTo: contentView.leftAnchor, constant: 4),
+            stackView.rightAnchor.constraint(equalTo: contentView.rightAnchor, constant: -4),
+            stackView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 4),
+            stackView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -4)
+        ])
+        
+        stackView.addArrangedSubview(titleLabel)
+        stackView.addArrangedSubview(descriptionLabel)
+        stackView.addArrangedSubview(importButton)
+        
+        stackView.setCustomSpacing(16, after: descriptionLabel)
+    }
+}
+
+// MARK: - Import Button
+extension RingtoneCreatedEmptyCell {
+    private func setImportButtonTarget() {
+        importButton.addTarget(
+            self,
+            action: #selector(importButtonTapped),
+            for: .touchUpInside
+        )
+    }
+    
+    @objc private func importButtonTapped() {
+        onImportButtonTapped?()
     }
 }

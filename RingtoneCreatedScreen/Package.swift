@@ -12,11 +12,17 @@ let package = Package(
             targets: ["RingtoneCreatedScreen"]
         ),
     ],
-    dependencies: [.package(path: "RingtoneUIKit")],
+    dependencies: [
+        .package(path: "RingtoneImportScreens"),
+        .package(path: "RingtoneUIKit"),
+    ],
     targets: [
         .target(
             name: "RingtoneCreatedScreen",
-            dependencies: ["RingtoneUIKit"]
+            dependencies: [
+                "RingtoneImportScreens",
+                "RingtoneUIKit"
+            ]
         ),
     ]
 )

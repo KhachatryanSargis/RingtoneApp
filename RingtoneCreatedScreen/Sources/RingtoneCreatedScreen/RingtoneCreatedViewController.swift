@@ -6,11 +6,19 @@
 //
 
 import UIKit
+import Combine
+import RingtoneImportScreens
 import RingtoneUIKit
 import RingtoneKit
 
+public enum RingtoneCreatedViewControllerAction {
+    case `import`
+}
+
 public final class RingtoneCreatedViewController: NiblessViewController {
     // MARK: - Properties
+    @Published public private(set) var action: RingtoneCreatedViewControllerAction?
+    private var cancelables: Set<AnyCancellable> = []
     private let viewModelFactory: RingtoneCreatedViewModelFactory
     
     // MARK: - Methods
@@ -28,6 +36,7 @@ public final class RingtoneCreatedViewController: NiblessViewController {
     public override func viewDidLoad() {
         super.viewDidLoad()
         configureTabBarItem()
+        observeViewAction()
     }
 }
 
@@ -47,5 +56,74 @@ extension RingtoneCreatedViewController {
             localized: "My Ringtones",
             comment: "The title of the ringtone created screen."
         )
+    }
+}
+
+// MARK: - View Action
+extension RingtoneCreatedViewController {
+    private func observeViewAction() {
+        (view as! RingtoneCreatedView).$action
+            .sink { [weak self] action in
+                guard let self = self else { return }
+                switch action {
+                case .some(_):
+                    self.showImportMenu()
+                case .none:
+                    return
+                }
+            }
+            .store(in: &cancelables)
+    }
+    
+    private func showImportMenu() {
+        let alertController = UIAlertController(
+            title: "Import Media",
+            message: "Choose a source to import media from.",
+            preferredStyle: .actionSheet
+        )
+        
+        let importFromGalleryAction = RingtoneAlertAction(
+            title: "Import from Gallery",
+            style: .default
+        ) {
+            [weak self] _ in
+            
+            guard let self = self else { return }
+            
+            self.onImportFromGallery()
+        }
+        
+        let importFromFilesAction = RingtoneAlertAction(
+            title: "Import from Files",
+            style: .default
+        ) {
+            [weak self] _ in
+            
+            guard let self = self else { return }
+            
+            self.onImportFromFiles()
+        }
+        
+        let cancelAction = RingtoneAlertAction(
+            title: "Cancel",
+            style: .cancel,
+            handler: nil
+        )
+        
+        alertController.addAction(importFromGalleryAction)
+        alertController.addAction(importFromFilesAction)
+        alertController.addAction(cancelAction)
+        
+        present(alertController, animated: true, completion: nil)
+    }
+    
+    private func onImportFromGallery() {
+        let ringtoneImportFromGalleryViewController = RingtoneImportFromGalleryViewController()
+        present(ringtoneImportFromGalleryViewController, animated: true)
+    }
+    
+    private func onImportFromFiles() {
+        let ringtoneImportFromFilesViewController = RingtoneImportFromFilesViewController()
+        present(ringtoneImportFromFilesViewController, animated: true)
     }
 }
