@@ -20,7 +20,7 @@ public struct ImageTheme {
     
     // MARK: - RingtoneDiscoverAudioCell
     public let play = UIImage(systemName: "play.circle.fill")!.withConfiguration(configuration)
-    public let puase = UIImage(systemName: "pause.circle")!.withConfiguration(configuration)
+    public let pause = UIImage(systemName: "pause.circle")!.withConfiguration(configuration)
     public let like = UIImage(systemName: "heart")!
     public let unlike = UIImage(systemName: "heart.slash.circle.fill")!
     public let edit = UIImage(systemName: "gearshape")!
