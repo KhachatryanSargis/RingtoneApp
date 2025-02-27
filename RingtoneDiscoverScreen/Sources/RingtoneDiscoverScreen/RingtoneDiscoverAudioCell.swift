@@ -14,7 +14,7 @@ final class RingtoneDiscoverAudioCell: NiblessCollectionViewCell {
     var audio: RingtoneAudio? {
         didSet {
             guard let audio = audio else { return }
-            titleLabel.text = "\(audio.title) and \(audio.title)"
+            titleLabel.text = audio.title
         }
     }
     
