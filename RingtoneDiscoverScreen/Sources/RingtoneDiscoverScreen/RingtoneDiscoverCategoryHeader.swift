@@ -9,38 +9,9 @@ import UIKit
 import RingtoneUIKit
 import RingtoneKit
 
-class RingtoneDiscoverCategoryHeader: NiblessCollectionReusableView {
+final class RingtoneDiscoverCategoryHeader: NiblessCollectionReusableView {
     // MARK: - Properties
-    var categories: [RingtoneCategory] = [] {
-        didSet {
-            var snapshot = NSDiffableDataSourceSnapshot<Int, RingtoneCategory>()
-            snapshot.appendSections([0])
-            snapshot.appendItems(categories, toSection: 0)
-            
-            self.dataSource.apply(snapshot, animatingDifferences: true)
-        }
-    }
-    
-    var categorySelectionResponder: RingtoneDiscoverCategorySelectionResponder? {
-        didSet {
-            // Preselecting first category.
-            // TODO: Find a better way to do this, this causes:
-            // - UICollectionView client error: attempting to perform update while UICollectionView is updating its visible views.
-            guard collectionView.indexPathsForSelectedItems?.isEmpty == true,
-                  categories.isEmpty == false,
-                  let categorySelectionResponder = categorySelectionResponder
-            else { return }
-            
-            let category = categories[0]
-            categorySelectionResponder.selectCategory(category)
-            
-            collectionView.selectItem(
-                at: IndexPath(item: 0, section: 0),
-                animated: false,
-                scrollPosition: []
-            )
-        }
-    }
+    private var categorySelectionResponder: RingtoneDiscoverCategorySelectionResponder?
     
     private let collectionView: UICollectionView = {
         let collectionView = UICollectionView(
@@ -67,6 +38,35 @@ class RingtoneDiscoverCategoryHeader: NiblessCollectionReusableView {
     override func layoutSubviews() {
         super.layoutSubviews()
         setBlurEffect()
+    }
+    
+    func setCategories(_ categories: [RingtoneCategory], responder: RingtoneDiscoverCategorySelectionResponder) {
+        self.categorySelectionResponder = responder
+        
+        var snapshot = NSDiffableDataSourceSnapshot<Int, RingtoneCategory>()
+        snapshot.appendSections([0])
+        snapshot.appendItems(categories, toSection: 0)
+        
+        dataSource.apply(snapshot, animatingDifferences: true) { [weak self] in
+            guard let self = self else { return }
+            
+            self.preselectFirstCategory()
+        }
+    }
+    
+    private func preselectFirstCategory() {
+        guard let categorySelectionResponder = categorySelectionResponder,
+              let category = dataSource.itemIdentifier(for: .init(item: 0, section: 0)),
+              collectionView.indexPathsForSelectedItems?.isEmpty == true
+        else { return }
+        
+        categorySelectionResponder.selectCategory(category)
+        
+        collectionView.selectItem(
+            at: IndexPath(item: 0, section: 0),
+            animated: false,
+            scrollPosition: []
+        )
     }
 }
 
@@ -167,7 +167,8 @@ extension RingtoneDiscoverCategoryHeader {
 // MARK: - Collection View Delegate
 extension RingtoneDiscoverCategoryHeader: UICollectionViewDelegate {
     func collectionView(_ collectionView: UICollectionView, shouldSelectItemAt indexPath: IndexPath) -> Bool {
-        let category = categories[indexPath.item]
+        guard let category = dataSource.itemIdentifier(for: indexPath)
+        else { return false }
         return selectCategory(category)
     }
     

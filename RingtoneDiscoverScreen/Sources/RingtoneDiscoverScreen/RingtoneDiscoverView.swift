@@ -24,8 +24,6 @@ final class RingtoneDiscoverView: NiblessView {
     }()
     
     private lazy var dataSource = makeDataSource()
-    private var categories: [RingtoneCategory] = []
-    private var audios: [RingtoneAudio] = []
     private var cancellables: Set<AnyCancellable> = []
     private let viewModel: RingtoneDiscoverViewModel
     
@@ -92,12 +90,14 @@ extension RingtoneDiscoverView {
         
         let categoryHeaderRegistration = UICollectionView.SupplementaryRegistration<RingtoneDiscoverCategoryHeader>(
             elementKind: UICollectionView.elementKindSectionHeader
-        ) { [weak self] supplementaryView, elementKind, indexPath in
+        ) { [weak self] categoryHeader, elementKind, indexPath in
             
             guard let self = self else { return }
             
-            supplementaryView.categories = self.categories
-            supplementaryView.categorySelectionResponder = viewModel
+            categoryHeader.setCategories(
+                viewModel.categories,
+                responder: viewModel
+            )
         }
         
         dataSource.supplementaryViewProvider = { collectionView, kind, indexPath in
@@ -172,8 +172,6 @@ extension RingtoneDiscoverView {
             .sink { [weak self] categories in
                 guard let self = self else { return }
                 
-                self.categories = categories
-                
                 var snapshot = NSDiffableDataSourceSnapshot<Int, RingtoneAudio>()
                 snapshot.appendSections([0])
                 
@@ -188,8 +186,6 @@ extension RingtoneDiscoverView {
             .receive(on: DispatchQueue.main)
             .sink { [weak self] audios in
                 guard let self = self else { return }
-                
-                self.audios = audios
                 
                 var snapshot = NSDiffableDataSourceSnapshot<Int, RingtoneAudio>()
                 snapshot.appendSections([0])
