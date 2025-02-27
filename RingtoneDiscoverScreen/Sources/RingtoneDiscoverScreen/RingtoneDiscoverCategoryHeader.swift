@@ -169,6 +169,10 @@ extension RingtoneDiscoverCategoryHeader: UICollectionViewDelegate {
     func collectionView(_ collectionView: UICollectionView, shouldSelectItemAt indexPath: IndexPath) -> Bool {
         guard let category = dataSource.itemIdentifier(for: indexPath)
         else { return false }
+        
+        guard collectionView.indexPathsForSelectedItems?.last != indexPath
+        else { return true }
+        
         return selectCategory(category)
     }
     
