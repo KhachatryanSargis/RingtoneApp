@@ -53,21 +53,6 @@ final class RingtoneDiscoverCategoryHeader: NiblessCollectionReusableView {
             self.preselectFirstCategory()
         }
     }
-    
-    private func preselectFirstCategory() {
-        guard let categorySelectionResponder = categorySelectionResponder,
-              let category = dataSource.itemIdentifier(for: .init(item: 0, section: 0)),
-              collectionView.indexPathsForSelectedItems?.isEmpty == true
-        else { return }
-        
-        categorySelectionResponder.selectCategory(category)
-        
-        collectionView.selectItem(
-            at: IndexPath(item: 0, section: 0),
-            animated: false,
-            scrollPosition: []
-        )
-    }
 }
 
 // MARK: - Style
@@ -164,7 +149,7 @@ extension RingtoneDiscoverCategoryHeader {
     }
 }
 
-// MARK: - Collection View Delegate
+// MARK: - Selection
 extension RingtoneDiscoverCategoryHeader: UICollectionViewDelegate {
     func collectionView(_ collectionView: UICollectionView, shouldSelectItemAt indexPath: IndexPath) -> Bool {
         guard let category = dataSource.itemIdentifier(for: indexPath)
@@ -183,5 +168,20 @@ extension RingtoneDiscoverCategoryHeader: UICollectionViewDelegate {
         } else {
             return false
         }
+    }
+    
+    private func preselectFirstCategory() {
+        guard let categorySelectionResponder = categorySelectionResponder,
+              let category = dataSource.itemIdentifier(for: .init(item: 0, section: 0)),
+              collectionView.indexPathsForSelectedItems?.isEmpty == true
+        else { return }
+        
+        categorySelectionResponder.selectCategory(category)
+        
+        collectionView.selectItem(
+            at: IndexPath(item: 0, section: 0),
+            animated: false,
+            scrollPosition: []
+        )
     }
 }
