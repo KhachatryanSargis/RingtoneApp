@@ -18,6 +18,8 @@ public final class RingtoneAudioRepository: IRingtoneAudioRepository {
     
     public func getRingtoneAudiosInCategory(_ category: RingtoneCategory) -> AnyPublisher<[RingtoneAudio], RingtoneAudioRepositoryError> {
         store.getRingtoneAudiosInCategory(category)
+            .mapError { .store($0) }
+            .eraseToAnyPublisher()
     }
     
     public func getFavoriteRingtoneAudios() -> AnyPublisher<[RingtoneAudio], RingtoneAudioRepositoryError> {
@@ -28,11 +30,9 @@ public final class RingtoneAudioRepository: IRingtoneAudioRepository {
         fatalError("getCreatedRingtoneAudios not implemented")
     }
     
-    public func addRingtoneAudioToFavorites(_ audio: RingtoneAudio) -> AnyPublisher<RingtoneAudio, RingtoneAudioRepositoryError> {
-        fatalError("addRingtoneAudioToFavorites not implemented")
-    }
-    
-    public func removeRingtoneAudioFromFavorites(_ audio: RingtoneAudio) -> AnyPublisher<RingtoneAudio, RingtoneAudioRepositoryError> {
-        fatalError("removeRingtoneAudioFromFavorites not implemented")
+    public func toggleRingtoneAudioFavoriteStatus(_ audio: RingtoneAudio) -> AnyPublisher<RingtoneAudio, RingtoneAudioRepositoryError> {
+        store.toggleRingtoneAudioFavoriteStatus(audio)
+            .mapError { .store($0) }
+            .eraseToAnyPublisher()
     }
 }
