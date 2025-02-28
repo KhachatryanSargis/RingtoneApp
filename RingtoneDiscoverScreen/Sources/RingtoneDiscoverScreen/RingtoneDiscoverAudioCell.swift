@@ -6,30 +6,13 @@
 //
 
 import UIKit
-import Combine
 import RingtoneUIKit
 import RingtoneKit
 
-enum RingtoneDiscoverAudioCellAction: Equatable {
-    case playOrPause(RingtoneAudio)
-    case likeOrUnlike(RingtoneAudio)
-    case use(RingtoneAudio)
-    case edit(RingtoneAudio)
-}
-
 final class RingtoneDiscoverAudioCell: NiblessCollectionViewCell {
     // MARK: - Properties
-    var actionPublisher: AnyPublisher<RingtoneDiscoverAudioCellAction, Never> {
-        return actionSubject.eraseToAnyPublisher()
-    }
-    private var actionSubject = PassthroughSubject<RingtoneDiscoverAudioCellAction, Never>()
-    
-    var audio: RingtoneAudio? {
-        didSet {
-            guard let audio = audio else { return }
-            setAudio(audio)
-        }
-    }
+    private var audio: RingtoneAudio?
+    private var responder: RingtoneDiscoverAudioCellActionsResponder?
     
     private let stackView: UIStackView = {
         let stackView = UIStackView()
@@ -122,7 +105,7 @@ final class RingtoneDiscoverAudioCell: NiblessCollectionViewCell {
     
     override func prepareForReuse() {
         super.prepareForReuse()
-        actionSubject.send(completion: .finished)
+        
     }
 }
 
@@ -184,17 +167,17 @@ extension RingtoneDiscoverAudioCell {
 
 // MARK: - Set Audio
 extension RingtoneDiscoverAudioCell {
-    private func setAudio(_ audio: RingtoneAudio) {
+    func setAudio(_ audio: RingtoneAudio, responder: RingtoneDiscoverAudioCellActionsResponder) {
+        self.audio = audio
+        self.responder = responder
+        
         titleLabel.text = audio.title
         playPauseButton.setImage(audio.isPlaying ? .theme.pause : .theme.play, for: .normal)
         likeUnlikeButton.setImage(audio.isLiked ? .theme.liked : .theme.like, for: .normal)
-        
-        // Restart the action publisher.
-        actionSubject = PassthroughSubject<RingtoneDiscoverAudioCellAction, Never>()
     }
 }
 
-// MARK: - Actions
+// MARK: - Button Actions
 extension RingtoneDiscoverAudioCell {
     private func configureButtonTargets() {
         playPauseButton.addTarget(self, action: #selector(onPlayOrPause), for: .touchUpInside)
@@ -206,24 +189,35 @@ extension RingtoneDiscoverAudioCell {
     @objc
     private func onPlayOrPause() {
         guard let audio = audio else { return }
-        actionSubject.send(.playOrPause(audio))
+        print("onPlayOrPause")
     }
     
     @objc
     private func onLikeOrUnlike() {
-        guard let audio = audio else { return }
-        actionSubject.send(.likeOrUnlike(audio))
+        guard let responder = responder,
+              let audio = audio
+        else { return }
+        
+        responder.toggleAudioFavoriteStatus(audio)
     }
     
     @objc
     private func onUse() {
         guard let audio = audio else { return }
-        actionSubject.send(.use(audio))
+        print("onUse")
     }
     
     @objc
     private func onEdit() {
         guard let audio = audio else { return }
-        actionSubject.send(.edit(audio))
+        print("onEdit")
+    }
+}
+
+// MARK: - Cleanup
+extension RingtoneDiscoverAudioCell {
+    private func cleaup() {
+        audio = nil
+        responder = nil
     }
 }

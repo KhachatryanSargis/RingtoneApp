@@ -75,11 +75,9 @@ extension RingtoneDiscoverView {
         let audioCellRegistration = UICollectionView.CellRegistration<RingtoneDiscoverAudioCell, RingtoneAudio> {
             [weak self] cell, indexPath, audio in
             
-            cell.audio = audio
-            
             guard let self = self else { return }
             
-            self.observeAudioCellActions(cell)
+            cell.setAudio(audio, responder: self.viewModel)
         }
         
         let dataSource =  UICollectionViewDiffableDataSource<Int, RingtoneAudio>(
@@ -197,29 +195,6 @@ extension RingtoneDiscoverView {
                 snapshot.appendItems(audios, toSection: 0)
                 
                 self.dataSource.apply(snapshot, animatingDifferences: true)
-            }
-            .store(in: &cancellables)
-    }
-}
-
-// MARK: Audio Cell
-extension RingtoneDiscoverView {
-    private func observeAudioCellActions(_ cell: RingtoneDiscoverAudioCell) {
-        cell.actionPublisher
-            .removeDuplicates()
-            .sink { [weak self] action in
-                guard let self = self else { return }
-                
-                switch action {
-                case .playOrPause(let audio):
-                    print(audio)
-                case .likeOrUnlike(let audio):
-                    self.viewModel.toggleAudioFavoriteStatus(audio)
-                case .use(let audio):
-                    print(audio)
-                case .edit(let audio):
-                    print(audio)
-                }
             }
             .store(in: &cancellables)
     }
