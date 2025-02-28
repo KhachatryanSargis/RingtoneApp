@@ -6,10 +6,9 @@
 //
 
 import UIKit
-import RingtoneUIKit
 import RingtoneKit
 
-final class RingtoneDiscoverAudioCell: NiblessCollectionViewCell {
+public final class RingtoneAudioCell: NiblessCollectionViewCell {
     // MARK: - Properties
     private var audio: RingtoneAudio?
     private var playbackResponder: RingtoneAudioPlaybackStatusChangeResponder?
@@ -101,19 +100,19 @@ final class RingtoneDiscoverAudioCell: NiblessCollectionViewCell {
         configureButtonTargets()
     }
     
-    override func layoutSubviews() {
+    public override func layoutSubviews() {
         super.layoutSubviews()
         configureLayer()
     }
     
-    override func prepareForReuse() {
+    public override func prepareForReuse() {
         super.prepareForReuse()
         
     }
 }
 
 // MARK: - Style
-extension RingtoneDiscoverAudioCell {
+extension RingtoneAudioCell {
     private func setBackgroudColor() {
         backgroundColor = .theme.secondaryBackground
     }
@@ -124,7 +123,7 @@ extension RingtoneDiscoverAudioCell {
 }
 
 // MARK: - Hierarchy
-extension RingtoneDiscoverAudioCell {
+extension RingtoneAudioCell {
     private func constructHierarchy() {
         stackView.translatesAutoresizingMaskIntoConstraints = false
         contentView.addSubview(stackView)
@@ -169,8 +168,8 @@ extension RingtoneDiscoverAudioCell {
 }
 
 // MARK: - Set Audio
-extension RingtoneDiscoverAudioCell {
-    func setAudio(
+extension RingtoneAudioCell {
+    public func setAudio(
         _ audio: RingtoneAudio,
         playbackResponder: RingtoneAudioPlaybackStatusChangeResponder,
         favoriteResponder: RingtoneAudioFavoriteStatusChangeResponder,
@@ -189,7 +188,7 @@ extension RingtoneDiscoverAudioCell {
 }
 
 // MARK: - Button Actions
-extension RingtoneDiscoverAudioCell {
+extension RingtoneAudioCell {
     private func configureButtonTargets() {
         playPauseButton.addTarget(self, action: #selector(onPlayOrPause), for: .touchUpInside)
         likeUnlikeButton.addTarget(self, action: #selector(onLikeOrUnlike), for: .touchUpInside)
@@ -235,7 +234,7 @@ extension RingtoneDiscoverAudioCell {
 }
 
 // MARK: - Cleanup
-extension RingtoneDiscoverAudioCell {
+extension RingtoneAudioCell {
     private func cleaup() {
         audio = nil
         playbackResponder = nil

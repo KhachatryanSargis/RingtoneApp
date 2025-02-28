@@ -72,7 +72,7 @@ extension RingtoneDiscoverView {
     }
     
     private func makeDataSource() -> UICollectionViewDiffableDataSource<Int, RingtoneAudio> {
-        let audioCellRegistration = UICollectionView.CellRegistration<RingtoneDiscoverAudioCell, RingtoneAudio> {
+        let audioCellRegistration = UICollectionView.CellRegistration<RingtoneAudioCell, RingtoneAudio> {
             [weak self] cell, indexPath, audio in
             
             guard let self = self else { return }
