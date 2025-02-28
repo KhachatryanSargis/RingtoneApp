@@ -6,9 +6,5 @@
 //
 
 public enum RingtoneAudioRepositoryError: Error {
-    case getRingtoneAudiosInCategory
-    case getFavoriteRingtoneAudios
-    case getCreatedRingtoneAudios
-    case addRingtoneAudioToFavorites
-    case removeRingtoneAudioFromFavorites
+    case store(RingtoneAudioStoreError)
 }
