@@ -30,6 +30,22 @@ public final class RingtoneDiscoverViewModel {
         getCategories()
     }
     
+    public func toggleAudioFavoriteStatus(_ audio: RingtoneAudio) {
+        audioRepository.toggleRingtoneAudioFavoriteStatus(audio)
+            .sink { completion in
+                guard case .failure(let error) = completion else { return }
+                print(error)
+            } receiveValue: { [weak self] audio in
+                guard let self = self else { return }
+                
+                guard let index = audios.firstIndex(where: { audio.id == $0.id })
+                else { return }
+                
+                self.audios[index] = audio
+            }
+            .store(in: &cancellables)
+    }
+    
     private func getCategories() {
         categoreisRepository.getCategories()
             .sink { completion in
