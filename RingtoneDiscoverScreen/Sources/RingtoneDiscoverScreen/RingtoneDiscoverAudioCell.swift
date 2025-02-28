@@ -6,15 +6,28 @@
 //
 
 import UIKit
+import Combine
 import RingtoneUIKit
 import RingtoneKit
 
+enum RingtoneDiscoverAudioCellAction: Equatable {
+    case playOrPause(RingtoneAudio)
+    case likeOrUnlike(RingtoneAudio)
+    case use(RingtoneAudio)
+    case edit(RingtoneAudio)
+}
+
 final class RingtoneDiscoverAudioCell: NiblessCollectionViewCell {
     // MARK: - Properties
+    var actionPublisher: AnyPublisher<RingtoneDiscoverAudioCellAction, Never> {
+        return actionSubject.eraseToAnyPublisher()
+    }
+    private var actionSubject = PassthroughSubject<RingtoneDiscoverAudioCellAction, Never>()
+    
     var audio: RingtoneAudio? {
         didSet {
             guard let audio = audio else { return }
-            titleLabel.text = audio.title
+            setAudio(audio)
         }
     }
     
@@ -22,7 +35,7 @@ final class RingtoneDiscoverAudioCell: NiblessCollectionViewCell {
         let stackView = UIStackView()
         stackView.axis = .horizontal
         stackView.alignment = .center
-        stackView.spacing = 4
+        stackView.spacing = 8
         return stackView
     }()
     
@@ -75,7 +88,6 @@ final class RingtoneDiscoverAudioCell: NiblessCollectionViewCell {
         configuration.imagePlacement = .top
         let button = UIButton(configuration: configuration)
         button.setImage(.theme.like, for: .normal)
-        button.setTitle("Like", for: .normal)
         return button
     }()
     
@@ -84,7 +96,6 @@ final class RingtoneDiscoverAudioCell: NiblessCollectionViewCell {
         configuration.imagePlacement = .top
         let button = UIButton(configuration: configuration)
         button.setImage(.theme.use, for: .normal)
-        button.setTitle("Use", for: .normal)
         return button
     }()
     
@@ -93,7 +104,6 @@ final class RingtoneDiscoverAudioCell: NiblessCollectionViewCell {
         configuration.imagePlacement = .top
         let button = UIButton(configuration: configuration)
         button.setImage(.theme.edit, for: .normal)
-        button.setTitle("Edit", for: .normal)
         return button
     }()
     
@@ -102,11 +112,17 @@ final class RingtoneDiscoverAudioCell: NiblessCollectionViewCell {
         super.init(frame: frame)
         setBackgroudColor()
         constructHierarchy()
+        configureButtonTargets()
     }
     
     override func layoutSubviews() {
         super.layoutSubviews()
         configureLayer()
+    }
+    
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        actionSubject.send(completion: .finished)
     }
 }
 
@@ -127,10 +143,10 @@ extension RingtoneDiscoverAudioCell {
         stackView.translatesAutoresizingMaskIntoConstraints = false
         contentView.addSubview(stackView)
         NSLayoutConstraint.activate([
-            stackView.leftAnchor.constraint(equalTo: contentView.leftAnchor, constant: 4),
-            stackView.rightAnchor.constraint(equalTo: contentView.rightAnchor, constant: -4),
-            stackView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 4),
-            stackView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -4)
+            stackView.leftAnchor.constraint(equalTo: contentView.leftAnchor, constant: 8),
+            stackView.rightAnchor.constraint(equalTo: contentView.rightAnchor, constant: -8),
+            stackView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 8),
+            stackView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -8)
         ])
         
         titleLabel.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
@@ -140,8 +156,19 @@ extension RingtoneDiscoverAudioCell {
         titleAndDescriptionStackView.addArrangedSubview(descriptionLabel)
         
         likeUseEditStackView.addArrangedSubview(likeUnlikeButton)
+        NSLayoutConstraint.activate([
+            likeUnlikeButton.widthAnchor.constraint(equalTo: likeUnlikeButton.heightAnchor)
+        ])
+        
         likeUseEditStackView.addArrangedSubview(useButton)
+        NSLayoutConstraint.activate([
+            useButton.widthAnchor.constraint(equalTo: useButton.heightAnchor)
+        ])
+        
         likeUseEditStackView.addArrangedSubview(editButton)
+        NSLayoutConstraint.activate([
+            editButton.widthAnchor.constraint(equalTo: editButton.heightAnchor)
+        ])
         
         stackView.addArrangedSubview(playPauseButton)
         NSLayoutConstraint.activate([
@@ -152,5 +179,51 @@ extension RingtoneDiscoverAudioCell {
         stackView.addArrangedSubview(titleAndDescriptionStackView)
         
         stackView.addArrangedSubview(likeUseEditStackView)
+    }
+}
+
+// MARK: - Set Audio
+extension RingtoneDiscoverAudioCell {
+    private func setAudio(_ audio: RingtoneAudio) {
+        titleLabel.text = audio.title
+        playPauseButton.setImage(audio.isPlaying ? .theme.pause : .theme.play, for: .normal)
+        likeUnlikeButton.setImage(audio.isLiked ? .theme.liked : .theme.like, for: .normal)
+        
+        // Restart the action publisher.
+        actionSubject = PassthroughSubject<RingtoneDiscoverAudioCellAction, Never>()
+    }
+}
+
+// MARK: - Actions
+extension RingtoneDiscoverAudioCell {
+    private func configureButtonTargets() {
+        playPauseButton.addTarget(self, action: #selector(onPlayOrPause), for: .touchUpInside)
+        likeUnlikeButton.addTarget(self, action: #selector(onLikeOrUnlike), for: .touchUpInside)
+        useButton.addTarget(self, action: #selector(onUse), for: .touchUpInside)
+        editButton.addTarget(self, action: #selector(onEdit), for: .touchUpInside)
+    }
+    
+    @objc
+    private func onPlayOrPause() {
+        guard let audio = audio else { return }
+        actionSubject.send(.playOrPause(audio))
+    }
+    
+    @objc
+    private func onLikeOrUnlike() {
+        guard let audio = audio else { return }
+        actionSubject.send(.likeOrUnlike(audio))
+    }
+    
+    @objc
+    private func onUse() {
+        guard let audio = audio else { return }
+        actionSubject.send(.use(audio))
+    }
+    
+    @objc
+    private func onEdit() {
+        guard let audio = audio else { return }
+        actionSubject.send(.edit(audio))
     }
 }
