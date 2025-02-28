@@ -41,12 +41,11 @@ final class RingtoneCreatedEmptyCell: NiblessCollectionViewCell {
     }()
     
     private let importButton: UIButton = {
-        var configuration = UIButton.Configuration.borderedProminent()
+        var configuration = UIButton.Configuration.borderedTinted()
         configuration.imagePlacement = .top
-        let button = UIButton(configuration: configuration)
-        button.setImage(.theme.import, for: .normal)
-        button.setTitle("Import", for: .normal)
-        return button
+        configuration.image = .theme.import
+        configuration.title = "Import"
+        return UIButton(configuration: configuration)
     }()
     
     // MARK: - Methods
@@ -80,6 +79,9 @@ extension RingtoneCreatedEmptyCell {
         stackView.addArrangedSubview(titleLabel)
         stackView.addArrangedSubview(descriptionLabel)
         stackView.addArrangedSubview(importButton)
+        NSLayoutConstraint.activate([
+            importButton.widthAnchor.constraint(equalTo: importButton.heightAnchor)
+        ])
         
         stackView.setCustomSpacing(16, after: descriptionLabel)
     }
