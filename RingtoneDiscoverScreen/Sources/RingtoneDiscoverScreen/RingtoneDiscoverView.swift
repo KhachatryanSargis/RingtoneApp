@@ -77,7 +77,13 @@ extension RingtoneDiscoverView {
             
             guard let self = self else { return }
             
-            cell.setAudio(audio, responder: self.viewModel)
+            cell.setAudio(
+                audio,
+                playbackResponder: self.viewModel,
+                favoriteResponder: self.viewModel,
+                editResponder: self.viewModel,
+                exportResponder: self.viewModel
+            )
         }
         
         let dataSource =  UICollectionViewDiffableDataSource<Int, RingtoneAudio>(

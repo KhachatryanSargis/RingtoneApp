@@ -12,7 +12,10 @@ import RingtoneKit
 final class RingtoneDiscoverAudioCell: NiblessCollectionViewCell {
     // MARK: - Properties
     private var audio: RingtoneAudio?
-    private var responder: RingtoneDiscoverAudioCellActionsResponder?
+    private var playbackResponder: RingtoneAudioPlaybackStatusChangeResponder?
+    private var favoriteResponder: RingtoneAudioFavoriteStatusChangeResponder?
+    private var editResponder: RingtoneAudioEditResponder?
+    private var exportResponder: RingtoneAudioExportResponder?
     
     private let stackView: UIStackView = {
         let stackView = UIStackView()
@@ -167,9 +170,17 @@ extension RingtoneDiscoverAudioCell {
 
 // MARK: - Set Audio
 extension RingtoneDiscoverAudioCell {
-    func setAudio(_ audio: RingtoneAudio, responder: RingtoneDiscoverAudioCellActionsResponder) {
+    func setAudio(
+        _ audio: RingtoneAudio,
+        playbackResponder: RingtoneAudioPlaybackStatusChangeResponder,
+        favoriteResponder: RingtoneAudioFavoriteStatusChangeResponder,
+        editResponder: RingtoneAudioEditResponder,
+        exportResponder: RingtoneAudioExportResponder
+    ) {
         self.audio = audio
-        self.responder = responder
+        self.favoriteResponder = favoriteResponder
+        self.editResponder = editResponder
+        self.exportResponder = exportResponder
         
         titleLabel.text = audio.title
         playPauseButton.setImage(audio.isPlaying ? .theme.pause : .theme.play, for: .normal)
@@ -188,29 +199,38 @@ extension RingtoneDiscoverAudioCell {
     
     @objc
     private func onPlayOrPause() {
-        guard let audio = audio else { return }
-        print("onPlayOrPause")
+        guard let responder = playbackResponder,
+              let audio = audio
+        else { return }
+        
+        responder.ringtoneAudioPlaybackStatusChange(audio)
     }
     
     @objc
     private func onLikeOrUnlike() {
-        guard let responder = responder,
+        guard let responder = favoriteResponder,
               let audio = audio
         else { return }
         
-        responder.toggleAudioFavoriteStatus(audio)
+        responder.ringtoneAudioFavoriteStatusChange(audio)
     }
     
     @objc
     private func onUse() {
-        guard let audio = audio else { return }
-        print("onUse")
+        guard let responder = exportResponder,
+              let audio = audio
+        else { return }
+        
+        responder.exportRingtoneAudio(audio)
     }
     
     @objc
     private func onEdit() {
-        guard let audio = audio else { return }
-        print("onEdit")
+        guard let responder = editResponder,
+              let audio = audio
+        else { return }
+        
+        responder.ringtoneAudioEdit(audio)
     }
 }
 
@@ -218,6 +238,9 @@ extension RingtoneDiscoverAudioCell {
 extension RingtoneDiscoverAudioCell {
     private func cleaup() {
         audio = nil
-        responder = nil
+        playbackResponder = nil
+        favoriteResponder = nil
+        exportResponder = nil
+        editResponder = nil
     }
 }

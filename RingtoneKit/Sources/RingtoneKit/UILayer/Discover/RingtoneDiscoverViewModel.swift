@@ -62,9 +62,16 @@ extension RingtoneDiscoverViewModel: RingtoneDiscoverCategorySelectionResponder 
     }
 }
 
-// MARK: - RingtoneDiscoverAudioCellActionsResponder
-extension RingtoneDiscoverViewModel: RingtoneDiscoverAudioCellActionsResponder {
-    public func toggleAudioFavoriteStatus(_ audio: RingtoneAudio) {
+// MARK: - RingtoneAudioPlaybackStatusChangeResponder
+extension RingtoneDiscoverViewModel: RingtoneAudioPlaybackStatusChangeResponder {
+    public func ringtoneAudioPlaybackStatusChange(_ audio: RingtoneAudio) {
+        print("ringtoneAudioPlaybackStatusChange")
+    }
+}
+
+// MARK: - RingtoneAudioFavoriteStatusChangeResponder
+extension RingtoneDiscoverViewModel: RingtoneAudioFavoriteStatusChangeResponder {
+    public func ringtoneAudioFavoriteStatusChange(_ audio: RingtoneAudio) {
         audioRepository.toggleRingtoneAudioFavoriteStatus(audio)
             .sink { completion in
                 guard case .failure(let error) = completion else { return }
@@ -78,5 +85,19 @@ extension RingtoneDiscoverViewModel: RingtoneDiscoverAudioCellActionsResponder {
                 self.audios[index] = audio
             }
             .store(in: &cancellables)
+    }
+}
+
+// MARK: - RingtoneAudioExportResponder
+extension RingtoneDiscoverViewModel: RingtoneAudioExportResponder {
+    public func exportRingtoneAudio(_ audio: RingtoneAudio) {
+        print("exportRingtoneAudio")
+    }
+}
+
+// MARK: - RingtoneAudioEditResponder
+extension RingtoneDiscoverViewModel: RingtoneAudioEditResponder {
+    public func ringtoneAudioEdit(_ audio: RingtoneAudio) {
+        print("ringtoneAudioEdit")
     }
 }
