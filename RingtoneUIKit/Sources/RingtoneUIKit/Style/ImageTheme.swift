@@ -22,9 +22,9 @@ public struct ImageTheme {
     public let play = UIImage(systemName: "play.circle.fill")!.withConfiguration(configuration)
     public let pause = UIImage(systemName: "pause.circle")!.withConfiguration(configuration)
     public let like = UIImage(systemName: "heart")!
-    public let unlike = UIImage(systemName: "heart.slash.circle.fill")!
+    public let liked = UIImage(systemName: "heart.fill")!
     public let edit = UIImage(systemName: "gearshape")!
-    public let use = UIImage(systemName: "plus.app")!
+    public let use = UIImage(systemName: "square.and.arrow.up")!
     
     // MARK: - RingtoneDiscoverViewContrller
     public let discover = UIImage(systemName: "waveform.badge.magnifyingglass")!
