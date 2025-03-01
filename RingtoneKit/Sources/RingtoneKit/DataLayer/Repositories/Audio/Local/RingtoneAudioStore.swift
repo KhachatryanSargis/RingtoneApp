@@ -19,7 +19,7 @@ public final class RingtoneAudioStore: IRingtoneAudioStore {
     }
     
     public func getFavoriteRingtoneAudios() -> AnyPublisher<[RingtoneAudio], RingtoneAudioStoreError> {
-        let filteredAudios = ringtoneAudios.filter { $0.isLiked }
+        let filteredAudios = ringtoneAudios.filter { $0.isFavorite }
         return Just(filteredAudios)
             .setFailureType(to: RingtoneAudioStoreError.self)
             .eraseToAnyPublisher()
