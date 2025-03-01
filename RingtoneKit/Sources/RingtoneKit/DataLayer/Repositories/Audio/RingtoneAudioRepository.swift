@@ -23,11 +23,15 @@ public final class RingtoneAudioRepository: IRingtoneAudioRepository {
     }
     
     public func getFavoriteRingtoneAudios() -> AnyPublisher<[RingtoneAudio], RingtoneAudioRepositoryError> {
-        fatalError("getFavoriteRingtoneAudios not implemented")
+        store.getFavoriteRingtoneAudios()
+            .mapError { .store($0) }
+            .eraseToAnyPublisher()
     }
     
     public func getCreatedRingtoneAudios() -> AnyPublisher<[RingtoneAudio], RingtoneAudioRepositoryError> {
-        fatalError("getCreatedRingtoneAudios not implemented")
+        store.getCreatedRingtoneAudios()
+            .mapError { .store($0) }
+            .eraseToAnyPublisher()
     }
     
     public func toggleRingtoneAudioFavoriteStatus(_ audio: RingtoneAudio) -> AnyPublisher<RingtoneAudio, RingtoneAudioRepositoryError> {
