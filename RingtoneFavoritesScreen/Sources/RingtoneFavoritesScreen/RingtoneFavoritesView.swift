@@ -121,7 +121,7 @@ extension RingtoneFavoritesView {
             
             let section = NSCollectionLayoutSection(group: group)
             section.interGroupSpacing = 8
-            section.contentInsets = .init(top: 16, leading: 0, bottom: 16, trailing: 0)
+            section.contentInsets = .init(top: 0, leading: 0, bottom: 16, trailing: 0)
             
             return section
         }
@@ -147,7 +147,9 @@ extension RingtoneFavoritesView {
     private func observeAudios() {
         viewModel.$audios
             .receive(on: DispatchQueue.main)
-            .sink { [weak self] audios in
+            .sink(receiveCompletion: { completion in
+                print(completion)
+            }, receiveValue: { [weak self] audios in
                 guard let self = self else { return }
                 
                 var snapshot = NSDiffableDataSourceSnapshot<Int, RingtoneAudio>()
@@ -155,7 +157,7 @@ extension RingtoneFavoritesView {
                 snapshot.appendItems(audios, toSection: 0)
                 
                 self.dataSource.apply(snapshot, animatingDifferences: true)
-            }
+            })
             .store(in: &cancellables)
     }
 }
