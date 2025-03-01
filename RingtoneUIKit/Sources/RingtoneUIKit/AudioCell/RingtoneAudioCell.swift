@@ -183,7 +183,7 @@ extension RingtoneAudioCell {
         
         titleLabel.text = audio.title
         playPauseButton.setImage(audio.isPlaying ? .theme.pause : .theme.play, for: .normal)
-        likeUnlikeButton.setImage(audio.isLiked ? .theme.liked : .theme.like, for: .normal)
+        likeUnlikeButton.setImage(audio.isFavorite ? .theme.liked : .theme.like, for: .normal)
     }
 }
 
@@ -211,7 +211,7 @@ extension RingtoneAudioCell {
               let audio = audio
         else { return }
         
-        responder.ringtoneAudioFavoriteStatusChange(audio)
+        responder.changeAudioFavoriteStatus(audio)
     }
     
     @objc
