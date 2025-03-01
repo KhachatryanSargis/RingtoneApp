@@ -15,7 +15,7 @@ public struct RingtoneAudio: Identifiable, Equatable, Hashable, Sendable {
     public let categoryID: String
     public let isCreated: Bool
     public let isPlaying: Bool
-    public let isLiked: Bool
+    public let isFavorite: Bool
     
     public init(
         title: String,
@@ -28,7 +28,7 @@ public struct RingtoneAudio: Identifiable, Equatable, Hashable, Sendable {
         self.categoryID = categoryID
         self.isCreated = isCreated
         self.isPlaying = isPlaying
-        self.isLiked = isLiked
+        self.isFavorite = isLiked
     }
 }
 
@@ -40,7 +40,7 @@ extension RingtoneAudio {
             categoryID: self.categoryID,
             isCreated: self.isCreated,
             isPlaying: self.isPlaying,
-            isLiked: self.isLiked ? false : true
+            isLiked: self.isFavorite ? false : true
         )
     }
 }
