@@ -80,7 +80,7 @@ extension RingtoneDiscoverView {
             cell.setAudio(
                 audio,
                 playbackResponder: self.viewModel,
-                favoriteResponder: self.viewModel,
+                favoriteResponder: self.viewModel.audioFavoriteStatusChangeResponder,
                 editResponder: self.viewModel,
                 exportResponder: self.viewModel
             )
