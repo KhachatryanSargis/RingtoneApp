@@ -19,7 +19,10 @@ public final class RingtoneAudioStore: IRingtoneAudioStore {
     }
     
     public func getFavoriteRingtoneAudios() -> AnyPublisher<[RingtoneAudio], RingtoneAudioStoreError> {
-        fatalError("getFavoriteRingtoneAudios not implemented")
+        let filteredAudios = ringtoneAudios.filter { $0.isLiked }
+        return Just(filteredAudios)
+            .setFailureType(to: RingtoneAudioStoreError.self)
+            .eraseToAnyPublisher()
     }
     
     public func getCreatedRingtoneAudios() -> AnyPublisher<[RingtoneAudio], RingtoneAudioStoreError> {
