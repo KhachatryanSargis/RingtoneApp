@@ -12,16 +12,28 @@ import RingtoneCreatedScreen
 
 public final class AppDependencyContainer {
     // MARK: - Properties
-    private let categoreisRepository: IRingtoneCategoriesRepository
-    private let audioRepository: IRingtoneAudioRepository
+    private let discoverViewModel: RingtoneDiscoverViewModel
+    private let favoritesViewModel: RingtoneFavoritesViewModel
     
     // MARK: - Methods
     public init () {
-        let ringtoneCategoriesStore = RingtoneCategoriesStore()
-        self.categoreisRepository = RingtoneCategoriesRepository(store: ringtoneCategoriesStore)
+        let ringtoneCategoriesRepository = RingtoneCategoriesRepository(
+            store: RingtoneCategoriesStore()
+        )
         
-        let ringtoneAudioStore = RingtoneAudioStore()
-        self.audioRepository = RingtoneAudioRepository(store: ringtoneAudioStore)
+        let ringtoneAudioRepository = RingtoneAudioRepository(
+            store: RingtoneAudioStore()
+        )
+        
+        favoritesViewModel = RingtoneFavoritesViewModel(
+            audioRepository: ringtoneAudioRepository
+        )
+        
+        discoverViewModel = RingtoneDiscoverViewModel(
+            categoreisRepository: ringtoneCategoriesRepository,
+            audioRepository: ringtoneAudioRepository,
+            audiofavoriteStatusChangeResponder: favoritesViewModel
+        )
     }
 }
 
@@ -35,10 +47,7 @@ extension AppDependencyContainer: RingtoneDiscoverViewModelFactory {
     
     // MARK: - DiscoverViewModelFactory
     public func makeRingtoneDiscoverViewModel() -> RingtoneDiscoverViewModel {
-        RingtoneDiscoverViewModel(
-            categoreisRepository: categoreisRepository,
-            audioRepository: audioRepository
-        )
+        return discoverViewModel
     }
 }
 
@@ -50,7 +59,7 @@ extension AppDependencyContainer: RingtoneFavoritesViewModelFactory {
     }
     
     public func makeRingtoneFavoritesViewModelFactory() -> RingtoneFavoritesViewModel {
-        RingtoneFavoritesViewModel(audioRepository: audioRepository)
+        return favoritesViewModel
     }
 }
 
