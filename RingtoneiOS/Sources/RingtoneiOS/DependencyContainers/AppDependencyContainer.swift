@@ -43,10 +43,14 @@ extension AppDependencyContainer: RingtoneDiscoverViewModelFactory {
 }
 
 // MARK: - Ringtone
-extension AppDependencyContainer {
+extension AppDependencyContainer: RingtoneFavoritesViewModelFactory {
     @MainActor
     internal func makeRingtoneFavoritesViewController() -> RingtoneFavoritesViewController {
-        RingtoneFavoritesViewController()
+        RingtoneFavoritesViewController(viewModelFactory: self)
+    }
+    
+    public func makeRingtoneFavoritesViewModelFactory() -> RingtoneFavoritesViewModel {
+        RingtoneFavoritesViewModel(audioRepository: audioRepository)
     }
 }
 
