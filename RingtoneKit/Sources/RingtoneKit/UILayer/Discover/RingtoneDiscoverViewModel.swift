@@ -16,6 +16,7 @@ public final class RingtoneDiscoverViewModel {
     @Published public private(set) var categories: [RingtoneCategory] = []
     @Published public private(set) var audios: [RingtoneAudio] = []
     
+    public let audioFavoriteStatusChangeResponder: RingtoneAudioFavoriteStatusChangeResponder
     private var cancellables: Set<AnyCancellable> = []
     private let categoreisRepository: IRingtoneCategoriesRepository
     private let audioRepository: IRingtoneAudioRepository
@@ -23,11 +24,15 @@ public final class RingtoneDiscoverViewModel {
     // MARK: - Methods
     public init(
         categoreisRepository: IRingtoneCategoriesRepository,
-        audioRepository: IRingtoneAudioRepository
+        audioRepository: IRingtoneAudioRepository,
+        audiofavoriteStatusChangeResponder: RingtoneAudioFavoriteStatusChangeResponder
     ) {
         self.categoreisRepository = categoreisRepository
         self.audioRepository = audioRepository
+        self.audioFavoriteStatusChangeResponder = audiofavoriteStatusChangeResponder
+        
         getCategories()
+        observeFavoriteAudios()
     }
     
     private func getCategories() {
@@ -55,6 +60,30 @@ public final class RingtoneDiscoverViewModel {
     }
 }
 
+// MARK: - Sync Favorite Audios
+extension RingtoneDiscoverViewModel {
+    private func observeFavoriteAudios() {
+        audioFavoriteStatusChangeResponder.audiosPublisher
+            .sink { [weak self] favoriteAudios in
+                guard let self = self else { return }
+                
+                var audios = self.audios
+                
+                for (index, audio) in audios.enumerated() {
+                    if let favoriteIndex = favoriteAudios.firstIndex(where: { audio.id == $0.id }) {
+                        audios[index] = favoriteAudios[favoriteIndex]
+                    } else {
+                        guard audio.isFavorite else { continue }
+                        audios[index] = audio.likeToggled()
+                    }
+                }
+                
+                self.audios = audios
+            }
+            .store(in: &cancellables)
+    }
+}
+
 // MARK: - RingtoneDiscoverCategorySelectionResponder
 extension RingtoneDiscoverViewModel: RingtoneDiscoverCategorySelectionResponder {
     public func selectCategory(_ category: RingtoneCategory) {
@@ -66,25 +95,6 @@ extension RingtoneDiscoverViewModel: RingtoneDiscoverCategorySelectionResponder 
 extension RingtoneDiscoverViewModel: RingtoneAudioPlaybackStatusChangeResponder {
     public func ringtoneAudioPlaybackStatusChange(_ audio: RingtoneAudio) {
         print("ringtoneAudioPlaybackStatusChange")
-    }
-}
-
-// MARK: - RingtoneAudioFavoriteStatusChangeResponder
-extension RingtoneDiscoverViewModel: RingtoneAudioFavoriteStatusChangeResponder {
-    public func ringtoneAudioFavoriteStatusChange(_ audio: RingtoneAudio) {
-        audioRepository.toggleRingtoneAudioFavoriteStatus(audio)
-            .sink { completion in
-                guard case .failure(let error) = completion else { return }
-                print(error)
-            } receiveValue: { [weak self] audio in
-                guard let self = self else { return }
-                
-                guard let index = audios.firstIndex(where: { audio.id == $0.id })
-                else { return }
-                
-                self.audios[index] = audio
-            }
-            .store(in: &cancellables)
     }
 }
 
