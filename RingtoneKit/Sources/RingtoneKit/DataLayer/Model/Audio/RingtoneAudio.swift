@@ -92,3 +92,16 @@ extension RingtoneAudio {
         )
     }
 }
+
+// MARK: - Empty
+extension RingtoneAudio {
+    public static var empty: RingtoneAudio {
+        .init(
+            title: "",
+            categoryID: "",
+            isCreated: false,
+            isPlaying: false,
+            isLiked: false
+        )
+    }
+}
