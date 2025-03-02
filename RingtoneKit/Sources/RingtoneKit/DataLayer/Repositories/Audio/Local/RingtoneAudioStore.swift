@@ -12,28 +12,28 @@ public final class RingtoneAudioStore: IRingtoneAudioStore {
     public init() {}
     
     public func getRingtoneAudiosInCategory(_ category: RingtoneCategory) -> AnyPublisher<[RingtoneAudio], RingtoneAudioStoreError> {
-        let filteredAudios = ringtoneAudios.filter { $0.categoryID == category.displayName }
+        let filteredAudios = items.filter { $0.categoryID == category.displayName }.map { $0.convertToAudio() }
         return Just(filteredAudios)
             .setFailureType(to: RingtoneAudioStoreError.self)
             .eraseToAnyPublisher()
     }
     
     public func getFavoriteRingtoneAudios() -> AnyPublisher<[RingtoneAudio], RingtoneAudioStoreError> {
-        let filteredAudios = ringtoneAudios.filter { $0.isFavorite }
+        let filteredAudios = items.filter { $0.isFavorite }.map { $0.convertToAudio() }
         return Just(filteredAudios)
             .setFailureType(to: RingtoneAudioStoreError.self)
             .eraseToAnyPublisher()
     }
     
     public func getCreatedRingtoneAudios() -> AnyPublisher<[RingtoneAudio], RingtoneAudioStoreError> {
-        let filteredAudios = ringtoneAudios.filter { $0.isCreated }
+        let filteredAudios = items.filter { $0.isCreated }.map { $0.convertToAudio() }
         return Just(filteredAudios)
             .setFailureType(to: RingtoneAudioStoreError.self)
             .eraseToAnyPublisher()
     }
     
     public func toggleRingtoneAudioFavoriteStatus(_ audio: RingtoneAudio) -> AnyPublisher<RingtoneAudio, RingtoneAudioStoreError> {
-        guard let audioIndex = ringtoneAudios.firstIndex(where: { audio.id == $0.id })
+        guard let audioIndex = items.firstIndex(where: { audio.id == $0.id })
         else {
             return Fail<RingtoneAudio, RingtoneAudioStoreError>(
                 error: .toggleRingtoneAudioFavoriteStatus
@@ -41,9 +41,9 @@ public final class RingtoneAudioStore: IRingtoneAudioStore {
             .eraseToAnyPublisher()
         }
         
-        let updatedAudio = audio.likeToggled()
+        let updatedAudio = audio.isFavorite ? audio.unliked() : audio.liked()
         
-        ringtoneAudios[audioIndex] = updatedAudio
+        items[audioIndex] = .constrcutFromAudio(updatedAudio)
         
         return Just(updatedAudio)
             .setFailureType(to: RingtoneAudioStoreError.self)
@@ -51,7 +51,7 @@ public final class RingtoneAudioStore: IRingtoneAudioStore {
     }
     
     // MARK: - Mock Ringtone Audios
-    private var ringtoneAudios: [RingtoneAudio] = [
+    private var items: [RingtoneAudioStoreItem] = [
         // MARK: - Trending
         .init(title: "Ringtone 1 in Trending", categoryID: "Trending"),
         .init(title: "Ringtone 2 in Trending", categoryID: "Trending"),
