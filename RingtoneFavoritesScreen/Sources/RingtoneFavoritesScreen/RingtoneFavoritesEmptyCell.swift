@@ -40,6 +40,12 @@ final class RingtoneFavoritesEmptyCell: NiblessCollectionViewCell {
         return label
     }()
     
+    private let imageView: UIImageView = {
+        let imageView = UIImageView()
+        imageView.image = .theme.liked
+        return imageView
+    }()
+    
     // MARK: - Methods
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -61,13 +67,16 @@ extension RingtoneFavoritesEmptyCell {
         contentView.addSubview(stackView)
         
         NSLayoutConstraint.activate([
-            stackView.leftAnchor.constraint(equalTo: contentView.leftAnchor, constant: 4),
-            stackView.rightAnchor.constraint(equalTo: contentView.rightAnchor, constant: -4),
-            stackView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 4),
-            stackView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -4)
+            stackView.leftAnchor.constraint(equalTo: contentView.leftAnchor, constant: 16),
+            stackView.rightAnchor.constraint(equalTo: contentView.rightAnchor, constant: -16),
+            stackView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 16),
+            stackView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -16)
         ])
         
         stackView.addArrangedSubview(titleLabel)
         stackView.addArrangedSubview(descriptionLabel)
+        stackView.addArrangedSubview(imageView)
+        
+        stackView.setCustomSpacing(16, after: descriptionLabel)
     }
 }
