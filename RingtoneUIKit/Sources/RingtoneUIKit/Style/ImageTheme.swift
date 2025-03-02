@@ -21,19 +21,19 @@ public struct ImageTheme {
     // MARK: - RingtoneDiscoverAudioCell
     public let play = UIImage(systemName: "play.circle.fill")!.withConfiguration(configuration)
     public let pause = UIImage(systemName: "pause.circle")!.withConfiguration(configuration)
-    public let like = UIImage(systemName: "heart")!
-    public let liked = UIImage(systemName: "heart.fill")!
-    public let edit = UIImage(systemName: "gearshape")!
-    public let use = UIImage(systemName: "square.and.arrow.up")!
+    public let like = UIImage(systemName: "heart")!.withConfiguration(configuration)
+    public let liked = UIImage(systemName: "heart.fill")!.withConfiguration(configuration)
+    public let edit = UIImage(systemName: "gearshape")!.withConfiguration(configuration)
+    public let use = UIImage(systemName: "square.and.arrow.up")!.withConfiguration(configuration)
     
     // MARK: - RingtoneDiscoverViewContrller
-    public let discover = UIImage(systemName: "waveform.badge.magnifyingglass")!
+    public let discover = UIImage(systemName: "waveform.badge.magnifyingglass")!.withConfiguration(configuration)
     
     // MARK: - RingtoneFavoritesViewContrller
-    public let favorites = UIImage(systemName: "heart.square")!
+    public let favorites = UIImage(systemName: "heart.square")!.withConfiguration(configuration)
     
     // MARK: - RingtoneCreatedViewContrller
-    public let myRingtones = UIImage(systemName: "music.note.house")
+    public let myRingtones = UIImage(systemName: "music.note.house")!.withConfiguration(configuration)
     
     // MARK: - RingtoneCreatedEmptyCell
     public let `import` = UIImage(systemName: "square.and.arrow.down")!.withConfiguration(configuration)
