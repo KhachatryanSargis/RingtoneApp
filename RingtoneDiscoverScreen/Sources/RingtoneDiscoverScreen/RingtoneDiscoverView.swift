@@ -20,6 +20,7 @@ final class RingtoneDiscoverView: NiblessView {
         collectionView.showsVerticalScrollIndicator = false
         collectionView.showsHorizontalScrollIndicator = false
         collectionView.backgroundColor = .clear
+        collectionView.allowsSelection = false
         return collectionView
     }()
     
@@ -64,7 +65,7 @@ extension RingtoneDiscoverView {
 extension RingtoneDiscoverView {
     private func setCollectionViewDataSourceAndDelegate() {
         collectionView.dataSource = dataSource
-        collectionView.delegate = self
+//        collectionView.delegate = self
     }
     
     private func setCollectionViewLayout() {
@@ -161,12 +162,12 @@ extension RingtoneDiscoverView {
 }
 
 // MARK: - Collection View Delegate
-extension RingtoneDiscoverView: UICollectionViewDelegate {
-    func collectionView(_ collectionView: UICollectionView, shouldSelectItemAt indexPath: IndexPath) -> Bool {
-        // TODO: Think of a usecase.
-        return true
-    }
-}
+//extension RingtoneDiscoverView: UICollectionViewDelegate {
+//    func collectionView(_ collectionView: UICollectionView, shouldSelectItemAt indexPath: IndexPath) -> Bool {
+//        // TODO: Think of a usecase.
+//        return true
+//    }
+//}
 
 // MARK: - View Model
 extension RingtoneDiscoverView {
