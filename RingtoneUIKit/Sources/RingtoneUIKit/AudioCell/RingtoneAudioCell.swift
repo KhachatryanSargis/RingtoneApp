@@ -107,7 +107,7 @@ public final class RingtoneAudioCell: NiblessCollectionViewCell {
     
     public override func prepareForReuse() {
         super.prepareForReuse()
-        
+        cleaup()
     }
 }
 
@@ -177,6 +177,7 @@ extension RingtoneAudioCell {
         exportResponder: RingtoneAudioExportResponder
     ) {
         self.audio = audio
+        self.playbackResponder = playbackResponder
         self.favoriteResponder = favoriteResponder
         self.editResponder = editResponder
         self.exportResponder = exportResponder
