@@ -25,14 +25,18 @@ public final class AppDependencyContainer {
             store: RingtoneAudioStore()
         )
         
+        let audioPlayer = RingtoneAudioPlayer()
+        
         favoritesViewModel = RingtoneFavoritesViewModel(
-            audioRepository: ringtoneAudioRepository
+            audioRepository: ringtoneAudioRepository,
+            audioPlayer: audioPlayer
         )
         
         discoverViewModel = RingtoneDiscoverViewModel(
             categoreisRepository: ringtoneCategoriesRepository,
             audioRepository: ringtoneAudioRepository,
-            audiofavoriteStatusChangeResponder: favoritesViewModel
+            audiofavoriteStatusChangeResponder: favoritesViewModel,
+            audioPlayer: audioPlayer
         )
     }
 }
