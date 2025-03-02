@@ -10,6 +10,11 @@ import Combine
 import RingtoneUIKit
 import RingtoneKit
 
+fileprivate enum RingtoneFavoritesViewSection: Int {
+    case audios
+    case empty
+}
+
 final class RingtoneFavoritesView: NiblessView {
     // MARK: - Properties
     private let collectionView: UICollectionView = {
@@ -71,7 +76,7 @@ extension RingtoneFavoritesView {
         collectionView.collectionViewLayout = makeLayout()
     }
     
-    private func makeDataSource() -> UICollectionViewDiffableDataSource<Int, RingtoneAudio> {
+    private func makeDataSource() -> UICollectionViewDiffableDataSource<RingtoneFavoritesViewSection, RingtoneAudio> {
         let audioCellRegistration = UICollectionView.CellRegistration<RingtoneAudioCell, RingtoneAudio> {
             [weak self] cell, indexPath, audio in
             
@@ -86,15 +91,31 @@ extension RingtoneFavoritesView {
             )
         }
         
-        let dataSource =  UICollectionViewDiffableDataSource<Int, RingtoneAudio>(
+        let emptyCellRegistration = UICollectionView.CellRegistration<RingtoneFavoritesEmptyCell, RingtoneAudio> {
+            cell, indexPath, audio in
+        }
+        
+        let dataSource =  UICollectionViewDiffableDataSource<RingtoneFavoritesViewSection, RingtoneAudio>(
             collectionView: collectionView
         ) { collectionView, indexPath, audio in
             
-            collectionView.dequeueConfiguredReusableCell(
-                using: audioCellRegistration,
-                for: indexPath,
-                item: audio
-            )
+            guard let section = RingtoneFavoritesViewSection(rawValue: indexPath.section)
+            else { fatalError("unexpected favorites view section") }
+            
+            switch section {
+            case .audios:
+                return collectionView.dequeueConfiguredReusableCell(
+                    using: audioCellRegistration,
+                    for: indexPath,
+                    item: audio
+                )
+            case .empty:
+                return collectionView.dequeueConfiguredReusableCell(
+                    using: emptyCellRegistration,
+                    for: indexPath,
+                    item: audio
+                )
+            }
         }
         
         return dataSource
@@ -102,12 +123,27 @@ extension RingtoneFavoritesView {
     
     private func makeLayout() -> UICollectionViewCompositionalLayout {
         let layout = UICollectionViewCompositionalLayout { sectionIndex, environment in
-            let item = NSCollectionLayoutItem(
-                layoutSize: NSCollectionLayoutSize(
-                    widthDimension: .fractionalWidth(1),
-                    heightDimension: .fractionalHeight(1)
+            guard let favoritesViewSection = RingtoneFavoritesViewSection(rawValue: sectionIndex)
+            else { fatalError("unexpected favorites view section") }
+            
+            let item: NSCollectionLayoutItem
+            
+            switch favoritesViewSection {
+            case .audios:
+                item = NSCollectionLayoutItem(
+                    layoutSize: NSCollectionLayoutSize(
+                        widthDimension: .fractionalWidth(1),
+                        heightDimension: .fractionalHeight(1)
+                    )
                 )
-            )
+            case .empty:
+                item = NSCollectionLayoutItem(
+                    layoutSize: NSCollectionLayoutSize(
+                        widthDimension: .fractionalWidth(1),
+                        heightDimension: .estimated(100)
+                    )
+                )
+            }
             
             let group = NSCollectionLayoutGroup.vertical(
                 layoutSize: NSCollectionLayoutSize(
@@ -152,9 +188,15 @@ extension RingtoneFavoritesView {
             }, receiveValue: { [weak self] audios in
                 guard let self = self else { return }
                 
-                var snapshot = NSDiffableDataSourceSnapshot<Int, RingtoneAudio>()
-                snapshot.appendSections([0])
-                snapshot.appendItems(audios, toSection: 0)
+                var snapshot = NSDiffableDataSourceSnapshot<RingtoneFavoritesViewSection, RingtoneAudio>()
+                
+                snapshot.appendSections([.audios, .empty])
+                
+                if audios.isEmpty {
+                    snapshot.appendItems([.empty], toSection: .empty)
+                } else {
+                    snapshot.appendItems(audios, toSection: .audios)
+                }
                 
                 self.dataSource.apply(snapshot, animatingDifferences: true)
             })
