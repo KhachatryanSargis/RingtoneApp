@@ -7,10 +7,25 @@
 
 import Foundation
 
-public struct RingtoneAudio: Identifiable, Equatable, Hashable, Sendable {
+public struct RingtoneAudio: Equatable, Hashable, Sendable {
     public var id: String {
         return title
     }
+    
+    public var url: URL {
+        let fileManager = FileManager.default
+        
+        let documentsDirectory = fileManager.urls(
+            for: .documentDirectory,
+            in: .userDomainMask
+        ).first!
+        
+        return documentsDirectory.appendingPathComponent(
+            "tiktok",
+            conformingTo: .mp3
+        )
+    }
+    
     public let title: String
     public let categoryID: String
     public let isCreated: Bool
@@ -34,13 +49,46 @@ public struct RingtoneAudio: Identifiable, Equatable, Hashable, Sendable {
 
 // MARK: - Like, Unlike
 extension RingtoneAudio {
-    public func likeToggled() -> RingtoneAudio {
+    public func liked() -> RingtoneAudio {
         RingtoneAudio(
             title: self.title,
             categoryID: self.categoryID,
             isCreated: self.isCreated,
             isPlaying: self.isPlaying,
-            isLiked: self.isFavorite ? false : true
+            isLiked: true
+        )
+    }
+    
+    public func unliked() -> RingtoneAudio {
+        RingtoneAudio(
+            title: self.title,
+            categoryID: self.categoryID,
+            isCreated: self.isCreated,
+            isPlaying: self.isPlaying,
+            isLiked: false
+        )
+    }
+}
+
+// MARK: - Play, Pause
+extension RingtoneAudio {
+    public func played() -> RingtoneAudio {
+        RingtoneAudio(
+            title: self.title,
+            categoryID: self.categoryID,
+            isCreated: self.isCreated,
+            isPlaying: true,
+            isLiked: self.isFavorite
+        )
+    }
+    
+    public func paused() -> RingtoneAudio {
+        RingtoneAudio(
+            title: self.title,
+            categoryID: self.categoryID,
+            isCreated: self.isCreated,
+            isPlaying: false,
+            isLiked: self.isFavorite
         )
     }
 }
