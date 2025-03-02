@@ -20,10 +20,7 @@ public struct RingtoneAudio: Equatable, Hashable, Sendable {
             in: .userDomainMask
         ).first!
         
-        return documentsDirectory.appendingPathComponent(
-            "tiktok",
-            conformingTo: .mp3
-        )
+        return documentsDirectory.appendingPathComponent("tiktok.m4a")
     }
     
     public let title: String
