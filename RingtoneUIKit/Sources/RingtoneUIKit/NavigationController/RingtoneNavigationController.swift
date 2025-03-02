@@ -15,7 +15,7 @@ public final class RingtoneNavigationController: NiblessNavigationController {
             super.init()
         }
 //        setNavigationBarAppearance()
-//        if prefersLargeTitles { setNavigationBarprefersLargeTitles() }
+        if prefersLargeTitles { setNavigationBarprefersLargeTitles() }
     }
 }
 
