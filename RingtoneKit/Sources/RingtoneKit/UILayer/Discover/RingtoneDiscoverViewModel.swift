@@ -11,8 +11,14 @@ public protocol RingtoneDiscoverViewModelFactory {
     func makeRingtoneDiscoverViewModel() -> RingtoneDiscoverViewModel
 }
 
+public enum RingtoneDiscoverViewModelAction {
+    case export(RingtoneAudio)
+    case edit(RingtoneAudio)
+}
+
 public final class RingtoneDiscoverViewModel {
     // MARK: - Properties
+    @Published public private(set) var action: RingtoneDiscoverViewModelAction?
     @Published public private(set) var categories: [RingtoneCategory] = []
     @Published public private(set) var audios: [RingtoneAudio] = []
     
@@ -155,13 +161,13 @@ extension RingtoneDiscoverViewModel: RingtoneAudioPlaybackStatusChangeResponder 
 // MARK: - RingtoneAudioExportResponder
 extension RingtoneDiscoverViewModel: RingtoneAudioExportResponder {
     public func exportRingtoneAudio(_ audio: RingtoneAudio) {
-        print("exportRingtoneAudio")
+        action = .export(audio)
     }
 }
 
 // MARK: - RingtoneAudioEditResponder
 extension RingtoneDiscoverViewModel: RingtoneAudioEditResponder {
     public func ringtoneAudioEdit(_ audio: RingtoneAudio) {
-        print("ringtoneAudioEdit")
+        action = .edit(audio)
     }
 }
