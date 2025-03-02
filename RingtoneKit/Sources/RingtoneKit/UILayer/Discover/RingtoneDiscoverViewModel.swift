@@ -17,7 +17,13 @@ public final class RingtoneDiscoverViewModel {
     @Published public private(set) var audios: [RingtoneAudio] = []
     
     public let audioFavoriteStatusChangeResponder: RingtoneAudioFavoriteStatusChangeResponder
+    private let audioPlayer: IRingtoneAudioPlayer
     private var cancellables: Set<AnyCancellable> = []
+    private var audioPlayerCancellable: AnyCancellable? {
+        didSet {
+            oldValue?.cancel()
+        }
+    }
     private let categoreisRepository: IRingtoneCategoriesRepository
     private let audioRepository: IRingtoneAudioRepository
     
@@ -25,14 +31,17 @@ public final class RingtoneDiscoverViewModel {
     public init(
         categoreisRepository: IRingtoneCategoriesRepository,
         audioRepository: IRingtoneAudioRepository,
-        audiofavoriteStatusChangeResponder: RingtoneAudioFavoriteStatusChangeResponder
+        audiofavoriteStatusChangeResponder: RingtoneAudioFavoriteStatusChangeResponder,
+        audioPlayer: IRingtoneAudioPlayer
     ) {
         self.categoreisRepository = categoreisRepository
         self.audioRepository = audioRepository
         self.audioFavoriteStatusChangeResponder = audiofavoriteStatusChangeResponder
+        self.audioPlayer = audioPlayer
         
         getCategories()
         observeFavoriteAudios()
+        observeAudioPlayerStatus()
     }
     
     private func getCategories() {
@@ -54,6 +63,15 @@ public final class RingtoneDiscoverViewModel {
                 print(error)
             } receiveValue: { [weak self] audios in
                 guard let self = self else { return }
+                
+                var audios = audios
+                
+                // Syncing playback status.
+                if let currentAudioID = self.audioPlayer.currentAudioID,
+                   let index = audios.firstIndex(where: { $0.id == currentAudioID }) {
+                    audios[index] = audios[index].played()
+                }
+                
                 self.audios = audios
             }
             .store(in: &cancellables)
@@ -73,8 +91,7 @@ extension RingtoneDiscoverViewModel {
                     if let favoriteIndex = favoriteAudios.firstIndex(where: { audio.id == $0.id }) {
                         audios[index] = favoriteAudios[favoriteIndex]
                     } else {
-                        guard audio.isFavorite else { continue }
-                        audios[index] = audio.likeToggled()
+                        audios[index] = audio.unliked()
                     }
                 }
                 
@@ -94,7 +111,44 @@ extension RingtoneDiscoverViewModel: RingtoneDiscoverCategorySelectionResponder 
 // MARK: - RingtoneAudioPlaybackStatusChangeResponder
 extension RingtoneDiscoverViewModel: RingtoneAudioPlaybackStatusChangeResponder {
     public func ringtoneAudioPlaybackStatusChange(_ audio: RingtoneAudio) {
-        print("ringtoneAudioPlaybackStatusChange")
+        if audio.isPlaying {
+            audioPlayer.pause()
+        } else {
+            audioPlayer.play(audio)
+        }
+    }
+    
+    private func observeAudioPlayerStatus() {
+        audioPlayer.statusPublisher
+            .sink { [weak self] status in
+                guard let self = self else { return }
+                
+                switch status {
+                case .startedPlaying(let audioID):
+                    var audios = self.audios
+                    
+                    // TODO: Optimize.
+                    for (index, audio) in self.audios.enumerated() {
+                        if audioID == audio.id  {
+                            audios[index] = audios[index].played()
+                        } else {
+                            audios[index] = audios[index].paused()
+                        }
+                    }
+                    
+                    self.audios = audios
+                case .pausedPlaying:
+                    self.audios = self.audios.map { $0.paused() }
+                case .finishedPlaying:
+                    self.audios = self.audios.map { $0.paused() }
+                case .failedToPlay:
+                    self.audios = self.audios.map { $0.paused() }
+                case .failedToInitialize(let error):
+                    print("failedToInitialize", error)
+                    self.audios = self.audios.map { $0.paused() }
+                }
+            }
+            .store(in: &cancellables)
     }
 }
 
