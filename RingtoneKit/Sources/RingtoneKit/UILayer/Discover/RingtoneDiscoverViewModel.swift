@@ -25,11 +25,6 @@ public final class RingtoneDiscoverViewModel {
     public let audioFavoriteStatusChangeResponder: RingtoneAudioFavoriteStatusChangeResponder
     private let audioPlayer: IRingtoneAudioPlayer
     private var cancellables: Set<AnyCancellable> = []
-    private var audioPlayerCancellable: AnyCancellable? {
-        didSet {
-            oldValue?.cancel()
-        }
-    }
     private let categoreisRepository: IRingtoneCategoriesRepository
     private let audioRepository: IRingtoneAudioRepository
     
@@ -73,7 +68,8 @@ public final class RingtoneDiscoverViewModel {
                 var audios = audios
                 
                 // Syncing playback status.
-                if let currentAudioID = self.audioPlayer.currentAudioID,
+                if self.audioPlayer.isPlaying,
+                   let currentAudioID = self.audioPlayer.currentAudioID,
                    let index = audios.firstIndex(where: { $0.id == currentAudioID }) {
                     audios[index] = audios[index].played()
                 }
