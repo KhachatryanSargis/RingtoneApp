@@ -13,6 +13,10 @@ import RingtoneKit
 
 public final class RingtoneCreatedViewController: NiblessViewController {
     // MARK: - Properties
+    public var actionPublisher: AnyPublisher<RingtoneCreatedAction, Never> {
+        actionSubject.eraseToAnyPublisher()
+    }
+    private let actionSubject = PassthroughSubject<RingtoneCreatedAction, Never>()
     private var cancelables: Set<AnyCancellable> = []
     private let viewModelFactory: RingtoneCreatedViewModelFactory
     
@@ -62,11 +66,11 @@ extension RingtoneCreatedViewController {
     
     @objc
     private func onImport() {
-        showImportMenu()
+        actionSubject.send(.importAudio)
     }
 }
 
-// MARK: - View Action
+// MARK: - View Model Actions
 extension RingtoneCreatedViewController {
     private func observeViewModelAction(_ viewModel: RingtoneCreatedViewModel) {
         viewModel.$action
@@ -75,66 +79,14 @@ extension RingtoneCreatedViewController {
                 guard let self = self else { return }
                 
                 switch action {
+                case .importAudio:
+                    self.actionSubject.send(.importAudio)
                 case .export(let audio):
-                    print("export", audio)
+                    self.actionSubject.send(.export(audio))
                 case .edit(let audio):
-                    print("edit", audio)
-                case .import:
-                    self.showImportMenu()
+                    self.actionSubject.send(.edit(audio))
                 }
             }
             .store(in: &cancelables)
-    }
-    
-    private func showImportMenu() {
-        let alertController = UIAlertController(
-            title: "Import Media",
-            message: "Choose a source to import media from.",
-            preferredStyle: .actionSheet
-        )
-        
-        let importFromGalleryAction = RingtoneAlertAction(
-            title: "Import from Gallery",
-            style: .default
-        ) {
-            [weak self] _ in
-            
-            guard let self = self else { return }
-            
-            self.onImportFromGallery()
-        }
-        
-        let importFromFilesAction = RingtoneAlertAction(
-            title: "Import from Files",
-            style: .default
-        ) {
-            [weak self] _ in
-            
-            guard let self = self else { return }
-            
-            self.onImportFromFiles()
-        }
-        
-        let cancelAction = RingtoneAlertAction(
-            title: "Cancel",
-            style: .cancel,
-            handler: nil
-        )
-        
-        alertController.addAction(importFromGalleryAction)
-        alertController.addAction(importFromFilesAction)
-        alertController.addAction(cancelAction)
-        
-        present(alertController, animated: true, completion: nil)
-    }
-    
-    private func onImportFromGallery() {
-        let ringtoneImportFromGalleryViewController = RingtoneImportFromGalleryViewController()
-        present(ringtoneImportFromGalleryViewController, animated: true)
-    }
-    
-    private func onImportFromFiles() {
-        let ringtoneImportFromFilesViewController = RingtoneImportFromFilesViewController()
-        present(ringtoneImportFromFilesViewController, animated: true)
     }
 }
