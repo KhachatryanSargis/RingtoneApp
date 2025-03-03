@@ -10,19 +10,13 @@ import Combine
 import RingtoneUIKit
 import RingtoneKit
 
-enum RingtoneCreatedViewAction {
-    case `import`
-}
-
-fileprivate enum RingtoneCreatedViewItem {
-    case addRingtone
-    case ringtones
+fileprivate enum RingtoneCreatedViewSection: Int {
+    case audios
+    case empty
 }
 
 final class RingtoneCreatedView: NiblessView {
     // MARK: - Properties
-    @Published private(set) var action: RingtoneCreatedViewAction?
-    
     private let collectionView: UICollectionView = {
         let collectionView = UICollectionView(
             frame: .zero,
@@ -82,27 +76,51 @@ extension RingtoneCreatedView {
         collectionView.collectionViewLayout = makeLayout()
     }
     
-    private func makeDataSource() -> UICollectionViewDiffableDataSource<Int, RingtoneCreatedViewItem> {
-        let emptyCellRegistration = UICollectionView.CellRegistration<RingtoneCreatedEmptyCell, RingtoneCreatedViewItem>
-        { (cell, indexPath, _) in
+    private func makeDataSource() -> UICollectionViewDiffableDataSource<RingtoneCreatedViewSection, RingtoneAudio> {
+        let audioCellRegistration = UICollectionView.CellRegistration<RingtoneAudioCell, RingtoneAudio> {
+            [weak self] cell, indexPath, audio in
+            
+            guard let self = self else { return }
+            
+            cell.setAudio(
+                audio,
+                playbackResponder: self.viewModel,
+                favoriteResponder: self.viewModel.audioFavoriteStatusChangeResponder,
+                editResponder: self.viewModel,
+                exportResponder: self.viewModel
+            )
+        }
+        
+        let emptyCellRegistration = UICollectionView.CellRegistration<RingtoneCreatedEmptyCell, RingtoneAudio> {
+            cell, indexPath, audio in
+            
             cell.onImportButtonTapped = { [weak self] in
                 guard let self = self else { return }
-                self.action = .import
+                
+                self.viewModel.import()
             }
         }
         
-        let dataSource = UICollectionViewDiffableDataSource<Int, RingtoneCreatedViewItem>(
+        let dataSource =  UICollectionViewDiffableDataSource<RingtoneCreatedViewSection, RingtoneAudio>(
             collectionView: collectionView
-        ) { collectionView, indexPath, item in
-            switch item {
-            case .addRingtone:
+        ) { collectionView, indexPath, audio in
+            
+            guard let section = RingtoneCreatedViewSection(rawValue: indexPath.section)
+            else { fatalError("unexpected created view section") }
+            
+            switch section {
+            case .audios:
+                return collectionView.dequeueConfiguredReusableCell(
+                    using: audioCellRegistration,
+                    for: indexPath,
+                    item: audio
+                )
+            case .empty:
                 return collectionView.dequeueConfiguredReusableCell(
                     using: emptyCellRegistration,
                     for: indexPath,
-                    item: .addRingtone
+                    item: audio
                 )
-            case .ringtones:
-                fatalError()
             }
         }
         
@@ -111,17 +129,32 @@ extension RingtoneCreatedView {
     
     private func makeLayout() -> UICollectionViewCompositionalLayout {
         let layout = UICollectionViewCompositionalLayout { sectionIndex, environment in
-            let item = NSCollectionLayoutItem(
-                layoutSize: NSCollectionLayoutSize(
-                    widthDimension: .fractionalWidth(1),
-                    heightDimension: .estimated(150)
+            guard let favoritesViewSection = RingtoneCreatedViewSection(rawValue: sectionIndex)
+            else { fatalError("unexpected created view section") }
+            
+            let item: NSCollectionLayoutItem
+            
+            switch favoritesViewSection {
+            case .audios:
+                item = NSCollectionLayoutItem(
+                    layoutSize: NSCollectionLayoutSize(
+                        widthDimension: .fractionalWidth(1),
+                        heightDimension: .fractionalHeight(1)
+                    )
                 )
-            )
+            case .empty:
+                item = NSCollectionLayoutItem(
+                    layoutSize: NSCollectionLayoutSize(
+                        widthDimension: .fractionalWidth(1),
+                        heightDimension: .estimated(100)
+                    )
+                )
+            }
             
             let group = NSCollectionLayoutGroup.vertical(
                 layoutSize: NSCollectionLayoutSize(
                     widthDimension: .fractionalWidth(1),
-                    heightDimension: .estimated(150)
+                    heightDimension: .estimated(100)
                 ),
                 subitems: [item]
             )
@@ -130,7 +163,7 @@ extension RingtoneCreatedView {
             
             let section = NSCollectionLayoutSection(group: group)
             section.interGroupSpacing = 8
-            section.contentInsets = .init(top: 16, leading: 0, bottom: 16, trailing: 0)
+            section.contentInsets = .init(top: 0, leading: 0, bottom: 16, trailing: 0)
             
             return section
         }
@@ -149,21 +182,29 @@ extension RingtoneCreatedView: UICollectionViewDelegate {
 // MARK: - View Model
 extension RingtoneCreatedView {
     private func observeViewModel() {
-        viewModel.$items
-            .sink { [weak self] items in
+        observeAudios()
+    }
+    
+    private func observeAudios() {
+        viewModel.$audios
+            .receive(on: DispatchQueue.main)
+            .sink(receiveCompletion: { completion in
+                print(completion)
+            }, receiveValue: { [weak self] audios in
                 guard let self = self else { return }
                 
-                var snapshot = NSDiffableDataSourceSnapshot<Int, RingtoneCreatedViewItem>()
-                snapshot.appendSections([0])
+                var snapshot = NSDiffableDataSourceSnapshot<RingtoneCreatedViewSection, RingtoneAudio>()
                 
-                if items.isEmpty {
-                    snapshot.appendItems([.addRingtone], toSection: 0)
+                snapshot.appendSections([.audios, .empty])
+                
+                if audios.isEmpty {
+                    snapshot.appendItems([.empty], toSection: .empty)
                 } else {
-                    
+                    snapshot.appendItems(audios, toSection: .audios)
                 }
                 
                 self.dataSource.apply(snapshot, animatingDifferences: true)
-            }
+            })
             .store(in: &cancellables)
     }
 }
