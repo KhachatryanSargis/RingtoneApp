@@ -24,7 +24,7 @@ final class RingtoneCreatedEmptyCell: NiblessCollectionViewCell {
         let label = UILabel()
         label.font = .theme.headline
         label.textColor = .theme.label
-        label.text = "You have no ringtones."
+        label.text = "You didn't creat any ringtones."
         label.textAlignment = .center
         label.numberOfLines = 0
         return label
@@ -70,10 +70,10 @@ extension RingtoneCreatedEmptyCell {
         contentView.addSubview(stackView)
         
         NSLayoutConstraint.activate([
-            stackView.leftAnchor.constraint(equalTo: contentView.leftAnchor, constant: 4),
-            stackView.rightAnchor.constraint(equalTo: contentView.rightAnchor, constant: -4),
-            stackView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 4),
-            stackView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -4)
+            stackView.leftAnchor.constraint(equalTo: contentView.leftAnchor, constant: 16),
+            stackView.rightAnchor.constraint(equalTo: contentView.rightAnchor, constant: -16),
+            stackView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 16),
+            stackView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -16)
         ])
         
         stackView.addArrangedSubview(titleLabel)
