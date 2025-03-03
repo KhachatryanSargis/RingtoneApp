@@ -12,7 +12,7 @@ public struct RingtoneAudio: Equatable, Hashable, Sendable {
         return title
     }
     
-    public var url: URL {
+    public static var defaultUrl: URL {
         let fileManager = FileManager.default
         
         let documentsDirectory = fileManager.urls(
@@ -28,19 +28,22 @@ public struct RingtoneAudio: Equatable, Hashable, Sendable {
     public let isCreated: Bool
     public let isPlaying: Bool
     public let isFavorite: Bool
+    public let url: URL
     
     public init(
         title: String,
         categoryID: String = "Other",
         isCreated: Bool = false,
         isPlaying: Bool = false,
-        isLiked: Bool = false
+        isLiked: Bool = false,
+        url: URL = RingtoneAudio.defaultUrl
     ) {
         self.title = title
         self.categoryID = categoryID
         self.isCreated = isCreated
         self.isPlaying = isPlaying
         self.isFavorite = isLiked
+        self.url = url
     }
 }
 
@@ -52,7 +55,8 @@ extension RingtoneAudio {
             categoryID: self.categoryID,
             isCreated: self.isCreated,
             isPlaying: self.isPlaying,
-            isLiked: true
+            isLiked: true,
+            url: self.url
         )
     }
     
@@ -62,7 +66,8 @@ extension RingtoneAudio {
             categoryID: self.categoryID,
             isCreated: self.isCreated,
             isPlaying: self.isPlaying,
-            isLiked: false
+            isLiked: false,
+            url: self.url
         )
     }
 }
@@ -75,7 +80,8 @@ extension RingtoneAudio {
             categoryID: self.categoryID,
             isCreated: self.isCreated,
             isPlaying: true,
-            isLiked: self.isFavorite
+            isLiked: self.isFavorite,
+            url: self.url
         )
     }
     
@@ -85,7 +91,8 @@ extension RingtoneAudio {
             categoryID: self.categoryID,
             isCreated: self.isCreated,
             isPlaying: false,
-            isLiked: self.isFavorite
+            isLiked: self.isFavorite,
+            url: self.url
         )
     }
 }
@@ -98,7 +105,8 @@ extension RingtoneAudio {
             categoryID: "",
             isCreated: false,
             isPlaying: false,
-            isLiked: false
+            isLiked: false,
+            url: RingtoneAudio.defaultUrl
         )
     }
 }
