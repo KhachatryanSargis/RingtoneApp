@@ -9,9 +9,12 @@ import RingtoneKit
 import RingtoneDiscoverScreen
 import RingtoneFavoritesScreen
 import RingtoneCreatedScreen
+import RingtoneImportScreens
 
 public final class AppDependencyContainer {
     // MARK: - Properties
+    unowned private(set) var audioPlayerProgressPublisher: IRingtoneAudioPlayerProgressPublisher
+    
     private let discoverViewModel: RingtoneDiscoverViewModel
     private let favoritesViewModel: RingtoneFavoritesViewModel
     private let createdViewModel: RingtoneCreatedViewModel
@@ -27,6 +30,7 @@ public final class AppDependencyContainer {
         )
         
         let audioPlayer = RingtoneAudioPlayer()
+        self.audioPlayerProgressPublisher = audioPlayer
         
         favoritesViewModel = RingtoneFavoritesViewModel(
             audioRepository: ringtoneAudioRepository,
@@ -83,5 +87,21 @@ extension AppDependencyContainer: RingtoneCreatedViewModelFactory {
     
     public func makeRingtoneCreatedViewModel() -> RingtoneCreatedViewModel {
         createdViewModel
+    }
+}
+
+// MARK: - Import From Gallery
+extension AppDependencyContainer {
+    @MainActor
+    internal func makeRingtoneImportFromGalleryViewController() -> RingtoneImportFromGalleryViewController {
+        RingtoneImportFromGalleryViewController()
+    }
+}
+
+// MARK: - Import From Files
+extension AppDependencyContainer {
+    @MainActor
+    internal func makeRingtoneImportFromFilesViewController() -> RingtoneImportFromFilesViewController {
+        RingtoneImportFromFilesViewController()
     }
 }
