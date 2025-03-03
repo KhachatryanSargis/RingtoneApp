@@ -17,13 +17,7 @@ public final class RingtoneFavoritesViewModel {
     public var audiosPublisher: AnyPublisher<[RingtoneAudio], Never> {
         $audios.eraseToAnyPublisher()
     }
-    
     private var cancellables: Set<AnyCancellable> = []
-    private var audioPlayerCancellable: AnyCancellable? {
-        didSet {
-            oldValue?.cancel()
-        }
-    }
     private let audioRepository: IRingtoneAudioRepository
     private let audioPlayer: IRingtoneAudioPlayer
     
