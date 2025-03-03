@@ -37,4 +37,7 @@ public struct ImageTheme {
     
     // MARK: - RingtoneCreatedEmptyCell
     public let `import` = UIImage(systemName: "square.and.arrow.down")!.withConfiguration(configuration)
+    
+    // MARK: - RingtoneCreatedViewController
+    public let import_fill = UIImage(systemName: "square.and.arrow.down.fill")!.withConfiguration(configuration)
 }
