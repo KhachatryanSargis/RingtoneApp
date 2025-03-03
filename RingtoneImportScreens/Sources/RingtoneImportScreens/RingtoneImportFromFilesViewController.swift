@@ -42,19 +42,29 @@ extension RingtoneImportFromFilesViewController {
         documentPickerViewController.allowsMultipleSelection = false
         
         addChild(documentPickerViewController)
+        
+        documentPickerViewController.view.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(documentPickerViewController.view)
+        NSLayoutConstraint.activate([
+            documentPickerViewController.view.topAnchor.constraint(equalTo: view.topAnchor),
+            documentPickerViewController.view.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            documentPickerViewController.view.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            documentPickerViewController.view.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+        ])
+        
+        documentPickerViewController.didMove(toParent: self)
     }
 }
 
 // MARK: - UIDocumentPickerDelegate
 extension RingtoneImportFromFilesViewController: UIDocumentPickerDelegate {
     public func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]) {
-        for url in urls {
-            print("Selected file URL: \(url)")
-        }
+        guard let presentingViewController = presentingViewController else { return }
+        presentingViewController.dismiss(animated: true)
     }
     
     public func documentPickerWasCancelled(_ controller: UIDocumentPickerViewController) {
-        dismiss(animated: true)
+        guard let presentingViewController = presentingViewController else { return }
+        presentingViewController.dismiss(animated: true)
     }
 }

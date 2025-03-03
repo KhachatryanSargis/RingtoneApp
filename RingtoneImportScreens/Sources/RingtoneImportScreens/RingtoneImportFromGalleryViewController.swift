@@ -31,23 +31,28 @@ extension RingtoneImportFromGalleryViewController {
         configuration.selectionLimit = 0
         configuration.filter = .videos
         
-        let picker = PHPickerViewController(configuration: configuration)
-        picker.delegate = self
+        let pickerViewController = PHPickerViewController(configuration: configuration)
+        pickerViewController.delegate = self
         
-        addChild(picker)
-        view.addSubview(picker.view)
+        addChild(pickerViewController)
+        
+        pickerViewController.view.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(pickerViewController.view)
+        NSLayoutConstraint.activate([
+            pickerViewController.view.topAnchor.constraint(equalTo: view.topAnchor),
+            pickerViewController.view.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            pickerViewController.view.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            pickerViewController.view.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+        ])
+        
+        pickerViewController.didMove(toParent: self)
     }
 }
 
 // MARK: - PHPickerViewControllerDelegate
 extension RingtoneImportFromGalleryViewController: PHPickerViewControllerDelegate {
     public func picker(_ picker: PHPickerViewController, didFinishPicking results: [PHPickerResult]) {
-        guard !results.isEmpty else {
-            dismiss(animated: true)
-            return
-        }
-        
-        print(results)
-        dismiss(animated: true)
+        guard let presentingViewController = presentingViewController else { return }
+        presentingViewController.dismiss(animated: true)
     }
 }
