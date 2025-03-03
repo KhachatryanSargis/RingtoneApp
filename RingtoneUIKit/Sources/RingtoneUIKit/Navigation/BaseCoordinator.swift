@@ -108,3 +108,10 @@ extension BaseCoordinator {
         alertViewController.addAction(action)
     }
 }
+
+// MARK: - Cancellables
+extension BaseCoordinator {
+    public func storeCancellable(_ cancellable: AnyCancellable) {
+        cancellables.insert(cancellable)
+    }
+}
