@@ -11,25 +11,14 @@ public protocol RingtoneCreatedViewModelFactory {
     func makeRingtoneCreatedViewModel() -> RingtoneCreatedViewModel
 }
 
-public enum RingtoneCreatedViewModelAction {
-    case `import`
-    case export(RingtoneAudio)
-    case edit(RingtoneAudio)
-}
-
 public final class RingtoneCreatedViewModel {
     // MARK: - Properties
-    @Published public private(set) var action: RingtoneCreatedViewModelAction?
+    @Published public private(set) var action: RingtoneCreatedAction?
     @Published public private(set) var audios: [RingtoneAudio] = []
     
     public let audioFavoriteStatusChangeResponder: RingtoneAudioFavoriteStatusChangeResponder
     private let audioPlayer: IRingtoneAudioPlayer
     private var cancellables: Set<AnyCancellable> = []
-    private var audioPlayerCancellable: AnyCancellable? {
-        didSet {
-            oldValue?.cancel()
-        }
-    }
     private let audioRepository: IRingtoneAudioRepository
     
     // MARK: - Methods
@@ -69,6 +58,13 @@ extension RingtoneCreatedViewModel {
                 self.audios = audios
             }
             .store(in: &cancellables)
+    }
+}
+
+// MARK: - Import
+extension RingtoneCreatedViewModel {
+    public func importRingtoneAudio() {
+        action = .importAudio
     }
 }
 
@@ -150,12 +146,5 @@ extension RingtoneCreatedViewModel: RingtoneAudioExportResponder {
 extension RingtoneCreatedViewModel: RingtoneAudioEditResponder {
     public func ringtoneAudioEdit(_ audio: RingtoneAudio) {
         action = .edit(audio)
-    }
-}
-
-// MARK: - Import
-extension RingtoneCreatedViewModel {
-    public func `import`() {
-        action = .import
     }
 }
