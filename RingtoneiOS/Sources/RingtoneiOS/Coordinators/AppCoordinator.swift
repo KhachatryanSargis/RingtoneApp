@@ -36,5 +36,3 @@ public final class AppCoordinator: BaseCoordinator {
         addChild(createdCoordinator)
     }
 }
-
-

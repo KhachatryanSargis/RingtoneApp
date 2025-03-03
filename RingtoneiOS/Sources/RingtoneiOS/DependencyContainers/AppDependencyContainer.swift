@@ -14,6 +14,7 @@ public final class AppDependencyContainer {
     // MARK: - Properties
     private let discoverViewModel: RingtoneDiscoverViewModel
     private let favoritesViewModel: RingtoneFavoritesViewModel
+    private let createdViewModel: RingtoneCreatedViewModel
     
     // MARK: - Methods
     public init () {
@@ -34,6 +35,12 @@ public final class AppDependencyContainer {
         
         discoverViewModel = RingtoneDiscoverViewModel(
             categoreisRepository: ringtoneCategoriesRepository,
+            audioRepository: ringtoneAudioRepository,
+            audiofavoriteStatusChangeResponder: favoritesViewModel,
+            audioPlayer: audioPlayer
+        )
+        
+        createdViewModel = RingtoneCreatedViewModel(
             audioRepository: ringtoneAudioRepository,
             audiofavoriteStatusChangeResponder: favoritesViewModel,
             audioPlayer: audioPlayer
@@ -75,6 +82,6 @@ extension AppDependencyContainer: RingtoneCreatedViewModelFactory {
     }
     
     public func makeRingtoneCreatedViewModel() -> RingtoneCreatedViewModel {
-        RingtoneCreatedViewModel()
+        createdViewModel
     }
 }
