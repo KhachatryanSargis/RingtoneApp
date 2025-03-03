@@ -11,13 +11,8 @@ import RingtoneImportScreens
 import RingtoneUIKit
 import RingtoneKit
 
-public enum RingtoneCreatedViewControllerAction {
-    case `import`
-}
-
 public final class RingtoneCreatedViewController: NiblessViewController {
     // MARK: - Properties
-    @Published public private(set) var action: RingtoneCreatedViewControllerAction?
     private var cancelables: Set<AnyCancellable> = []
     private let viewModelFactory: RingtoneCreatedViewModelFactory
     
@@ -30,13 +25,13 @@ public final class RingtoneCreatedViewController: NiblessViewController {
     
     public override func loadView() {
         let viewModel = viewModelFactory.makeRingtoneCreatedViewModel()
+        observeViewModelAction(viewModel)
         view = RingtoneCreatedView(viewModel: viewModel)
     }
     
     public override func viewDidLoad() {
         super.viewDidLoad()
         configureTabBarItem()
-        observeViewAction()
     }
 }
 
@@ -56,20 +51,36 @@ extension RingtoneCreatedViewController {
             localized: "My Ringtones",
             comment: "The title of the ringtone created screen."
         )
+        
+        navigationItem.rightBarButtonItem = .init(
+            image: .theme.import_fill,
+            style: .plain,
+            target: self,
+            action: #selector(onImport)
+        )
+    }
+    
+    @objc
+    private func onImport() {
+        showImportMenu()
     }
 }
 
 // MARK: - View Action
 extension RingtoneCreatedViewController {
-    private func observeViewAction() {
-        (view as! RingtoneCreatedView).$action
+    private func observeViewModelAction(_ viewModel: RingtoneCreatedViewModel) {
+        viewModel.$action
+            .compactMap { $0 }
             .sink { [weak self] action in
                 guard let self = self else { return }
+                
                 switch action {
-                case .some(_):
+                case .export(let audio):
+                    print("export", audio)
+                case .edit(let audio):
+                    print("edit", audio)
+                case .import:
                     self.showImportMenu()
-                case .none:
-                    return
                 }
             }
             .store(in: &cancelables)
