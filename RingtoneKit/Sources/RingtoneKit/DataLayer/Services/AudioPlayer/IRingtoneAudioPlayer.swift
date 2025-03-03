@@ -7,9 +7,10 @@
 
 import Combine
 
-public protocol IRingtoneAudioPlayer {
+public protocol IRingtoneAudioPlayer: IRingtoneAudioPlayerProgressPublisher {
     // MARK: - Properties
     var currentAudioID: String? { get }
+    var isPlaying: Bool { get }
     var statusPublisher: AnyPublisher<RingtoneAudioPlayerStatus, Never> { get }
     
     // MARK: - Methods
