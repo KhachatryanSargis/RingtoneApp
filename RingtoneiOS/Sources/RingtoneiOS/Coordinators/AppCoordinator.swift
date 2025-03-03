@@ -19,7 +19,9 @@ public final class AppCoordinator: BaseCoordinator {
     // MARK: - Methods
     public init(container: AppDependencyContainer) {
         self.container = container
-        self.tabBarController = RingtoneTabBarController()
+        self.tabBarController = RingtoneTabBarController(
+            audioPlayerProgressPublisher: container.audioPlayerProgressPublisher
+        )
         super.init()
     }
     
