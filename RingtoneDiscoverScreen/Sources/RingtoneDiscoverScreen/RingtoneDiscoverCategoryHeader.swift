@@ -24,7 +24,7 @@ final class RingtoneDiscoverCategoryHeader: NiblessCollectionReusableView {
         return collectionView
     }()
     
-    private lazy var dataSource = makeDataSource()
+    private var dataSource: UICollectionViewDiffableDataSource<Int, RingtoneCategory>!
     
     // MARK: - Methods
     override init(frame: CGRect) {
@@ -93,6 +93,7 @@ extension RingtoneDiscoverCategoryHeader {
 // MARK: - Collection View
 extension RingtoneDiscoverCategoryHeader {
     private func setCollectionViewDataSourceAndDelegate() {
+        dataSource = makeDataSource()
         collectionView.dataSource = dataSource
         collectionView.delegate = self
     }

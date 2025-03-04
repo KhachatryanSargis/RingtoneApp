@@ -28,7 +28,7 @@ final class RingtoneCreatedView: NiblessView {
         return collectionView
     }()
     
-    private lazy var dataSource = makeDataSource()
+    private var dataSource: UICollectionViewDiffableDataSource<RingtoneCreatedViewSection, RingtoneAudio>!
     private var cancellables: Set<AnyCancellable> = []
     private let viewModel: RingtoneCreatedViewModel
     
@@ -68,6 +68,7 @@ extension RingtoneCreatedView {
 // MARK: - Collection View
 extension RingtoneCreatedView {
     private func setCollectionViewDataSourceAndDelegate() {
+        dataSource = makeDataSource()
         collectionView.dataSource = dataSource
         collectionView.delegate = self
     }
