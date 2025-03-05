@@ -7,22 +7,8 @@
 
 import Foundation
 
-public struct RingtoneAudio: Equatable, Hashable, Sendable {
-    public var id: String {
-        return title
-    }
-    
-    public static var defaultUrl: URL {
-        let fileManager = FileManager.default
-        
-        let documentsDirectory = fileManager.urls(
-            for: .documentDirectory,
-            in: .userDomainMask
-        ).first!
-        
-        return documentsDirectory.appendingPathComponent("tiktok.m4a")
-    }
-    
+public struct RingtoneAudio: Identifiable, Equatable, Hashable, Sendable {
+    public let id: String
     public let title: String
     public let categoryID: String
     public let isCreated: Bool
@@ -31,13 +17,15 @@ public struct RingtoneAudio: Equatable, Hashable, Sendable {
     public let url: URL
     
     public init(
+        id: String,
         title: String,
         categoryID: String = "Other",
         isCreated: Bool = false,
         isPlaying: Bool = false,
         isLiked: Bool = false,
-        url: URL = RingtoneAudio.defaultUrl
+        url: URL
     ) {
+        self.id = id
         self.title = title
         self.categoryID = categoryID
         self.isCreated = isCreated
@@ -51,6 +39,7 @@ public struct RingtoneAudio: Equatable, Hashable, Sendable {
 extension RingtoneAudio {
     public func liked() -> RingtoneAudio {
         RingtoneAudio(
+            id: self.id,
             title: self.title,
             categoryID: self.categoryID,
             isCreated: self.isCreated,
@@ -62,6 +51,7 @@ extension RingtoneAudio {
     
     public func unliked() -> RingtoneAudio {
         RingtoneAudio(
+            id: self.id,
             title: self.title,
             categoryID: self.categoryID,
             isCreated: self.isCreated,
@@ -76,6 +66,7 @@ extension RingtoneAudio {
 extension RingtoneAudio {
     public func played() -> RingtoneAudio {
         RingtoneAudio(
+            id: self.id,
             title: self.title,
             categoryID: self.categoryID,
             isCreated: self.isCreated,
@@ -87,6 +78,7 @@ extension RingtoneAudio {
     
     public func paused() -> RingtoneAudio {
         RingtoneAudio(
+            id: self.id,
             title: self.title,
             categoryID: self.categoryID,
             isCreated: self.isCreated,
@@ -101,12 +93,13 @@ extension RingtoneAudio {
 extension RingtoneAudio {
     public static var empty: RingtoneAudio {
         .init(
+            id: "",
             title: "",
             categoryID: "",
             isCreated: false,
             isPlaying: false,
             isLiked: false,
-            url: RingtoneAudio.defaultUrl
+            url: URL(string: "skh.com")!
         )
     }
 }

@@ -8,11 +8,7 @@
 import Foundation
 
 struct RingtoneAudioStoreItem: Sendable {
-    public var id: String {
-        return title
-    }
-    
-    public var url: URL {
+    public static var dummyURL: URL {
         let fileManager = FileManager.default
         
         let documentsDirectory = fileManager.urls(
@@ -20,27 +16,30 @@ struct RingtoneAudioStoreItem: Sendable {
             in: .userDomainMask
         ).first!
         
-        return documentsDirectory.appendingPathComponent(
-            "tiktok",
-            conformingTo: .mp3
-        )
+        return documentsDirectory.appendingPathComponent("tiktok.m4a")
     }
     
+    let id: String
     let title: String
     let categoryID: String
     let isCreated: Bool
     let isFavorite: Bool
+    let url: URL
     
     init(
+        id: String = UUID().uuidString,
         title: String,
         categoryID: String = "Other",
         isCreated: Bool = false,
-        isFavorite: Bool = false
+        isFavorite: Bool = false,
+        url: URL = dummyURL
     ) {
+        self.id = id
         self.title = title
         self.categoryID = categoryID
         self.isCreated = isCreated
         self.isFavorite = isFavorite
+        self.url = url
     }
 }
 
@@ -48,6 +47,7 @@ struct RingtoneAudioStoreItem: Sendable {
 extension RingtoneAudioStoreItem {
     static func constrcutFromAudio(_ audio: RingtoneAudio) -> RingtoneAudioStoreItem {
         RingtoneAudioStoreItem(
+            id: audio.id,
             title: audio.title,
             categoryID: audio.categoryID,
             isCreated: audio.isCreated,
@@ -57,10 +57,12 @@ extension RingtoneAudioStoreItem {
     
     func convertToAudio() -> RingtoneAudio {
         RingtoneAudio(
+            id: self.id,
             title: self.title,
             categoryID: self.categoryID,
             isPlaying: false,
-            isLiked: self.isFavorite
+            isLiked: self.isFavorite,
+            url: self.url
         )
     }
 }
