@@ -11,6 +11,12 @@ public final class RingtoneAudioRepository: IRingtoneAudioRepository {
     // MARK: - Properties
     private let store: IRingtoneAudioStore
     
+    public func addRingtoneAudios(_ audios: [RingtoneAudio]) -> AnyPublisher<[RingtoneAudio], RingtoneAudioRepositoryError> {
+        store.addRingtoneAudios(audios)
+            .mapError { .store($0) }
+            .eraseToAnyPublisher()
+    }
+    
     // MARK: - Methods
     public init(store: IRingtoneAudioStore) {
         self.store = store

@@ -11,6 +11,14 @@ public final class RingtoneAudioStore: IRingtoneAudioStore {
     // MARK: - Methods
     public init() {}
     
+    public func addRingtoneAudios(_ audios: [RingtoneAudio]) -> AnyPublisher<[RingtoneAudio], RingtoneAudioStoreError> {
+        let items = audios.map { RingtoneAudioStoreItem.constrcutFromAudio($0) }
+        self.items.append(contentsOf: items)
+        return Just(audios)
+            .setFailureType(to: RingtoneAudioStoreError.self)
+            .eraseToAnyPublisher()
+    }
+    
     public func getRingtoneAudiosInCategory(_ category: RingtoneCategory) -> AnyPublisher<[RingtoneAudio], RingtoneAudioStoreError> {
         let filteredAudios = items.filter { $0.categoryID == category.displayName }.map { $0.convertToAudio() }
         return Just(filteredAudios)
