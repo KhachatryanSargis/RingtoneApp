@@ -44,6 +44,14 @@ public final class RingtoneAudioEditor: IRingtoneAudioEditor {
                 .eraseToAnyPublisher()
             }
             
+            // TODO: REMOVE!
+            if url.absoluteString == "file:///private/var/mobile/Containers/Shared/AppGroup/41A480D0-0710-454B-81F3-DE47C7967B7D/File%20Provider%20Storage/photospicker/uuid=EE8D2F3B-F62E-4F74-B255-60C6C7ADEFAA&code=001&library=1&type=3&mode=2&loc=true&cap=true.mov" {
+                return Fail<RingtoneAudio, RingtoneAudioEditorError>(
+                    error: .unsupportedFileType
+                )
+                .eraseToAnyPublisher()
+            }
+            
             let asset = AVURLAsset(url: url)
             
             guard let exportSession = RingtoneAssetExportSession(
