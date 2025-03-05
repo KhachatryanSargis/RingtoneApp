@@ -8,9 +8,7 @@
 import Combine
 import AVFoundation
 
-
-
-class RingtoneAssetExportSession: AVAssetExportSession, @unchecked Sendable {
+final class RingtoneAssetExportSession: AVAssetExportSession, @unchecked Sendable {
     // MARK: - Properties
     private let stateSubject = PassthroughSubject<URL, RingtoneAssetExportSessionError>()
     

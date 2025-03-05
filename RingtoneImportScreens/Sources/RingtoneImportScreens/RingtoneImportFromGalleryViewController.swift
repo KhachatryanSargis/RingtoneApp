@@ -5,11 +5,20 @@
 //  Created by Sargis Khachatryan on 27.02.25.
 //
 
-import UIKit
 import PhotosUI
 import RingtoneUIKit
+import RingtoneKit
 
 public final class RingtoneImportFromGalleryViewController: NiblessViewController {
+    // MARK: - Properties
+    private let viewModelFactory: RingtoneImportViewModelFactory
+    
+    // MARK: - Methods
+    public init(viewModelFactory: RingtoneImportViewModelFactory) {
+        self.viewModelFactory = viewModelFactory
+        super.init()
+    }
+    
     public override func viewDidLoad() {
         super.viewDidLoad()
         setBackgroundColor()
@@ -27,7 +36,8 @@ extension RingtoneImportFromGalleryViewController {
 // MARK: - PHPickerViewController
 extension RingtoneImportFromGalleryViewController {
     private func addChildPHPickerViewController() {
-        var configuration = PHPickerConfiguration()
+        let photoLibrary = PHPhotoLibrary.shared()
+        var configuration = PHPickerConfiguration(photoLibrary: photoLibrary)
         configuration.selectionLimit = 0
         configuration.filter = .videos
         
@@ -52,7 +62,14 @@ extension RingtoneImportFromGalleryViewController {
 // MARK: - PHPickerViewControllerDelegate
 extension RingtoneImportFromGalleryViewController: PHPickerViewControllerDelegate {
     public func picker(_ picker: PHPickerViewController, didFinishPicking results: [PHPickerResult]) {
-        guard let presentingViewController = presentingViewController else { return }
+        let itemProviders = results.map { $0.itemProvider }
+        
+        let viewModel = viewModelFactory.makeRingtoneImportViewModel()
+        viewModel.createRingtoneItemsFromItemProviders(itemProviders)
+        
+        guard let presentingViewController = presentingViewController
+        else { return }
+        
         presentingViewController.dismiss(animated: true)
     }
 }

@@ -9,5 +9,5 @@ import Foundation
 import Combine
 
 public protocol IRingtoneAudioEditor {
-    func convertToAudioRingtone(_ url: URL) -> AnyPublisher<RingtoneAudio, RingtoneAudioEditorError>
+    func convertToAudioRingtone(_ url: URL, suggestedName: String?) -> AnyPublisher<RingtoneAudio, RingtoneAudioEditorError>
 }

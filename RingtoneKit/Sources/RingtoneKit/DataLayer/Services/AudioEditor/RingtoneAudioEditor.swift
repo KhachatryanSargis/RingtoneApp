@@ -1,5 +1,5 @@
 //
-//  IRingtoneAudioEditor.swift
+//  RingtoneAudioEditor.swift
 //  RingtoneKit
 //
 //  Created by Sargis Khachatryan on 04.03.25.
@@ -8,15 +8,7 @@
 import AVFoundation
 import Combine
 
-public enum RingtoneAudioEditorError: Error, Sendable {
-    case unsupportedFileType
-    case failedToCreateExportSession
-    case exportSession(RingtoneAssetExportSessionError)
-}
-
-
-
-public class RingtoneAudioEditor: IRingtoneAudioEditor {
+public final class RingtoneAudioEditor: IRingtoneAudioEditor {
     // MARK: - Properties
     private var rootDirectoryURL: URL {
         guard let documentDirectoryURL = FileManager.default.urls(
@@ -27,7 +19,7 @@ public class RingtoneAudioEditor: IRingtoneAudioEditor {
         }
         
         let ringtonesDirectoryURL = documentDirectoryURL.appendingPathComponent(
-            "ringtones",
+            "Ringtones",
             isDirectory: true
         )
         
@@ -43,46 +35,44 @@ public class RingtoneAudioEditor: IRingtoneAudioEditor {
     // MARK: - Methods
     public init() {}
     
-    public func convertToAudioRingtone(_ url: URL) -> AnyPublisher<RingtoneAudio, RingtoneAudioEditorError> {
-        convertToM4A(url: url)
-            .map { newUrl in
-                return RingtoneAudio(
-                    title: "New Ringtone",
-                    url: newUrl
+    public func convertToAudioRingtone(_ url: URL, suggestedName: String?) -> AnyPublisher<RingtoneAudio, RingtoneAudioEditorError> {
+        Deferred { [weak self] in
+            guard let self = self else {
+                return Fail<RingtoneAudio, RingtoneAudioEditorError>(
+                    error: .unknown
                 )
+                .eraseToAnyPublisher()
             }
-            .eraseToAnyPublisher()
-    }
-    
-    private func convertToM4A(url: URL) -> AnyPublisher<URL, RingtoneAudioEditorError> {
-        let asset = AVAsset(url: url)
-        
-        guard asset.tracks(withMediaType: .audio).first != nil else {
-            return Fail<URL, RingtoneAudioEditorError>(
-                error: .unsupportedFileType
-            )
-            .eraseToAnyPublisher()
-        }
-        
-        guard let exportSession = RingtoneAssetExportSession(
-            asset: asset,
-            presetName: AVAssetExportPresetAppleM4A
-        ) else {
-            return Fail<URL, RingtoneAudioEditorError>(
-                error: .failedToCreateExportSession
-            )
-            .eraseToAnyPublisher()
-        }
-        
-        let fileName = UUID().uuidString + ".m4a"
-        let outputURL = rootDirectoryURL.appendingPathComponent(fileName)
-        
-        exportSession.outputURL = outputURL
-        exportSession.outputFileType = .m4a
-        
-        return Deferred {
-            exportSession.start()
+            
+            let asset = AVURLAsset(url: url)
+            
+            guard let exportSession = RingtoneAssetExportSession(
+                asset: asset,
+                presetName: AVAssetExportPresetAppleM4A
+            ) else {
+                return Fail<RingtoneAudio, RingtoneAudioEditorError>(
+                    error: .failedToCreateExportSession
+                )
+                .eraseToAnyPublisher()
+            }
+            
+            let id = UUID().uuidString
+            let fileName = id + ".band"
+            let outputURL = rootDirectoryURL.appendingPathComponent(fileName)
+            let title = suggestedName ?? "My Ringtone"
+            
+            exportSession.outputURL = outputURL
+            exportSession.outputFileType = .m4a
+            
+            return exportSession.start()
                 .mapError { .exportSession($0) }
+                .map { url in
+                    RingtoneAudio(
+                        id: id,
+                        title: title,
+                        url: url
+                    )
+                }
                 .eraseToAnyPublisher()
         }
         .eraseToAnyPublisher()

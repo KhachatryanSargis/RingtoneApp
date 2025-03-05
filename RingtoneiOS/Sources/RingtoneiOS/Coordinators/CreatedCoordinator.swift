@@ -40,14 +40,17 @@ extension CreatedCoordinator {
                 case .importAudio:
                     self.showImportMenu()
                 case .export(let audio):
-                    print(audio)
+                    self.onExportAudio(audio)
                 case .edit(let audio):
                     print(audio)
                 }
             }
         storeCancellable(cancellable)
     }
-    
+}
+
+// MARK: - Show Import Menu
+extension CreatedCoordinator {
     private func showImportMenu() {
         let alertController = UIAlertController(
             title: "Import Media",
@@ -58,9 +61,7 @@ extension CreatedCoordinator {
         let importFromGalleryAction = RingtoneAlertAction(
             title: "Import from Gallery",
             style: .default
-        ) {
-            [weak self] _ in
-            
+        ) { [weak self] _ in
             guard let self = self else { return }
             
             self.onImportFromGallery()
@@ -69,9 +70,7 @@ extension CreatedCoordinator {
         let importFromFilesAction = RingtoneAlertAction(
             title: "Import from Files",
             style: .default
-        ) {
-            [weak self] _ in
-            
+        ) { [weak self] _ in
             guard let self = self else { return }
             
             self.onImportFromFiles()
@@ -113,6 +112,22 @@ extension CreatedCoordinator {
         presentable.toViewController().present(
             ringtoneImportFromFilesViewController,
             animated: true
+        )
+    }
+}
+
+// MARK: - Export
+extension CreatedCoordinator {
+    private func onExportAudio(_ audio: RingtoneAudio) {
+        let activityViewController = UIActivityViewController(
+            activityItems: [audio.url],
+            applicationActivities: nil
+        )
+        
+        presentable.toViewController().present(
+            activityViewController,
+            animated: true,
+            completion: nil
         )
     }
 }

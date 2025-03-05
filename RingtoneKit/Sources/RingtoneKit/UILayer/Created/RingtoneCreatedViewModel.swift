@@ -20,20 +20,24 @@ public final class RingtoneCreatedViewModel {
     private let audioPlayer: IRingtoneAudioPlayer
     private var cancellables: Set<AnyCancellable> = []
     private let audioRepository: IRingtoneAudioRepository
+    private let audioImportResponder: RingtoneAudioImportResponder
     
     // MARK: - Methods
     public init(
         audioRepository: IRingtoneAudioRepository,
         audiofavoriteStatusChangeResponder: RingtoneAudioFavoriteStatusChangeResponder,
-        audioPlayer: IRingtoneAudioPlayer
+        audioPlayer: IRingtoneAudioPlayer,
+        audioImportResponder: RingtoneAudioImportResponder
     ) {
         self.audioRepository = audioRepository
         self.audioFavoriteStatusChangeResponder = audiofavoriteStatusChangeResponder
         self.audioPlayer = audioPlayer
+        self.audioImportResponder = audioImportResponder
         
         getCreatedRingtoneAudios()
         observeFavoriteAudios()
         observeAudioPlayerStatus()
+        observeImportedAudios()
     }
 }
 
@@ -65,6 +69,15 @@ extension RingtoneCreatedViewModel {
 extension RingtoneCreatedViewModel {
     public func importRingtoneAudio() {
         action = .importAudio
+    }
+    
+    private func observeImportedAudios() {
+        audioImportResponder.audiosPublisher
+            .sink { [weak self] audios in
+                guard let self = self else { return }
+                self.audios.append(contentsOf: audios)
+            }
+            .store(in: &cancellables)
     }
 }
 

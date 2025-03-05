@@ -18,6 +18,7 @@ public final class AppDependencyContainer {
     private let discoverViewModel: RingtoneDiscoverViewModel
     private let favoritesViewModel: RingtoneFavoritesViewModel
     private let createdViewModel: RingtoneCreatedViewModel
+    private let importViewModel: RingtoneImportViewModel
     
     // MARK: - Methods
     public init () {
@@ -29,25 +30,32 @@ public final class AppDependencyContainer {
             store: RingtoneAudioStore()
         )
         
-        let audioPlayer = RingtoneAudioPlayer()
-        self.audioPlayerProgressPublisher = audioPlayer
+        let ringtoneAudioPlayer = RingtoneAudioPlayer()
+        self.audioPlayerProgressPublisher = ringtoneAudioPlayer
         
         favoritesViewModel = RingtoneFavoritesViewModel(
             audioRepository: ringtoneAudioRepository,
-            audioPlayer: audioPlayer
+            audioPlayer: ringtoneAudioPlayer
         )
         
         discoverViewModel = RingtoneDiscoverViewModel(
             categoreisRepository: ringtoneCategoriesRepository,
             audioRepository: ringtoneAudioRepository,
             audiofavoriteStatusChangeResponder: favoritesViewModel,
-            audioPlayer: audioPlayer
+            audioPlayer: ringtoneAudioPlayer
+        )
+        
+        let ringtoneAudioEditor = RingtoneAudioEditor()
+        importViewModel = RingtoneImportViewModel(
+            audioEditor: ringtoneAudioEditor,
+            audioRepository: ringtoneAudioRepository
         )
         
         createdViewModel = RingtoneCreatedViewModel(
             audioRepository: ringtoneAudioRepository,
             audiofavoriteStatusChangeResponder: favoritesViewModel,
-            audioPlayer: audioPlayer
+            audioPlayer: ringtoneAudioPlayer,
+            audioImportResponder: importViewModel
         )
     }
 }
@@ -90,18 +98,19 @@ extension AppDependencyContainer: RingtoneCreatedViewModelFactory {
     }
 }
 
-// MARK: - Import From Gallery
-extension AppDependencyContainer {
-    @MainActor
-    internal func makeRingtoneImportFromGalleryViewController() -> RingtoneImportFromGalleryViewController {
-        RingtoneImportFromGalleryViewController()
-    }
-}
-
-// MARK: - Import From Files
-extension AppDependencyContainer {
+// MARK: - Import
+extension AppDependencyContainer: RingtoneImportViewModelFactory {
     @MainActor
     internal func makeRingtoneImportFromFilesViewController() -> RingtoneImportFromFilesViewController {
         RingtoneImportFromFilesViewController()
+    }
+    
+    @MainActor
+    internal func makeRingtoneImportFromGalleryViewController() -> RingtoneImportFromGalleryViewController {
+        RingtoneImportFromGalleryViewController(viewModelFactory: self)
+    }
+    
+    public func makeRingtoneImportViewModel() -> RingtoneImportViewModel {
+        importViewModel
     }
 }
