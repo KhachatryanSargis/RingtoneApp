@@ -16,7 +16,9 @@ struct RingtoneAudioStoreItem: Sendable {
             in: .userDomainMask
         ).first!
         
-        return documentsDirectory.appendingPathComponent("tiktok.m4a")
+        return documentsDirectory
+            .appendingPathComponent("Ringtones", isDirectory: true)
+            .appendingPathComponent("tiktok.band")
     }
     
     let id: String

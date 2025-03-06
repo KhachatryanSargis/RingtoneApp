@@ -8,8 +8,18 @@
 import UIKit
 import UniformTypeIdentifiers
 import RingtoneUIKit
+import RingtoneKit
 
 public final class RingtoneImportFromFilesViewController: NiblessViewController {
+    // MARK: - Properties
+    private let viewModelFactory: RingtoneImportViewModelFactory
+    
+    // MARK: - Methods
+    public init(viewModelFactory: RingtoneImportViewModelFactory) {
+        self.viewModelFactory = viewModelFactory
+        super.init()
+    }
+    
     public override func viewDidLoad() {
         super.viewDidLoad()
         setBackgroundColor()
@@ -39,7 +49,7 @@ extension RingtoneImportFromFilesViewController {
         let documentPickerViewController = UIDocumentPickerViewController(forOpeningContentTypes: supportedTypes)
         
         documentPickerViewController.delegate = self
-        documentPickerViewController.allowsMultipleSelection = false
+        documentPickerViewController.allowsMultipleSelection = true
         
         addChild(documentPickerViewController)
         
@@ -59,6 +69,9 @@ extension RingtoneImportFromFilesViewController {
 // MARK: - UIDocumentPickerDelegate
 extension RingtoneImportFromFilesViewController: UIDocumentPickerDelegate {
     public func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]) {
+        let viewModel = viewModelFactory.makeRingtoneImportViewModel()
+        viewModel.createRingtoneItemsFromURLs(urls)
+        
         guard let presentingViewController = presentingViewController else { return }
         presentingViewController.dismiss(animated: true)
     }

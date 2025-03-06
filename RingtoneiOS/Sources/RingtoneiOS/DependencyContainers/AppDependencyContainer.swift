@@ -45,10 +45,13 @@ public final class AppDependencyContainer {
             audioPlayer: ringtoneAudioPlayer
         )
         
-        let ringtoneAudioEditor = RingtoneAudioEditor()
+        let dataImporterFactory = { RingtoneDataImporter() }
+        let dataConverterFactory = { RingtoneDataConverter() }
+        
         importViewModel = RingtoneImportViewModel(
-            audioEditor: ringtoneAudioEditor,
-            audioRepository: ringtoneAudioRepository
+            audioRepository: ringtoneAudioRepository,
+            dataImporterFactory: dataImporterFactory,
+            dataConverterFactory: dataConverterFactory
         )
         
         createdViewModel = RingtoneCreatedViewModel(
@@ -102,7 +105,7 @@ extension AppDependencyContainer: RingtoneCreatedViewModelFactory {
 extension AppDependencyContainer: RingtoneImportViewModelFactory {
     @MainActor
     internal func makeRingtoneImportFromFilesViewController() -> RingtoneImportFromFilesViewController {
-        RingtoneImportFromFilesViewController()
+        RingtoneImportFromFilesViewController(viewModelFactory: self)
     }
     
     @MainActor
