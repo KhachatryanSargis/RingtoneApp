@@ -148,7 +148,6 @@ extension RingtoneCreatedViewModel: RingtoneAudioPlaybackStatusChangeResponder {
                 case .failedToPlay:
                     self.audios = self.audios.map { $0.paused() }
                 case .failedToInitialize(let error):
-                    print("failedToInitialize", error)
                     self.audios = self.audios.map { $0.paused() }
                 }
             }
