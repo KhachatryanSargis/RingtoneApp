@@ -13,7 +13,7 @@ public final class RingtoneAudioRepository: IRingtoneAudioRepository {
     
     public func addRingtoneAudios(_ audios: [RingtoneAudio]) -> AnyPublisher<[RingtoneAudio], RingtoneAudioRepositoryError> {
         store.addRingtoneAudios(audios)
-            .mapError { .store($0) }
+            .mapError { .storeError($0) }
             .eraseToAnyPublisher()
     }
     
@@ -24,25 +24,25 @@ public final class RingtoneAudioRepository: IRingtoneAudioRepository {
     
     public func getRingtoneAudiosInCategory(_ category: RingtoneCategory) -> AnyPublisher<[RingtoneAudio], RingtoneAudioRepositoryError> {
         store.getRingtoneAudiosInCategory(category)
-            .mapError { .store($0) }
+            .mapError { .storeError($0) }
             .eraseToAnyPublisher()
     }
     
     public func getFavoriteRingtoneAudios() -> AnyPublisher<[RingtoneAudio], RingtoneAudioRepositoryError> {
         store.getFavoriteRingtoneAudios()
-            .mapError { .store($0) }
+            .mapError { .storeError($0) }
             .eraseToAnyPublisher()
     }
     
     public func getCreatedRingtoneAudios() -> AnyPublisher<[RingtoneAudio], RingtoneAudioRepositoryError> {
         store.getCreatedRingtoneAudios()
-            .mapError { .store($0) }
+            .mapError { .storeError($0) }
             .eraseToAnyPublisher()
     }
     
     public func toggleRingtoneAudioFavoriteStatus(_ audio: RingtoneAudio) -> AnyPublisher<RingtoneAudio, RingtoneAudioRepositoryError> {
         store.toggleRingtoneAudioFavoriteStatus(audio)
-            .mapError { .store($0) }
+            .mapError { .storeError($0) }
             .eraseToAnyPublisher()
     }
 }

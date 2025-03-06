@@ -6,5 +6,5 @@
 //
 
 public enum RingtoneAudioRepositoryError: Error {
-    case store(RingtoneAudioStoreError)
+    case storeError(RingtoneAudioStoreError)
 }
