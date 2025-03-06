@@ -53,8 +53,8 @@ extension CreatedCoordinator {
 extension CreatedCoordinator {
     private func showImportMenu() {
         let alertController = UIAlertController(
-            title: "Import Media",
-            message: "Choose a source to import media from.",
+            title: nil,
+            message: nil,
             preferredStyle: .actionSheet
         )
         
