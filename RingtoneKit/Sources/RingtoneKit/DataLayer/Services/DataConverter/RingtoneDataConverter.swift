@@ -89,71 +89,95 @@ extension RingtoneDataConverter {
         let accessing = url.startAccessingSecurityScopedResource()
         
         let asset = AVURLAsset(url: url)
-        asset.loadTracks(withMediaType: AVMediaType.audio) { [weak self] tracks, error in
-            guard let self = self else { return }
+        
+        guard let session = AVAssetExportSession(
+            asset: asset,
+            presetName: AVAssetExportPresetAppleM4A
+        ) else {
+            if accessing { url.stopAccessingSecurityScopedResource() }
             
-            if let error = error {
-                if accessing { url.stopAccessingSecurityScopedResource() }
-                
-                self.errorLock.lock()
-                self.errors.append(.exportSessionError(error))
-                self.errorLock.unlock()
-                
-                self.group.leave()
-                completion(nil)
-                return
-            }
+            self.errorLock.lock()
+            self.errors.append(.failedToCreateExportSession)
+            self.errorLock.unlock()
             
-            guard let track = tracks?.first else {
-                if accessing { url.stopAccessingSecurityScopedResource() }
-                
-                self.errorLock.lock()
-                self.errors.append(.unexpected)
-                self.errorLock.unlock()
-                
-                self.group.leave()
-                completion(nil)
-                return
-            }
-            
-            let composition = AVMutableComposition()
-            composition.addMutableTrack(withMediaType: AVMediaType.audio, preferredTrackID: kCMPersistentTrackID_Invalid)
-            
-            do {
-                try composition.insertTimeRange(track.timeRange, of: asset, at: CMTime.zero)
-            } catch {
-                if accessing { url.stopAccessingSecurityScopedResource() }
-                
-                self.errorLock.lock()
-                self.errors.append(.exportSessionError(error))
-                self.errorLock.unlock()
-                
-                self.group.leave()
-                completion(nil)
-                return
-            }
-            
-            guard let session = AVAssetExportSession(
-                asset: composition,
-                presetName: AVAssetExportPresetPassthrough
-            ) else {
-                if accessing { url.stopAccessingSecurityScopedResource() }
-                
-                self.errorLock.lock()
-                self.errors.append(.failedToCreateExportSession)
-                self.errorLock.unlock()
-                
-                self.group.leave()
-                completion(nil)
-                return
-            }
-            
-            self.sessionLock.lock()
-            self.sessions[url] = session
-            self.sessionLock.unlock()
-            
-            completion(session)
+            self.group.leave()
+            completion(nil)
+            return
         }
+        
+        self.sessionLock.lock()
+        self.sessions[url] = session
+        self.sessionLock.unlock()
+        
+        completion(session)
+        
+        // TODO: Research why the below approach fails for screen recordings.
+        
+        //        asset.loadTracks(withMediaType: AVMediaType.audio) { [weak self] tracks, error in
+        //            guard let self = self else { return }
+        //
+        //            if let error = error {
+        //                if accessing { url.stopAccessingSecurityScopedResource() }
+        //
+        //                self.errorLock.lock()
+        //                self.errors.append(.exportSessionError(error))
+        //                self.errorLock.unlock()
+        //
+        //                self.group.leave()
+        //                completion(nil)
+        //                return
+        //            }
+        //
+        //            guard let track = tracks?.first else {
+        //                if accessing { url.stopAccessingSecurityScopedResource() }
+        //
+        //                self.errorLock.lock()
+        //                self.errors.append(.unexpected)
+        //                self.errorLock.unlock()
+        //
+        //                self.group.leave()
+        //                completion(nil)
+        //                return
+        //            }
+        //
+        //            let composition = AVMutableComposition()
+        //            composition.addMutableTrack(withMediaType: AVMediaType.audio, preferredTrackID: kCMPersistentTrackID_Invalid)
+        //
+        //            do {
+        //                try composition.insertTimeRange(track.timeRange, of: asset, at: CMTime.zero)
+        //            } catch {
+        //                if accessing { url.stopAccessingSecurityScopedResource() }
+        //
+        //                self.errorLock.lock()
+        //                self.errors.append(.exportSessionError(error))
+        //                self.errorLock.unlock()
+        //
+        //                self.group.leave()
+        //                completion(nil)
+        //                return
+        //            }
+        //
+        //            guard let session = AVAssetExportSession(
+        //                asset: composition,
+        //                presetName: AVAssetExportPresetPassthrough
+        //            ) else {
+        //                if accessing { url.stopAccessingSecurityScopedResource() }
+        //
+        //                self.errorLock.lock()
+        //                self.errors.append(.failedToCreateExportSession)
+        //                self.errorLock.unlock()
+        //
+        //                self.group.leave()
+        //                completion(nil)
+        //                return
+        //            }
+        //
+        //            self.sessionLock.lock()
+        //            self.sessions[url] = session
+        //            self.sessionLock.unlock()
+        //
+        //            completion(session)
+        //        }
     }
 }
 
