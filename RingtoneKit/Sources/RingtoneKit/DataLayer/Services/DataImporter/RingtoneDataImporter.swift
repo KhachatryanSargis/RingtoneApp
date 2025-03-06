@@ -140,7 +140,7 @@ public final class RingtoneDataImporter: IRingtoneDataImporter, @unchecked Senda
                         .appendingPathComponent(ouputName)
                     
                     do {
-                        try fileManager.moveItem(at: url, to: outputURL)
+                        try fileManager.copyItem(at: url, to: outputURL)
                         
                         if accessing { url.stopAccessingSecurityScopedResource() }
                         
