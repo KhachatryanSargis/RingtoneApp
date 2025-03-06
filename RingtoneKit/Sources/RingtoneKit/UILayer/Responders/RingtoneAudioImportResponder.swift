@@ -8,5 +8,6 @@
 import Combine
 
 public protocol RingtoneAudioImportResponder {
+    var isLoadingPublisher: AnyPublisher<Bool, Never> { get }
     var audiosPublisher: AnyPublisher<[RingtoneAudio], Never> { get }
 }

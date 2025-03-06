@@ -30,6 +30,7 @@ public final class RingtoneCreatedViewController: NiblessViewController {
     public override func loadView() {
         let viewModel = viewModelFactory.makeRingtoneCreatedViewModel()
         observeViewModelAction(viewModel)
+        observeViewModelLoading(viewModel)
         view = RingtoneCreatedView(viewModel: viewModel)
     }
     
@@ -86,6 +87,21 @@ extension RingtoneCreatedViewController {
                 case .edit(let audio):
                     self.actionSubject.send(.edit(audio))
                 }
+            }
+            .store(in: &cancelables)
+    }
+}
+
+// MARK: - View Model Loading
+extension RingtoneCreatedViewController {
+    private func observeViewModelLoading(_ viewModel: RingtoneCreatedViewModel) {
+        viewModel.$isLoading
+            .receive(on: DispatchQueue.main)
+            .removeDuplicates()
+            .sink { [weak self] isLoading in
+                guard let self = self else { return }
+                
+                isLoading ? self.startLoading() : self.stopLoading()
             }
             .store(in: &cancelables)
     }

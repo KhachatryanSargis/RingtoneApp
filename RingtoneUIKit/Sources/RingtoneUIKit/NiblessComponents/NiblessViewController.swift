@@ -8,6 +8,13 @@
 import UIKit
 
 open class NiblessViewController: UIViewController {
+    // MARK: - Properties
+    private final var activityIndicatorView: UIActivityIndicatorView = {
+        let indicator = UIActivityIndicatorView(style: .large)
+        indicator.color = .theme.accent
+        return indicator
+    }()
+    
     // MARK: - Methods
     public init(enableKeyboardNotificationObservers: Bool = false) {
         super.init(nibName: nil, bundle: nil)
@@ -69,5 +76,19 @@ extension NiblessViewController {
         guard let keyboardFrame = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey]
                 as? CGRect else { return }
         keyboardFrameChanged(keyboardFrame)
+    }
+}
+
+// MARK: - Loader
+extension NiblessViewController {
+    public final func startLoading() {
+        view.addSubview(activityIndicatorView)
+        activityIndicatorView.center = view.center
+        activityIndicatorView.startAnimating()
+    }
+    
+    public final func stopLoading() {
+        activityIndicatorView.stopAnimating()
+        activityIndicatorView.removeFromSuperview()
     }
 }

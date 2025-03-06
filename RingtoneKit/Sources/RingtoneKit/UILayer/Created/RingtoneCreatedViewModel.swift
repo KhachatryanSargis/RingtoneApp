@@ -13,6 +13,7 @@ public protocol RingtoneCreatedViewModelFactory {
 
 public final class RingtoneCreatedViewModel {
     // MARK: - Properties
+    @Published public private(set) var isLoading: Bool = false
     @Published public private(set) var action: RingtoneCreatedAction?
     @Published public private(set) var audios: [RingtoneAudio] = []
     
@@ -76,6 +77,13 @@ extension RingtoneCreatedViewModel {
             .sink { [weak self] audios in
                 guard let self = self else { return }
                 self.audios.append(contentsOf: audios)
+            }
+            .store(in: &cancellables)
+        
+        audioImportResponder.isLoadingPublisher
+            .sink { [weak self] isLoading in
+                guard let self = self else { return }
+                self.isLoading = isLoading
             }
             .store(in: &cancellables)
     }

@@ -15,6 +15,7 @@ public protocol RingtoneImportViewModelFactory {
 
 public final class RingtoneImportViewModel {
     // MARK: - Properties
+    private let isloadingSubject = PassthroughSubject<Bool, Never>()
     private let audiosSubject = PassthroughSubject<[RingtoneAudio], Never>()
     private var cancellables: Set<AnyCancellable> = []
     
@@ -37,10 +38,13 @@ public final class RingtoneImportViewModel {
         let dataImporter = dataImporterFactory()
         let dataConverter = dataConverterFactory()
         
+        isloadingSubject.send(true)
+        
         dataImporter.importDataFromItemProviders(itemProviders)
             .sink { [weak self] result in
                 guard let self = self else { return }
                 
+                self.isloadingSubject.send(false)
                 print("importDataFromItemProviders", result.errors)
                 
                 dataConverter.convertToRingtoneAudios(result.urls)
@@ -68,6 +72,8 @@ public final class RingtoneImportViewModel {
         let dataImporter = dataImporterFactory()
         let dataConverter = dataConverterFactory()
         
+        isloadingSubject.send(true)
+        
         dataImporter.importDataFromURLs(urls)
             .sink { [weak self] result in
                 guard let self = self else { return }
@@ -81,6 +87,8 @@ public final class RingtoneImportViewModel {
                         
                         self.audioRepository.addRingtoneAudios(result.audios)
                             .sink { completion in
+                                self.isloadingSubject.send(false)
+                                
                                 guard case .failure(let error) = completion else { return }
                                 
                                 // TODO: Clean all the saved audio data if this fails.
@@ -98,6 +106,10 @@ public final class RingtoneImportViewModel {
 
 // MARK: - RingtoneAudioImportResponder
 extension RingtoneImportViewModel: RingtoneAudioImportResponder {
+    public var isLoadingPublisher: AnyPublisher<Bool, Never> {
+        isloadingSubject.eraseToAnyPublisher()
+    }
+    
     public var audiosPublisher: AnyPublisher<[RingtoneAudio], Never> {
         audiosSubject.eraseToAnyPublisher()
     }
