@@ -44,7 +44,6 @@ public final class RingtoneImportViewModel {
             .sink { [weak self] result in
                 guard let self = self else { return }
                 
-                self.isloadingSubject.send(false)
                 print("importDataFromItemProviders", result.errors)
                 
                 dataConverter.convertToRingtoneAudios(result.urls)
@@ -54,6 +53,8 @@ public final class RingtoneImportViewModel {
                         
                         self.audioRepository.addRingtoneAudios(result.audios)
                             .sink { completion in
+                                self.isloadingSubject.send(false)
+                                
                                 guard case .failure(let error) = completion else { return }
                                 
                                 // TODO: Clean all the saved audio data if this fails.
