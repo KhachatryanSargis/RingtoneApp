@@ -48,9 +48,18 @@ public final class RingtoneImportViewModel {
                         
                         print("convertToRingtoneAudios", result.errors)
                         
-                        self.audiosSubject.send(result.audios)
+                        self.audioRepository.addRingtoneAudios(result.audios)
+                            .sink { completion in
+                                guard case .failure(let error) = completion else { return }
+                                
+                                // TODO: Clean all the saved audio data if this fails.
+                                print(error)
+                            } receiveValue: { audios in
+                                self.audiosSubject.send(audios)
+                            }
+                            .store(in: &self.cancellables)
                     }
-                    .store(in: &cancellables)
+                    .store(in: &self.cancellables)
             }
             .store(in: &cancellables)
     }
