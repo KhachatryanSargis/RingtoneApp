@@ -40,7 +40,7 @@ extension RingtoneImportFromGalleryViewController {
         var configuration = PHPickerConfiguration(photoLibrary: photoLibrary)
         configuration.selectionLimit = 0
         configuration.filter = .videos
-        configuration.preferredAssetRepresentationMode = .current
+//        configuration.preferredAssetRepresentationMode = .current
         
         let pickerViewController = PHPickerViewController(configuration: configuration)
         pickerViewController.delegate = self
