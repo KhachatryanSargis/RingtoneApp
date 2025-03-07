@@ -73,7 +73,7 @@ public final class RingtoneDataImporter: IRingtoneDataImporter, @unchecked Senda
                         
                         let fileManager = FileManager.default
                         let temporaryDirectory = fileManager.temporaryDirectory
-                        let ouputName = UUID().uuidString + ".mov"
+                        let ouputName = UUID().uuidString + ".\(url.pathExtension)"
                         let outputURL = temporaryDirectory
                             .appendingPathComponent(ouputName)
                         
@@ -135,7 +135,7 @@ public final class RingtoneDataImporter: IRingtoneDataImporter, @unchecked Senda
                     
                     let fileManager = FileManager.default
                     let temporaryDirectory = fileManager.temporaryDirectory
-                    let ouputName = UUID().uuidString + ".mov"
+                    let ouputName = UUID().uuidString + ".\(url.pathExtension)"
                     let outputURL = temporaryDirectory
                         .appendingPathComponent(ouputName)
                     

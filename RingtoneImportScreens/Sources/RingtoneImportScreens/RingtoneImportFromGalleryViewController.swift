@@ -40,6 +40,7 @@ extension RingtoneImportFromGalleryViewController {
         var configuration = PHPickerConfiguration(photoLibrary: photoLibrary)
         configuration.selectionLimit = 0
         configuration.filter = .videos
+        configuration.preferredAssetRepresentationMode = .current
         
         let pickerViewController = PHPickerViewController(configuration: configuration)
         pickerViewController.delegate = self
@@ -62,6 +63,16 @@ extension RingtoneImportFromGalleryViewController {
 // MARK: - PHPickerViewControllerDelegate
 extension RingtoneImportFromGalleryViewController: PHPickerViewControllerDelegate {
     public func picker(_ picker: PHPickerViewController, didFinishPicking results: [PHPickerResult]) {
+        guard !results.isEmpty
+        else {
+            guard let presentingViewController = presentingViewController
+            else { return }
+            
+            presentingViewController.dismiss(animated: true)
+            
+            return
+        }
+        
         let itemProviders = results.map { $0.itemProvider }
         
         let viewModel = viewModelFactory.makeRingtoneImportViewModel()
