@@ -11,7 +11,7 @@ import UniformTypeIdentifiers
 
 public final class RingtoneDataImporter: IRingtoneDataImporter, @unchecked Sendable {
     // MARK: - Properties
-    private var urls: [URL: URL] = [:]
+    private var urls: [URL] = []
     private var errors: [RingtoneDataImporterError] = []
     
     // MARK: - Methods
@@ -83,7 +83,7 @@ public final class RingtoneDataImporter: IRingtoneDataImporter, @unchecked Senda
                             if accessing { url.stopAccessingSecurityScopedResource() }
                             
                             urlLock.lock()
-                            self.urls[url] = outputURL
+                            self.urls.append(outputURL)
                             urlLock.unlock()
                             
                             group.leave()
@@ -100,10 +100,10 @@ public final class RingtoneDataImporter: IRingtoneDataImporter, @unchecked Senda
                 }
                 
                 group.notify(queue: .global()) {
-                    let urls = self.urls.map { $0.value }
+                    let urls = self.urls
                     let errors = self.errors
                     
-                    self.urls = [:]
+                    self.urls = []
                     self.errors = []
                     
                     promise(.success(.init(urls: urls, errors: errors)))
@@ -145,7 +145,7 @@ public final class RingtoneDataImporter: IRingtoneDataImporter, @unchecked Senda
                         if accessing { url.stopAccessingSecurityScopedResource() }
                         
                         urlLock.lock()
-                        self.urls[url] = outputURL
+                        self.urls.append(outputURL)
                         urlLock.unlock()
                         
                         group.leave()
@@ -161,10 +161,10 @@ public final class RingtoneDataImporter: IRingtoneDataImporter, @unchecked Senda
                 }
                 
                 group.notify(queue: .global()) {
-                    let urls = self.urls.map { $0.value }
+                    let urls = self.urls
                     let errors = self.errors
                     
-                    self.urls = [:]
+                    self.urls = []
                     self.errors = []
                     
                     promise(.success(.init(urls: urls, errors: errors)))
