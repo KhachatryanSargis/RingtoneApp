@@ -13,6 +13,7 @@ public final class RingtoneDataImporter: IRingtoneDataImporter, @unchecked Senda
     // MARK: - Properties
     private var urls: [URL] = []
     private var errors: [RingtoneDataImporterError] = []
+    private var remoteURLs: [URL] = []
     
     // MARK: - Methods
     public init() {}
@@ -30,6 +31,7 @@ public final class RingtoneDataImporter: IRingtoneDataImporter, @unchecked Senda
                 
                 let group = DispatchGroup()
                 let urlLock = NSLock()
+                let urlRemoteLock = NSLock()
                 let errorLock = NSLock()
                 
                 for itemProvider in itemProviders {
@@ -69,18 +71,18 @@ public final class RingtoneDataImporter: IRingtoneDataImporter, @unchecked Senda
                             return
                         }
                         
-                        let accessing = url.startAccessingSecurityScopedResource()
-                        
-                        let fileManager = FileManager.default
-                        let temporaryDirectory = fileManager.temporaryDirectory
-                        let ouputName = UUID().uuidString + ".\(url.pathExtension)"
-                        let outputURL = temporaryDirectory
-                            .appendingPathComponent(ouputName)
+                        guard self.urlContainsData(url)
+                        else {
+                            urlRemoteLock.lock()
+                            self.remoteURLs.append(url)
+                            urlRemoteLock.unlock()
+                            
+                            group.leave()
+                            return
+                        }
                         
                         do {
-                            try fileManager.copyItem(at: url, to: outputURL)
-                            
-                            if accessing { url.stopAccessingSecurityScopedResource() }
+                            let outputURL = try self.copyDataFromUrl(url)
                             
                             urlLock.lock()
                             self.urls.append(outputURL)
@@ -88,8 +90,6 @@ public final class RingtoneDataImporter: IRingtoneDataImporter, @unchecked Senda
                             
                             group.leave()
                         } catch {
-                            if accessing { url.stopAccessingSecurityScopedResource() }
-                            
                             errorLock.lock()
                             self.errors.append(.failedToReadDataFromURL(url))
                             errorLock.unlock()
@@ -131,18 +131,8 @@ public final class RingtoneDataImporter: IRingtoneDataImporter, @unchecked Senda
                 for url in urls {
                     group.enter()
                     
-                    let accessing = url.startAccessingSecurityScopedResource()
-                    
-                    let fileManager = FileManager.default
-                    let temporaryDirectory = fileManager.temporaryDirectory
-                    let ouputName = UUID().uuidString + ".\(url.pathExtension)"
-                    let outputURL = temporaryDirectory
-                        .appendingPathComponent(ouputName)
-                    
                     do {
-                        try fileManager.copyItem(at: url, to: outputURL)
-                        
-                        if accessing { url.stopAccessingSecurityScopedResource() }
+                        let outputURL = try self.copyDataFromUrl(url)
                         
                         urlLock.lock()
                         self.urls.append(outputURL)
@@ -150,8 +140,6 @@ public final class RingtoneDataImporter: IRingtoneDataImporter, @unchecked Senda
                         
                         group.leave()
                     } catch {
-                        if accessing { url.stopAccessingSecurityScopedResource() }
-                        
                         errorLock.lock()
                         self.errors.append(.failedToReadDataFromURL(url))
                         errorLock.unlock()
@@ -172,5 +160,54 @@ public final class RingtoneDataImporter: IRingtoneDataImporter, @unchecked Senda
             }
         }
         .eraseToAnyPublisher()
+    }
+}
+
+// MARK: - Copy Data
+extension RingtoneDataImporter {
+    private func copyDataFromUrl(_ url: URL) throws -> URL {
+        let accessing = url.startAccessingSecurityScopedResource()
+        
+        let fileManager = FileManager.default
+        let temporaryDirectory = fileManager.temporaryDirectory
+        let ouputName = UUID().uuidString + ".\(url.pathExtension)"
+        let outputURL = temporaryDirectory
+            .appendingPathComponent(ouputName)
+        
+        do {
+            try fileManager.copyItem(at: url, to: outputURL)
+            
+            if accessing { url.stopAccessingSecurityScopedResource() }
+            
+            return outputURL
+        } catch {
+            if accessing { url.stopAccessingSecurityScopedResource() }
+            
+            throw error
+        }
+    }
+}
+
+// MARK: - Check For Local URLs
+extension RingtoneDataImporter {
+    private func urlContainsData(_ url: URL) -> Bool {
+        let fileManager = FileManager.default
+        
+        if fileManager.fileExists(atPath: url.path) {
+            do {
+                let fileSize = try fileManager.attributesOfItem(atPath: url.path)[.size] as? NSNumber
+                if let size = fileSize, size.intValue > 0 {
+                    return true
+                } else {
+                    return false
+                }
+            } catch {
+                print("Error checking file attributes: \(error)")
+                return false
+            }
+        } else {
+            print("File does not exist.")
+            return false
+        }
     }
 }
