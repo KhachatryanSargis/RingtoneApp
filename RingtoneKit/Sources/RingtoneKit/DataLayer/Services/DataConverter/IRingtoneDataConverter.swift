@@ -9,5 +9,5 @@ import Foundation
 import Combine
 
 public protocol IRingtoneDataConverter {
-    func convertToRingtoneAudios(_ urls: [URL]) -> AnyPublisher<RingtoneDataConverterResult, Never>
+    func convertDataImporterLocalItems(_ items: [RingtoneDataImporterLocalItem]) -> AnyPublisher<RingtoneDataConverterResult, Never>
 }

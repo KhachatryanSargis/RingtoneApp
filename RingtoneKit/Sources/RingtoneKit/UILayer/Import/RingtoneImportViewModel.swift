@@ -45,9 +45,8 @@ public final class RingtoneImportViewModel {
                 guard let self = self else { return }
                 
                 let localItems = result.localItems
-                let urls = localItems.map { $0.url }
                 
-                dataConverter.convertToRingtoneAudios(urls)
+                dataConverter.convertDataImporterLocalItems(localItems)
                     .sink { result in
                         
                         self.audioRepository.addRingtoneAudios(result.audios)
@@ -79,9 +78,8 @@ public final class RingtoneImportViewModel {
                 guard let self = self else { return }
                 
                 let localItems = result.localItems
-                let urls = localItems.map { $0.url }
                 
-                dataConverter.convertToRingtoneAudios(urls)
+                dataConverter.convertDataImporterLocalItems(localItems)
                     .sink { result in
                         
                         print("convertToRingtoneAudios", result.errors)

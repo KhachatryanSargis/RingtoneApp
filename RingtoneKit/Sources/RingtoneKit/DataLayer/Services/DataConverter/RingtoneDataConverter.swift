@@ -44,24 +44,24 @@ public final class RingtoneDataConverter: IRingtoneDataConverter, @unchecked Sen
     // MARK: - Methods
     public init() {}
     
-    public func convertToRingtoneAudios(_ urls: [URL]) -> AnyPublisher<RingtoneDataConverterResult, Never> {
+    public func convertDataImporterLocalItems(_ items: [RingtoneDataImporterLocalItem]) -> AnyPublisher<RingtoneDataConverterResult, Never> {
         Deferred {
             Future { [weak self] promise in
                 guard let self = self else { return }
                 
-                guard !urls.isEmpty
+                guard !items.isEmpty
                 else {
                     promise(.success(.init(audios: [], errors: [])))
                     return
                 }
                 
-                for url in urls {
-                    createExportSessionForUrl(url) { session in
+                for item in items {
+                    createExportSessionForItem(item) { session in
                         guard let exportSession = session else { return }
                         
-                        let id = self.configureExportSession(exportSession, withUrl: url)
+                        self.configureExportSession(exportSession, withItem: item)
                         
-                        self.processExportSession(exportSession, withUrl: url, id: id)
+                        self.processExportSession(exportSession, withItem: item)
                     }
                 }
                 
@@ -83,18 +83,21 @@ public final class RingtoneDataConverter: IRingtoneDataConverter, @unchecked Sen
 // MARK: - Create Export Session
 extension RingtoneDataConverter {
     // MARK: - Create
-    private func createExportSessionForUrl(_ url: URL, completion: @Sendable @escaping (_ session: AVAssetExportSession?) -> Void) {
+    private func createExportSessionForItem(
+        _ item: RingtoneDataImporterLocalItem,
+        completion: @Sendable @escaping (_ session: AVAssetExportSession?) -> Void
+    ) {
         group.enter()
         
-        let accessing = url.startAccessingSecurityScopedResource()
+        let accessing = item.url.startAccessingSecurityScopedResource()
         
-        let asset = AVURLAsset(url: url)
+        let asset = AVURLAsset(url: item.url)
         
         guard let session = AVAssetExportSession(
             asset: asset,
             presetName: AVAssetExportPresetAppleM4A
         ) else {
-            if accessing { url.stopAccessingSecurityScopedResource() }
+            if accessing { item.url.stopAccessingSecurityScopedResource() }
             
             self.errorLock.lock()
             self.errors.append(.failedToCreateExportSession)
@@ -106,104 +109,38 @@ extension RingtoneDataConverter {
         }
         
         self.sessionLock.lock()
-        self.sessions[url] = session
+        self.sessions[item.url] = session
         self.sessionLock.unlock()
         
         completion(session)
-        
-        // TODO: Research why the below approach fails for screen recordings.
-        
-        //        asset.loadTracks(withMediaType: AVMediaType.audio) { [weak self] tracks, error in
-        //            guard let self = self else { return }
-        //
-        //            if let error = error {
-        //                if accessing { url.stopAccessingSecurityScopedResource() }
-        //
-        //                self.errorLock.lock()
-        //                self.errors.append(.exportSessionError(error))
-        //                self.errorLock.unlock()
-        //
-        //                self.group.leave()
-        //                completion(nil)
-        //                return
-        //            }
-        //
-        //            guard let track = tracks?.first else {
-        //                if accessing { url.stopAccessingSecurityScopedResource() }
-        //
-        //                self.errorLock.lock()
-        //                self.errors.append(.unexpected)
-        //                self.errorLock.unlock()
-        //
-        //                self.group.leave()
-        //                completion(nil)
-        //                return
-        //            }
-        //
-        //            let composition = AVMutableComposition()
-        //            composition.addMutableTrack(withMediaType: AVMediaType.audio, preferredTrackID: kCMPersistentTrackID_Invalid)
-        //
-        //            do {
-        //                try composition.insertTimeRange(track.timeRange, of: asset, at: CMTime.zero)
-        //            } catch {
-        //                if accessing { url.stopAccessingSecurityScopedResource() }
-        //
-        //                self.errorLock.lock()
-        //                self.errors.append(.exportSessionError(error))
-        //                self.errorLock.unlock()
-        //
-        //                self.group.leave()
-        //                completion(nil)
-        //                return
-        //            }
-        //
-        //            guard let session = AVAssetExportSession(
-        //                asset: composition,
-        //                presetName: AVAssetExportPresetPassthrough
-        //            ) else {
-        //                if accessing { url.stopAccessingSecurityScopedResource() }
-        //
-        //                self.errorLock.lock()
-        //                self.errors.append(.failedToCreateExportSession)
-        //                self.errorLock.unlock()
-        //
-        //                self.group.leave()
-        //                completion(nil)
-        //                return
-        //            }
-        //
-        //            self.sessionLock.lock()
-        //            self.sessions[url] = session
-        //            self.sessionLock.unlock()
-        //
-        //            completion(session)
-        //        }
     }
 }
 
 // MARK: - Configure Export Session
 extension RingtoneDataConverter {
-    private func configureExportSession(_ session: AVAssetExportSession, withUrl url: URL) -> UUID {
-        let id = UUID()
-        
-        let fileName = id.uuidString + ".m4a"
+    private func configureExportSession(
+        _ session: AVAssetExportSession,
+        withItem item: RingtoneDataImporterLocalItem
+    ) {
+        let fileName = item.id.uuidString + ".m4a"
         let outputURL = rootDirectoryURL.appendingPathComponent(fileName)
         
         session.outputURL = outputURL
         session.outputFileType = .m4a
-        
-        return id
     }
 }
 
 // MARK: - Process Export Session
 extension RingtoneDataConverter {
-    private func processExportSession(_ session: AVAssetExportSession, withUrl url: URL, id: UUID) {
+    private func processExportSession(
+        _ session: AVAssetExportSession,
+        withItem item: RingtoneDataImporterLocalItem
+    ) {
         session.exportAsynchronously { [weak self] in
             guard let self = self else { return }
             
             self.sessionLock.lock()
-            guard let session = self.sessions[url]
+            guard let session = self.sessions[item.url]
             else {
                 self.errors.append(.unexpected)
                 
@@ -226,8 +163,8 @@ extension RingtoneDataConverter {
                 self.audioLock.lock()
                 self.audios.append(
                     RingtoneAudio(
-                        id: id.uuidString,
-                        title: "My Ringtone",
+                        id: item.id.uuidString,
+                        title: item.name,
                         url: session.outputURL!
                     )
                 )
@@ -245,6 +182,6 @@ extension RingtoneDataConverter {
             }
         }
         
-        url.stopAccessingSecurityScopedResource()
+        item.url.stopAccessingSecurityScopedResource()
     }
 }
