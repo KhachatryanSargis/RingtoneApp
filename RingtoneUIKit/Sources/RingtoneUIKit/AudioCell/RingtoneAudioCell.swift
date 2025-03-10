@@ -55,7 +55,7 @@ public final class RingtoneAudioCell: NiblessCollectionViewCell {
         label.font = .theme.subheadline
         label.textColor = .theme.secondaryLabel
         // TODO: Remove!
-        label.text = "01:20 | 1.2 MB"
+        label.text = "01:20 • 1.2 MB"
         return label
     }()
     
