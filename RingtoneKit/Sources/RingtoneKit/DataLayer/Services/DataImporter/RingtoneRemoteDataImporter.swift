@@ -1,15 +1,15 @@
 //
-//  RingtoneDataImporter.swift
+//  RingtoneRemoteDataImporter.swift
 //  RingtoneKit
 //
-//  Created by Sargis Khachatryan on 05.03.25.
+//  Created by Sargis Khachatryan on 09.03.25.
 //
 
 import Foundation
 import Combine
 import UniformTypeIdentifiers
 
-public final class RingtoneDataImporter: IRingtoneDataImporter, @unchecked Sendable {
+public final class RingtoneRemoteDataImporter: IRingtoneDataImporter, @unchecked Sendable {
     // MARK: - Properties
     private var items: [RingtoneDataImporterItem] = []
     
@@ -38,21 +38,6 @@ public final class RingtoneDataImporter: IRingtoneDataImporter, @unchecked Senda
                     self.loadItemProvider(itemProvider) { [suggestedName] result in
                         switch result {
                         case .success(let url):
-                            guard self.urlContainsData(url)
-                            else {
-                                lock.lock()
-                                self.items.append(
-                                    .init(
-                                        id: UUID(),
-                                        name: suggestedName ?? url.lastPathComponent,
-                                        result: .success(url),
-                                        isRemote: true
-                                    )
-                                )
-                                lock.unlock()
-                                return
-                            }
-                            
                             do {
                                 let outputURL = try self.copyDataFromUrl(url)
                                 
@@ -60,7 +45,7 @@ public final class RingtoneDataImporter: IRingtoneDataImporter, @unchecked Senda
                                 self.items.append(
                                     .init(
                                         id: UUID(),
-                                        name: suggestedName ?? url.lastPathComponent,
+                                        name: suggestedName ?? "My Ringtone",
                                         result: .success(outputURL),
                                         isRemote: false
                                     )
@@ -102,6 +87,7 @@ public final class RingtoneDataImporter: IRingtoneDataImporter, @unchecked Senda
                 group.notify(queue: .global()) {
                     let items = self.items
                     self.items = []
+                    
                     promise(.success(items))
                 }
             }
@@ -160,7 +146,7 @@ public final class RingtoneDataImporter: IRingtoneDataImporter, @unchecked Senda
                 group.notify(queue: .global()) {
                     let items = self.items
                     self.items = []
-                    promise(.success(items))
+                    promise(.success(.init(items)))
                 }
             }
         }
@@ -169,7 +155,7 @@ public final class RingtoneDataImporter: IRingtoneDataImporter, @unchecked Senda
 }
 
 // MARK: - Load Item Provider
-extension RingtoneDataImporter {
+extension RingtoneRemoteDataImporter {
     private func loadItemProvider(
         _ itemProvider: NSItemProvider,
         completion: @Sendable @escaping (Result<URL, RingtoneDataImporterError>) -> Void
@@ -182,13 +168,13 @@ extension RingtoneDataImporter {
             return
         }
         
-        itemProvider.loadItem(forTypeIdentifier: typeIdentifier) { url, error in
+        itemProvider.loadFileRepresentation(forTypeIdentifier: typeIdentifier) { url, error in
             if let error = error {
                 completion(.failure(.failedToGetURLFromItemProvider(error)))
                 return
             }
             
-            guard let url = url as? URL
+            guard let url = url
             else {
                 completion(.failure(.unexpected))
                 return
@@ -200,7 +186,7 @@ extension RingtoneDataImporter {
 }
 
 // MARK: - Copy Data
-extension RingtoneDataImporter {
+extension RingtoneRemoteDataImporter {
     private func copyDataFromUrl(_ url: URL) throws -> URL {
         let accessing = url.startAccessingSecurityScopedResource()
         
@@ -225,26 +211,19 @@ extension RingtoneDataImporter {
 }
 
 // MARK: - Check For Local URLs
-extension RingtoneDataImporter {
+extension RingtoneRemoteDataImporter {
     private func urlContainsData(_ url: URL) -> Bool {
-        let accessing = url.startAccessingSecurityScopedResource()
-        
         let fileManager = FileManager.default
         
         if fileManager.fileExists(atPath: url.path) {
             do {
                 let fileSize = try fileManager.attributesOfItem(atPath: url.path)[.size] as? NSNumber
-                
-                if accessing { url.stopAccessingSecurityScopedResource() }
-                
                 if let size = fileSize, size.intValue > 0 {
                     return true
                 } else {
                     return false
                 }
             } catch {
-                if accessing { url.stopAccessingSecurityScopedResource() }
-                
                 print("Error checking file attributes: \(error)")
                 return false
             }

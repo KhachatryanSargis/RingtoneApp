@@ -10,6 +10,6 @@ import Foundation
 public enum RingtoneDataImporterError: Error {
     case unsupportedDataFormat
     case failedToGetURLFromItemProvider(Error)
-    case failedToReadDataFromURL(URL)
+    case failedToCopyData(Error)
     case unexpected
 }

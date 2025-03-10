@@ -20,13 +20,13 @@ public final class RingtoneImportViewModel {
     private var cancellables: Set<AnyCancellable> = []
     
     private let audioRepository: IRingtoneAudioRepository
-    private let dataImporterFactory: () -> IRingtoneDataImporter
+    private let dataImporterFactory: (_ isRemote: Bool) -> IRingtoneDataImporter
     private let dataConverterFactory: () -> IRingtoneDataConverter
     
     // MARK: - Methods
     public init(
         audioRepository: IRingtoneAudioRepository,
-        dataImporterFactory: @escaping () -> IRingtoneDataImporter,
+        dataImporterFactory: @escaping (_ isRemote: Bool) -> IRingtoneDataImporter,
         dataConverterFactory: @escaping () -> IRingtoneDataConverter
     ) {
         self.audioRepository = audioRepository
@@ -35,21 +35,20 @@ public final class RingtoneImportViewModel {
     }
     
     public func createRingtoneItemsFromItemProviders(_ itemProviders: [NSItemProvider]) {
-        let dataImporter = dataImporterFactory()
+        let dataImporter = dataImporterFactory(false)
         let dataConverter = dataConverterFactory()
         
         isloadingSubject.send(true)
         
         dataImporter.importDataFromItemProviders(itemProviders)
-            .sink { [weak self] result in
+            .sink { [weak self] items in
                 guard let self = self else { return }
                 
-                print("importDataFromItemProviders", result.errors)
+                let localItems = items.filter { !$0.isRemote }
+                let urls = localItems.compactMap { try? $0.result.get() }
                 
-                dataConverter.convertToRingtoneAudios(result.urls)
+                dataConverter.convertToRingtoneAudios(urls)
                     .sink { result in
-                        
-                        print("convertToRingtoneAudios", result.errors)
                         
                         self.audioRepository.addRingtoneAudios(result.audios)
                             .sink { completion in
@@ -70,18 +69,19 @@ public final class RingtoneImportViewModel {
     }
     
     public func createRingtoneItemsFromURLs(_ urls: [URL]) {
-        let dataImporter = dataImporterFactory()
+        let dataImporter = dataImporterFactory(false)
         let dataConverter = dataConverterFactory()
         
         isloadingSubject.send(true)
         
         dataImporter.importDataFromURLs(urls)
-            .sink { [weak self] result in
+            .sink { [weak self] items in
                 guard let self = self else { return }
                 
-                print("importDataFromURLs", result.errors)
+                let localItems = items.filter { !$0.isRemote }
+                let urls = localItems.compactMap { try? $0.result.get() }
                 
-                dataConverter.convertToRingtoneAudios(result.urls)
+                dataConverter.convertToRingtoneAudios(urls)
                     .sink { result in
                         
                         print("convertToRingtoneAudios", result.errors)

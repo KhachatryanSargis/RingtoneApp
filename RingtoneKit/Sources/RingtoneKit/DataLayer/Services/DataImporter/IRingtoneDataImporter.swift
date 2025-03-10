@@ -9,6 +9,6 @@ import Foundation
 import Combine
 
 public protocol IRingtoneDataImporter {
-    func importDataFromURLs(_ urls: [URL]) -> AnyPublisher<RingtoneDataImporterResult, Never>
-    func importDataFromItemProviders(_ itemProviders: [NSItemProvider]) -> AnyPublisher<RingtoneDataImporterResult, Never>
+    func importDataFromItemProviders(_ itemProviders: [NSItemProvider]) -> AnyPublisher<[RingtoneDataImporterItem], Never>
+    func importDataFromURLs(_ urls: [URL]) -> AnyPublisher<[RingtoneDataImporterItem], Never>
 }
