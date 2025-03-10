@@ -20,13 +20,13 @@ public final class RingtoneImportViewModel {
     private var cancellables: Set<AnyCancellable> = []
     
     private let audioRepository: IRingtoneAudioRepository
-    private let dataImporterFactory: (_ isRemote: Bool) -> IRingtoneDataImporter
+    private let dataImporterFactory: () -> IRingtoneDataImporter
     private let dataConverterFactory: () -> IRingtoneDataConverter
     
     // MARK: - Methods
     public init(
         audioRepository: IRingtoneAudioRepository,
-        dataImporterFactory: @escaping (_ isRemote: Bool) -> IRingtoneDataImporter,
+        dataImporterFactory: @escaping () -> IRingtoneDataImporter,
         dataConverterFactory: @escaping () -> IRingtoneDataConverter
     ) {
         self.audioRepository = audioRepository
@@ -35,17 +35,17 @@ public final class RingtoneImportViewModel {
     }
     
     public func createRingtoneItemsFromItemProviders(_ itemProviders: [NSItemProvider]) {
-        let dataImporter = dataImporterFactory(false)
+        let dataImporter = dataImporterFactory()
         let dataConverter = dataConverterFactory()
         
         isloadingSubject.send(true)
         
-        dataImporter.importDataFromItemProviders(itemProviders)
-            .sink { [weak self] items in
+        dataImporter.importDataFromGallery(itemProviders)
+            .sink { [weak self] result in
                 guard let self = self else { return }
                 
-                let localItems = items.filter { !$0.isRemote }
-                let urls = localItems.compactMap { try? $0.result.get() }
+                let localItems = result.localItems
+                let urls = localItems.map { $0.url }
                 
                 dataConverter.convertToRingtoneAudios(urls)
                     .sink { result in
@@ -69,17 +69,17 @@ public final class RingtoneImportViewModel {
     }
     
     public func createRingtoneItemsFromURLs(_ urls: [URL]) {
-        let dataImporter = dataImporterFactory(false)
+        let dataImporter = dataImporterFactory()
         let dataConverter = dataConverterFactory()
         
         isloadingSubject.send(true)
         
-        dataImporter.importDataFromURLs(urls)
-            .sink { [weak self] items in
+        dataImporter.importDataFromDocuments(urls)
+            .sink { [weak self] result in
                 guard let self = self else { return }
                 
-                let localItems = items.filter { !$0.isRemote }
-                let urls = localItems.compactMap { try? $0.result.get() }
+                let localItems = result.localItems
+                let urls = localItems.map { $0.url }
                 
                 dataConverter.convertToRingtoneAudios(urls)
                     .sink { result in

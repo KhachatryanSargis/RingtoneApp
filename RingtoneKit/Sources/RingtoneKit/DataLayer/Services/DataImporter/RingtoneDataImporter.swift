@@ -11,19 +11,32 @@ import UniformTypeIdentifiers
 
 public final class RingtoneDataImporter: IRingtoneDataImporter, @unchecked Sendable {
     // MARK: - Properties
-    private var items: [RingtoneDataImporterItem] = []
+    private var localItems: [RingtoneDataImporterLocalItem] = []
+    private var remoteItems: [RingtoneDataImporterRemoteItem] = []
+    private var failedItems: [RingtoneDataImporterFailedItem] = []
     
     // MARK: - Methods
     public init() {}
-    
-    public func importDataFromItemProviders(_ itemProviders: [NSItemProvider]) -> AnyPublisher<[RingtoneDataImporterItem], Never> {
+}
+
+// MARK: - From Gallery
+extension RingtoneDataImporter {
+    public func importDataFromGallery(_ itemProviders: [NSItemProvider]) -> AnyPublisher<RingtoneDataImporterResult, Never> {
         Deferred {
             Future { [weak self] promise in
                 guard let self = self else { return }
                 
                 guard !itemProviders.isEmpty
                 else {
-                    promise(.success([]))
+                    promise(
+                        .success(
+                            .init(
+                                localItems: [],
+                                remoteItems: [],
+                                failedItems: []
+                            )
+                        )
+                    )
                     return
                 }
                 
@@ -41,15 +54,16 @@ public final class RingtoneDataImporter: IRingtoneDataImporter, @unchecked Senda
                             guard self.urlContainsData(url)
                             else {
                                 lock.lock()
-                                self.items.append(
+                                self.remoteItems.append(
                                     .init(
                                         id: UUID(),
-                                        name: suggestedName ?? url.lastPathComponent,
-                                        result: .success(url),
-                                        isRemote: true
+                                        url: url,
+                                        name: suggestedName ?? url.lastPathComponent
                                     )
                                 )
                                 lock.unlock()
+                                
+                                group.leave()
                                 return
                             }
                             
@@ -57,12 +71,11 @@ public final class RingtoneDataImporter: IRingtoneDataImporter, @unchecked Senda
                                 let outputURL = try self.copyDataFromUrl(url)
                                 
                                 lock.lock()
-                                self.items.append(
+                                self.localItems.append(
                                     .init(
                                         id: UUID(),
-                                        name: suggestedName ?? url.lastPathComponent,
-                                        result: .success(outputURL),
-                                        isRemote: false
+                                        url: outputURL,
+                                        name: suggestedName ?? url.lastPathComponent
                                     )
                                 )
                                 lock.unlock()
@@ -70,12 +83,12 @@ public final class RingtoneDataImporter: IRingtoneDataImporter, @unchecked Senda
                                 group.leave()
                             } catch {
                                 lock.lock()
-                                self.items.append(
+                                self.failedItems.append(
                                     .init(
                                         id: UUID(),
-                                        name: suggestedName ?? "My Ringtone",
-                                        result: .failure(.failedToCopyData(error)),
-                                        isRemote: false
+                                        url: url,
+                                        name: suggestedName ?? url.lastPathComponent,
+                                        error: .failedToCopyData(error)
                                     )
                                 )
                                 lock.unlock()
@@ -84,12 +97,12 @@ public final class RingtoneDataImporter: IRingtoneDataImporter, @unchecked Senda
                             }
                         case .failure(let error):
                             lock.lock()
-                            self.items.append(
+                            self.failedItems.append(
                                 .init(
                                     id: UUID(),
+                                    url: nil,
                                     name: suggestedName ?? "My Ringtone",
-                                    result: .failure(error),
-                                    isRemote: false
+                                    error: .failedToGetURLFromItemProvider(error)
                                 )
                             )
                             lock.unlock()
@@ -100,23 +113,162 @@ public final class RingtoneDataImporter: IRingtoneDataImporter, @unchecked Senda
                 }
                 
                 group.notify(queue: .global()) {
-                    let items = self.items
-                    self.items = []
-                    promise(.success(items))
+                    let localItems = self.localItems
+                    let remoteItems = self.remoteItems
+                    let failedItems = self.failedItems
+                    
+                    self.localItems = []
+                    self.remoteItems = []
+                    self.failedItems = []
+                    
+                    promise(
+                        .success(
+                            .init(
+                                localItems: localItems,
+                                remoteItems: remoteItems,
+                                failedItems: failedItems
+                            )
+                        )
+                    )
                 }
             }
         }
         .eraseToAnyPublisher()
     }
     
-    public func importDataFromURLs(_ urls: [URL]) -> AnyPublisher<[RingtoneDataImporterItem], Never> {
+    public func importRemoteItemsFromGallery(_ items: [RingtoneDataImporterRemoteItem]) -> AnyPublisher<RingtoneDataImporterResult, Never> {
+        return Deferred {
+            Future { [weak self] promise in
+                guard let self = self else { return }
+                
+                guard !items.isEmpty
+                else {
+                    promise(
+                        .success(
+                            .init(
+                                localItems: [],
+                                remoteItems: [],
+                                failedItems: []
+                            )
+                        )
+                    )
+                    return
+                }
+                
+                let group = DispatchGroup()
+                let lock = NSLock()
+                
+                for item in items {
+                    group.enter()
+                    
+                    guard let itemProvider = NSItemProvider(contentsOf: item.url)
+                    else {
+                        lock.lock()
+                        self.failedItems.append(
+                            .init(
+                                id: item.id,
+                                url: item.url,
+                                name: item.name,
+                                error: .unexpected
+                            )
+                        )
+                        lock.unlock()
+                        
+                        group.leave()
+                        return
+                    }
+                    
+                    self.loadItemProvider(itemProvider, isRemote: true) { result in
+                        switch result {
+                        case .success(let url):
+                            do {
+                                let outputURL = try self.copyDataFromUrl(url)
+                                
+                                lock.lock()
+                                self.localItems.append(
+                                    .init(
+                                        id: item.id,
+                                        url: outputURL,
+                                        name: item.name
+                                    )
+                                )
+                                lock.unlock()
+                                
+                                group.leave()
+                            } catch {
+                                lock.lock()
+                                self.failedItems.append(
+                                    .init(
+                                        id: item.id,
+                                        url: item.url,
+                                        name: item.name,
+                                        error: .failedToCopyData(error)
+                                    )
+                                )
+                                lock.unlock()
+                                
+                                group.leave()
+                            }
+                        case .failure(let error):
+                            lock.lock()
+                            self.failedItems.append(
+                                .init(
+                                    id: item.id,
+                                    url: item.url,
+                                    name: item.name,
+                                    error: .failedToGetURLFromItemProvider(error)
+                                )
+                            )
+                            lock.unlock()
+                            
+                            group.leave()
+                        }
+                    }
+                }
+                
+                group.notify(queue: .global()) {
+                    let localItems = self.localItems
+                    let remoteItems = self.remoteItems
+                    let failedItems = self.failedItems
+                    
+                    self.localItems = []
+                    self.remoteItems = []
+                    self.failedItems = []
+                    
+                    promise(
+                        .success(
+                            .init(
+                                localItems: localItems,
+                                remoteItems: remoteItems,
+                                failedItems: failedItems
+                            )
+                        )
+                    )
+                }
+            }
+        }
+        .eraseToAnyPublisher()
+    }
+}
+
+// MARK: - From Documents
+extension RingtoneDataImporter {
+    public func importDataFromDocuments(_ urls: [URL]) -> AnyPublisher<RingtoneDataImporterResult, Never> {
         Deferred {
             Future { [weak self] promise in
                 guard let self = self else { return }
                 
                 guard !urls.isEmpty
                 else {
-                    promise(.success([]))
+                    promise(
+                        .success(
+                            .init(
+                                localItems: [],
+                                remoteItems: [],
+                                failedItems: []
+                            )
+                        )
+                    )
                     return
                 }
                 
@@ -130,12 +282,11 @@ public final class RingtoneDataImporter: IRingtoneDataImporter, @unchecked Senda
                         let outputURL = try self.copyDataFromUrl(url)
                         
                         lock.lock()
-                        self.items.append(
+                        self.localItems.append(
                             .init(
                                 id: UUID(),
-                                name: url.lastPathComponent,
-                                result: .success(outputURL),
-                                isRemote: false
+                                url: outputURL,
+                                name: url.lastPathComponent
                             )
                         )
                         lock.unlock()
@@ -143,12 +294,12 @@ public final class RingtoneDataImporter: IRingtoneDataImporter, @unchecked Senda
                         group.leave()
                     } catch {
                         lock.lock()
-                        self.items.append(
+                        self.failedItems.append(
                             .init(
                                 id: UUID(),
+                                url: url,
                                 name: url.lastPathComponent,
-                                result: .failure(.failedToCopyData(error)),
-                                isRemote: false
+                                error: .failedToCopyData(error)
                             )
                         )
                         lock.unlock()
@@ -158,9 +309,23 @@ public final class RingtoneDataImporter: IRingtoneDataImporter, @unchecked Senda
                 }
                 
                 group.notify(queue: .global()) {
-                    let items = self.items
-                    self.items = []
-                    promise(.success(items))
+                    let localItems = self.localItems
+                    let remoteItems = self.remoteItems
+                    let failedItems = self.failedItems
+                    
+                    self.localItems = []
+                    self.remoteItems = []
+                    self.failedItems = []
+                    
+                    promise(
+                        .success(
+                            .init(
+                                localItems: localItems,
+                                remoteItems: remoteItems,
+                                failedItems: failedItems
+                            )
+                        )
+                    )
                 }
             }
         }
@@ -171,7 +336,7 @@ public final class RingtoneDataImporter: IRingtoneDataImporter, @unchecked Senda
 // MARK: - Load Item Provider
 extension RingtoneDataImporter {
     private func loadItemProvider(
-        _ itemProvider: NSItemProvider,
+        _ itemProvider: NSItemProvider, isRemote: Bool = false,
         completion: @Sendable @escaping (Result<URL, RingtoneDataImporterError>) -> Void
     ) {
         guard let typeIdentifier = itemProvider.registeredTypeIdentifiers.first,
@@ -182,19 +347,36 @@ extension RingtoneDataImporter {
             return
         }
         
-        itemProvider.loadItem(forTypeIdentifier: typeIdentifier) { url, error in
-            if let error = error {
-                completion(.failure(.failedToGetURLFromItemProvider(error)))
-                return
+        if isRemote {
+            itemProvider.loadFileRepresentation(forTypeIdentifier: typeIdentifier) { url, error in
+                if let error = error {
+                    completion(.failure(.failedToGetURLFromItemProvider(error)))
+                    return
+                }
+                
+                guard let url = url
+                else {
+                    completion(.failure(.unexpected))
+                    return
+                }
+                
+                completion(.success(url))
             }
-            
-            guard let url = url as? URL
-            else {
-                completion(.failure(.unexpected))
-                return
+        } else {
+            itemProvider.loadItem(forTypeIdentifier: typeIdentifier) { url, error in
+                if let error = error {
+                    completion(.failure(.failedToGetURLFromItemProvider(error)))
+                    return
+                }
+                
+                guard let url = url as? URL
+                else {
+                    completion(.failure(.unexpected))
+                    return
+                }
+                
+                completion(.success(url))
             }
-            
-            completion(.success(url))
         }
     }
 }

@@ -45,13 +45,7 @@ public final class AppDependencyContainer {
             audioPlayer: ringtoneAudioPlayer
         )
         
-        let dataImporterFactory = { isRemote -> IRingtoneDataImporter in
-            if isRemote {
-                return RingtoneRemoteDataImporter()
-            } else {
-                return RingtoneDataImporter()
-            }
-        }
+        let dataImporterFactory = { RingtoneDataImporter() }
         let dataConverterFactory = { RingtoneDataConverter() }
         
         importViewModel = RingtoneImportViewModel(
