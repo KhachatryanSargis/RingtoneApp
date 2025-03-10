@@ -70,7 +70,7 @@ extension RingtoneImportFromFilesViewController {
 extension RingtoneImportFromFilesViewController: UIDocumentPickerDelegate {
     public func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]) {
         let viewModel = viewModelFactory.makeRingtoneImportViewModel()
-        viewModel.createRingtoneItemsFromURLs(urls)
+        viewModel.importDataFromDocuments(urls)
         
         guard let presentingViewController = presentingViewController else { return }
         presentingViewController.dismiss(animated: true)

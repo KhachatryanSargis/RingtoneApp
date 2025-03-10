@@ -34,7 +34,7 @@ public final class RingtoneImportViewModel {
         self.dataConverterFactory = dataConverterFactory
     }
     
-    public func createRingtoneItemsFromItemProviders(_ itemProviders: [NSItemProvider]) {
+    public func importDataFromGallery(_ itemProviders: [NSItemProvider]) {
         let dataImporter = dataImporterFactory()
         let dataConverter = dataConverterFactory()
         
@@ -68,7 +68,7 @@ public final class RingtoneImportViewModel {
             .store(in: &cancellables)
     }
     
-    public func createRingtoneItemsFromURLs(_ urls: [URL]) {
+    public func importDataFromDocuments(_ urls: [URL]) {
         let dataImporter = dataImporterFactory()
         let dataConverter = dataConverterFactory()
         

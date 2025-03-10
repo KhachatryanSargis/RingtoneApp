@@ -76,7 +76,7 @@ extension RingtoneImportFromGalleryViewController: PHPickerViewControllerDelegat
         let itemProviders = results.map { $0.itemProvider }
         
         let viewModel = viewModelFactory.makeRingtoneImportViewModel()
-        viewModel.createRingtoneItemsFromItemProviders(itemProviders)
+        viewModel.importDataFromGallery(itemProviders)
         
         guard let presentingViewController = presentingViewController
         else { return }
