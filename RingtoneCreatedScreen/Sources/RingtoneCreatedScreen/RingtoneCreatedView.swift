@@ -189,9 +189,7 @@ extension RingtoneCreatedView {
     private func observeAudios() {
         viewModel.$audios
             .receive(on: DispatchQueue.main)
-            .sink(receiveCompletion: { completion in
-                print(completion)
-            }, receiveValue: { [weak self] audios in
+            .sink(receiveValue: { [weak self] audios in
                 guard let self = self else { return }
                 
                 var snapshot = NSDiffableDataSourceSnapshot<RingtoneCreatedViewSection, RingtoneAudio>()
