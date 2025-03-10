@@ -127,3 +127,19 @@ extension RingtoneAudio {
         )
     }
 }
+
+// MARK: - Failed
+extension RingtoneAudio {
+    public static func failed(item: RingtoneDataImporterFailedItem) -> RingtoneAudio {
+        .init(
+            id: item.id.uuidString,
+            title: item.name,
+            categoryID: "",
+            isCreated: false,
+            isPlaying: false,
+            isLiked: false,
+            isLoading: true,
+            url: item.url ?? URL(string: "skh.com")!
+        )
+    }
+}
