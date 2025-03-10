@@ -76,7 +76,13 @@ extension RingtoneCreatedViewModel {
         audioImportResponder.audiosPublisher
             .sink { [weak self] audios in
                 guard let self = self else { return }
-                self.audios.append(contentsOf: audios)
+                
+                // Removing already exiting audios (loading).
+                var currentAudios = self.audios
+                let newAudioIDs = audios.map { $0.id }
+                currentAudios.removeAll(where: { newAudioIDs.contains($0.id) })
+                
+                self.audios = currentAudios + audios
             }
             .store(in: &cancellables)
         

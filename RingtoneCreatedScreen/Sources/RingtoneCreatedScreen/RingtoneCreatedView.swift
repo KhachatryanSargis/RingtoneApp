@@ -99,6 +99,12 @@ extension RingtoneCreatedView {
             )
         }
         
+        let loadingCellRegistration = UICollectionView.CellRegistration<RingtoneCreatedLoadingCell, RingtoneAudio> {
+            cell, indexPath, audio in
+            
+            cell.setAudio(audio)
+        }
+        
         let emptyCellRegistration = UICollectionView.CellRegistration<RingtoneCreatedEmptyCell, RingtoneCreatedViewItem> {
             cell, indexPath, audio in
             
@@ -128,65 +134,133 @@ extension RingtoneCreatedView {
                 )
             case .loadingAudio(let audio):
                 return collectionView.dequeueConfiguredReusableCell(
-                    using: audioCellRegistration,
+                    using: loadingCellRegistration,
                     for: indexPath,
                     item: audio
                 )
             }
         }
         
+        let loadingHeaderRegistration = UICollectionView.SupplementaryRegistration<RingtoneCreatedLoadingHeader>(
+            elementKind: UICollectionView.elementKindSectionHeader
+        ) { categoryHeader, elementKind, indexPath in }
+        
+        dataSource.supplementaryViewProvider = { collectionView, kind, indexPath in
+            return collectionView.dequeueConfiguredReusableSupplementary(
+                using: loadingHeaderRegistration,
+                for: indexPath
+            )
+        }
+        
         return dataSource
     }
     
     private func makeLayout() -> UICollectionViewCompositionalLayout {
-        let layout = UICollectionViewCompositionalLayout { sectionIndex, environment in
+        let layout = UICollectionViewCompositionalLayout { [weak self] sectionIndex, environment in
+            guard let self = self else { return .none }
+            
             guard let favoritesViewSection = RingtoneCreatedViewSection(rawValue: sectionIndex)
             else { fatalError("unexpected created view section") }
             
-            let item: NSCollectionLayoutItem
-            
             switch favoritesViewSection {
             case .empty:
-                item = NSCollectionLayoutItem(
-                    layoutSize: NSCollectionLayoutSize(
-                        widthDimension: .fractionalWidth(1),
-                        heightDimension: .estimated(100)
-                    )
-                )
+                return self.createEmptySection()
             case .created:
-                item = NSCollectionLayoutItem(
-                    layoutSize: NSCollectionLayoutSize(
-                        widthDimension: .fractionalWidth(1),
-                        heightDimension: .fractionalHeight(1)
-                    )
-                )
+                return self.createLoadedSection()
             case .loading:
-                item = NSCollectionLayoutItem(
-                    layoutSize: NSCollectionLayoutSize(
-                        widthDimension: .fractionalWidth(1),
-                        heightDimension: .fractionalHeight(1)
-                    )
-                )
+                return self.createLoadingSection()
             }
-            
-            let group = NSCollectionLayoutGroup.vertical(
-                layoutSize: NSCollectionLayoutSize(
-                    widthDimension: .fractionalWidth(1),
-                    heightDimension: .estimated(100)
-                ),
-                subitems: [item]
-            )
-            group.contentInsets = .init(top: 0, leading: 8, bottom: 0, trailing: 8)
-            group.interItemSpacing = .fixed(8)
-            
-            let section = NSCollectionLayoutSection(group: group)
-            section.interGroupSpacing = 8
-            section.contentInsets = .init(top: 0, leading: 0, bottom: 16, trailing: 0)
-            
-            return section
         }
         
         return layout
+    }
+}
+
+// MARK: - Layout Sections
+extension RingtoneCreatedView {
+    private func createEmptySection() -> NSCollectionLayoutSection {
+        let item = NSCollectionLayoutItem(
+            layoutSize: NSCollectionLayoutSize(
+                widthDimension: .fractionalWidth(1),
+                heightDimension: .estimated(100)
+            )
+        )
+        
+        let group = NSCollectionLayoutGroup.vertical(
+            layoutSize: NSCollectionLayoutSize(
+                widthDimension: .fractionalWidth(1),
+                heightDimension: .estimated(100)
+            ),
+            subitems: [item]
+        )
+        group.contentInsets = .init(top: 0, leading: 8, bottom: 0, trailing: 8)
+        group.interItemSpacing = .fixed(8)
+        
+        let section = NSCollectionLayoutSection(group: group)
+        section.interGroupSpacing = 8
+        section.contentInsets = .init(top: 0, leading: 0, bottom: 16, trailing: 0)
+        
+        return section
+    }
+    
+    private func createLoadedSection() -> NSCollectionLayoutSection {
+        let item = NSCollectionLayoutItem(
+            layoutSize: NSCollectionLayoutSize(
+                widthDimension: .fractionalWidth(1),
+                heightDimension: .fractionalHeight(1)
+            )
+        )
+        
+        let group = NSCollectionLayoutGroup.vertical(
+            layoutSize: NSCollectionLayoutSize(
+                widthDimension: .fractionalWidth(1),
+                heightDimension: .estimated(100)
+            ),
+            subitems: [item]
+        )
+        group.contentInsets = .init(top: 0, leading: 8, bottom: 0, trailing: 8)
+        group.interItemSpacing = .fixed(8)
+        
+        let section = NSCollectionLayoutSection(group: group)
+        section.interGroupSpacing = 8
+        section.contentInsets = .init(top: 0, leading: 0, bottom: 16, trailing: 0)
+        
+        return section
+    }
+    
+    private func createLoadingSection() -> NSCollectionLayoutSection {
+        let item = NSCollectionLayoutItem(
+            layoutSize: NSCollectionLayoutSize(
+                widthDimension: .fractionalWidth(1),
+                heightDimension: .fractionalHeight(1)
+            )
+        )
+        
+        let group = NSCollectionLayoutGroup.vertical(
+            layoutSize: NSCollectionLayoutSize(
+                widthDimension: .fractionalWidth(1),
+                heightDimension: .estimated(100)
+            ),
+            subitems: [item]
+        )
+        group.contentInsets = .init(top: 0, leading: 8, bottom: 0, trailing: 8)
+        group.interItemSpacing = .fixed(8)
+        
+        let header = NSCollectionLayoutBoundarySupplementaryItem(
+            layoutSize: NSCollectionLayoutSize(
+                widthDimension: .fractionalWidth(1),
+                heightDimension: .estimated(50)
+            ),
+            elementKind: UICollectionView.elementKindSectionHeader,
+            alignment: .top
+        )
+        
+        let section = NSCollectionLayoutSection(group: group)
+        section.boundarySupplementaryItems = [header]
+        section.interGroupSpacing = 8
+        section.contentInsets = .init(top: 0, leading: 0, bottom: 16, trailing: 0)
+        
+        return section
     }
 }
 
@@ -210,13 +284,21 @@ extension RingtoneCreatedView {
                 guard let self = self else { return }
                 
                 var snapshot = NSDiffableDataSourceSnapshot<RingtoneCreatedViewSection, RingtoneCreatedViewItem>()
+                snapshot.appendSections([.empty, .created])
                 
                 if audios.isEmpty {
-                    snapshot.appendSections([.empty])
                     snapshot.appendItems([.empty], toSection: .empty)
                 } else {
-                    snapshot.appendSections([.created])
-                    snapshot.appendItems(audios.map { .createdAudio($0) }, toSection: .created)
+                    let createdAudios = audios.filter { $0.isLoading == false }
+                    if !createdAudios.isEmpty {
+                        snapshot.appendItems(createdAudios.map { .createdAudio($0) }, toSection: .created)
+                    }
+                    
+                    let loadingAudios = audios.filter { $0.isLoading == true }
+                    if !loadingAudios.isEmpty {
+                        snapshot.appendSections([.loading])
+                        snapshot.appendItems(loadingAudios.map { .loadingAudio($0) }, toSection: .loading)
+                    }
                 }
                 
                 self.dataSource.apply(snapshot, animatingDifferences: true)

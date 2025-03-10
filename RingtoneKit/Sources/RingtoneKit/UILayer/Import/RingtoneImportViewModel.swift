@@ -45,6 +45,8 @@ public final class RingtoneImportViewModel {
                 guard let self = self else { return }
                 
                 let localItems = result.localItems
+                let remoteItems = result.remoteItems
+                let loadingAudios = remoteItems.map { RingtoneAudio.loading(item: $0) }
                 
                 dataConverter.convertDataImporterLocalItems(localItems)
                     .sink { result in
@@ -58,7 +60,9 @@ public final class RingtoneImportViewModel {
                                 // TODO: Clean all the saved audio data if this fails.
                                 print(error)
                             } receiveValue: { audios in
-                                self.audiosSubject.send(audios)
+                                self.importDataFromRemoteItems(remoteItems)
+                                
+                                self.audiosSubject.send(audios + loadingAudios)
                             }
                             .store(in: &self.cancellables)
                     }
@@ -98,6 +102,36 @@ public final class RingtoneImportViewModel {
                             .store(in: &self.cancellables)
                     }
                     .store(in: &cancellables)
+            }
+            .store(in: &cancellables)
+    }
+    
+    private func importDataFromRemoteItems(_ items: [RingtoneDataImporterRemoteItem]) {
+        let dataImporter = dataImporterFactory()
+        let dataConverter = dataConverterFactory()
+        
+        dataImporter.importRemoteItemsFromGallery(items)
+//            .delay(for: .seconds(1), scheduler: DispatchQueue.global())
+            .sink { [weak self] result in
+                guard let self = self else { return }
+                
+                let localItems = result.localItems
+                
+                dataConverter.convertDataImporterLocalItems(localItems)
+                    .sink { result in
+                        
+                        self.audioRepository.addRingtoneAudios(result.audios)
+                            .sink { completion in
+                                guard case .failure(let error) = completion else { return }
+                                
+                                // TODO: Clean all the saved audio data if this fails.
+                                print(error)
+                            } receiveValue: { audios in
+                                self.audiosSubject.send(audios)
+                            }
+                            .store(in: &self.cancellables)
+                    }
+                    .store(in: &self.cancellables)
             }
             .store(in: &cancellables)
     }

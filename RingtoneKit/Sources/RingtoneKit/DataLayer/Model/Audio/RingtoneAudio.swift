@@ -14,6 +14,7 @@ public struct RingtoneAudio: Identifiable, Equatable, Hashable, Sendable {
     public let isCreated: Bool
     public let isPlaying: Bool
     public let isFavorite: Bool
+    public let isLoading: Bool
     public let url: URL
     
     public init(
@@ -23,6 +24,7 @@ public struct RingtoneAudio: Identifiable, Equatable, Hashable, Sendable {
         isCreated: Bool = false,
         isPlaying: Bool = false,
         isLiked: Bool = false,
+        isLoading: Bool = false,
         url: URL
     ) {
         self.id = id
@@ -31,6 +33,7 @@ public struct RingtoneAudio: Identifiable, Equatable, Hashable, Sendable {
         self.isCreated = isCreated
         self.isPlaying = isPlaying
         self.isFavorite = isLiked
+        self.isLoading = isLoading
         self.url = url
     }
 }
@@ -45,6 +48,7 @@ extension RingtoneAudio {
             isCreated: self.isCreated,
             isPlaying: self.isPlaying,
             isLiked: true,
+            isLoading: self.isLoading,
             url: self.url
         )
     }
@@ -57,6 +61,7 @@ extension RingtoneAudio {
             isCreated: self.isCreated,
             isPlaying: self.isPlaying,
             isLiked: false,
+            isLoading: self.isLoading,
             url: self.url
         )
     }
@@ -72,6 +77,7 @@ extension RingtoneAudio {
             isCreated: self.isCreated,
             isPlaying: true,
             isLiked: self.isFavorite,
+            isLoading: self.isLoading,
             url: self.url
         )
     }
@@ -84,6 +90,7 @@ extension RingtoneAudio {
             isCreated: self.isCreated,
             isPlaying: false,
             isLiked: self.isFavorite,
+            isLoading: self.isLoading,
             url: self.url
         )
     }
@@ -99,7 +106,24 @@ extension RingtoneAudio {
             isCreated: false,
             isPlaying: false,
             isLiked: false,
+            isLoading: false,
             url: URL(string: "skh.com")!
+        )
+    }
+}
+
+// MARK: - Loading
+extension RingtoneAudio {
+    public static func loading(item: RingtoneDataImporterRemoteItem) -> RingtoneAudio {
+        .init(
+            id: item.id.uuidString,
+            title: item.name,
+            categoryID: "",
+            isCreated: false,
+            isPlaying: false,
+            isLiked: false,
+            isLoading: true,
+            url: item.url
         )
     }
 }
