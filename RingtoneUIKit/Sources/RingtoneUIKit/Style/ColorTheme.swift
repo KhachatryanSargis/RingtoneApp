@@ -34,6 +34,7 @@ public struct ColorTheme {
     public let secondaryLabel = UIColor.secondaryLabel
     public let green = UIColor.systemGreen
     public let orange = UIColor.systemOrange
+    public let red = UIColor.systemRed
     public let accent = UIColor(named: "AccentColor")!
     public let shadowColor = UIColor { collection in
         switch collection.userInterfaceStyle {
