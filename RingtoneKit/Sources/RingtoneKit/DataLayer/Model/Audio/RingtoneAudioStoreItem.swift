@@ -23,6 +23,7 @@ struct RingtoneAudioStoreItem: Sendable {
     
     let id: String
     let title: String
+    let description: String
     let categoryID: String
     let isCreated: Bool
     let isFavorite: Bool
@@ -31,6 +32,7 @@ struct RingtoneAudioStoreItem: Sendable {
     init(
         id: String = UUID().uuidString,
         title: String,
+        description: String,
         categoryID: String = "Other",
         isCreated: Bool = false,
         isFavorite: Bool = false,
@@ -38,6 +40,7 @@ struct RingtoneAudioStoreItem: Sendable {
     ) {
         self.id = id
         self.title = title
+        self.description = description
         self.categoryID = categoryID
         self.isCreated = isCreated
         self.isFavorite = isFavorite
@@ -51,6 +54,7 @@ extension RingtoneAudioStoreItem {
         RingtoneAudioStoreItem(
             id: audio.id,
             title: audio.title,
+            description: audio.desciption,
             categoryID: audio.categoryID,
             isCreated: audio.isCreated,
             isFavorite: audio.isFavorite
@@ -61,6 +65,7 @@ extension RingtoneAudioStoreItem {
         RingtoneAudio(
             id: self.id,
             title: self.title,
+            desciption: self.description,
             categoryID: self.categoryID,
             isPlaying: false,
             isLiked: self.isFavorite,
