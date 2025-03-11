@@ -54,8 +54,6 @@ public final class RingtoneAudioCell: NiblessCollectionViewCell {
         label.numberOfLines = 2
         label.font = .theme.subheadline
         label.textColor = .theme.secondaryLabel
-        // TODO: Remove!
-        label.text = "01:20 • 1.2 MB"
         return label
     }()
     
@@ -183,6 +181,7 @@ extension RingtoneAudioCell {
         self.exportResponder = exportResponder
         
         titleLabel.text = audio.title
+        descriptionLabel.text = audio.desciption
         playPauseButton.setImage(audio.isPlaying ? .theme.pause : .theme.play, for: .normal)
         likeUnlikeButton.setImage(audio.isFavorite ? .theme.liked : .theme.like, for: .normal)
     }
