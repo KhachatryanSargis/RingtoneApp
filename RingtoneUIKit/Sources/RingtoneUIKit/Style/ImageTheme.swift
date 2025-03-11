@@ -40,4 +40,8 @@ public struct ImageTheme {
     
     // MARK: - RingtoneCreatedViewController
     public let import_fill = UIImage(systemName: "square.and.arrow.down.fill")!.withConfiguration(configuration)
+    
+    // MARK: - RingtoneCreatedFailedHeader
+    public let retry = UIImage(systemName: "arrow.circlepath")!.withConfiguration(configuration)
+    public let clear = UIImage(systemName: "minus.circle")!.withConfiguration(configuration)
 }
