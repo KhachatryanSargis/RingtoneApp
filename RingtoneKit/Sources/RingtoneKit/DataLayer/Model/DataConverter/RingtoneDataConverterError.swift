@@ -9,5 +9,6 @@ public enum RingtoneDataConverterError: Error, Sendable {
     case failedToCreateExportSession
     case failedToCreateGarageBandProject
     case exportSessionError(Error)
+    case loadAudioTrackError(Error)
     case unexpected
 }
