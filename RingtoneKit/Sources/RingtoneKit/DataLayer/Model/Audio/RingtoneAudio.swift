@@ -10,30 +10,36 @@ import Foundation
 public struct RingtoneAudio: Identifiable, Equatable, Hashable, Sendable {
     public let id: String
     public let title: String
+    public let desciption: String
     public let categoryID: String
     public let isCreated: Bool
     public let isPlaying: Bool
     public let isFavorite: Bool
     public let isLoading: Bool
+    public let isFailed: Bool
     public let url: URL
     
     public init(
         id: String,
         title: String,
+        desciption: String,
         categoryID: String = "Other",
         isCreated: Bool = false,
         isPlaying: Bool = false,
         isLiked: Bool = false,
         isLoading: Bool = false,
+        isFailed: Bool = false,
         url: URL
     ) {
         self.id = id
         self.title = title
+        self.desciption = desciption
         self.categoryID = categoryID
         self.isCreated = isCreated
         self.isPlaying = isPlaying
         self.isFavorite = isLiked
         self.isLoading = isLoading
+        self.isFailed = isFailed
         self.url = url
     }
 }
@@ -44,11 +50,13 @@ extension RingtoneAudio {
         RingtoneAudio(
             id: self.id,
             title: self.title,
+            desciption: self.desciption,
             categoryID: self.categoryID,
             isCreated: self.isCreated,
             isPlaying: self.isPlaying,
             isLiked: true,
             isLoading: self.isLoading,
+            isFailed: self.isFailed,
             url: self.url
         )
     }
@@ -57,11 +65,13 @@ extension RingtoneAudio {
         RingtoneAudio(
             id: self.id,
             title: self.title,
+            desciption: self.desciption,
             categoryID: self.categoryID,
             isCreated: self.isCreated,
             isPlaying: self.isPlaying,
             isLiked: false,
             isLoading: self.isLoading,
+            isFailed: self.isFailed,
             url: self.url
         )
     }
@@ -73,11 +83,13 @@ extension RingtoneAudio {
         RingtoneAudio(
             id: self.id,
             title: self.title,
+            desciption: self.desciption,
             categoryID: self.categoryID,
             isCreated: self.isCreated,
             isPlaying: true,
             isLiked: self.isFavorite,
             isLoading: self.isLoading,
+            isFailed: self.isFailed,
             url: self.url
         )
     }
@@ -86,11 +98,13 @@ extension RingtoneAudio {
         RingtoneAudio(
             id: self.id,
             title: self.title,
+            desciption: self.desciption,
             categoryID: self.categoryID,
             isCreated: self.isCreated,
             isPlaying: false,
             isLiked: self.isFavorite,
             isLoading: self.isLoading,
+            isFailed: self.isFailed,
             url: self.url
         )
     }
@@ -102,11 +116,13 @@ extension RingtoneAudio {
         .init(
             id: "",
             title: "",
+            desciption: "",
             categoryID: "",
             isCreated: false,
             isPlaying: false,
             isLiked: false,
             isLoading: false,
+            isFailed: false,
             url: URL(string: "skh.com")!
         )
     }
@@ -118,11 +134,13 @@ extension RingtoneAudio {
         .init(
             id: item.id.uuidString,
             title: item.name,
+            desciption: "",
             categoryID: "",
             isCreated: false,
             isPlaying: false,
             isLiked: false,
             isLoading: true,
+            isFailed: false,
             url: item.url
         )
     }
@@ -134,11 +152,13 @@ extension RingtoneAudio {
         .init(
             id: item.id.uuidString,
             title: item.name,
+            desciption: "\(item.error)",
             categoryID: "",
             isCreated: false,
             isPlaying: false,
             isLiked: false,
-            isLoading: true,
+            isLoading: false,
+            isFailed: true,
             url: item.url ?? URL(string: "skh.com")!
         )
     }
