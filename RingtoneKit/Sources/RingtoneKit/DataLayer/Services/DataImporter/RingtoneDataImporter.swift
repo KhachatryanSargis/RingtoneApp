@@ -48,7 +48,7 @@ extension RingtoneDataImporter {
                     
                     let suggestedName = itemProvider.suggestedName
                     
-                    self.loadItemProvider(itemProvider) { [suggestedName] result in
+                    self.loadItemProvider(itemProvider, isRemote: false) { [suggestedName] result in
                         switch result {
                         case .success(let url):
                             guard self.urlContainsData(url)
@@ -58,7 +58,8 @@ extension RingtoneDataImporter {
                                     .init(
                                         id: UUID(),
                                         url: url,
-                                        name: suggestedName ?? url.lastPathComponent
+                                        name: suggestedName ?? url.lastPathComponent,
+                                        source: .gallery
                                     )
                                 )
                                 lock.unlock()
@@ -75,7 +76,8 @@ extension RingtoneDataImporter {
                                     .init(
                                         id: UUID(),
                                         url: outputURL,
-                                        name: suggestedName ?? url.lastPathComponent
+                                        name: suggestedName ?? url.lastPathComponent,
+                                        source: .gallery
                                     )
                                 )
                                 lock.unlock()
@@ -88,6 +90,7 @@ extension RingtoneDataImporter {
                                         id: UUID(),
                                         url: url,
                                         name: suggestedName ?? url.lastPathComponent,
+                                        source: .gallery,
                                         error: .failedToCopyData(error)
                                     )
                                 )
@@ -102,6 +105,7 @@ extension RingtoneDataImporter {
                                     id: UUID(),
                                     url: nil,
                                     name: suggestedName ?? "My Ringtone",
+                                    source: .gallery,
                                     error: .failedToGetURLFromItemProvider(error)
                                 )
                             )
@@ -169,6 +173,7 @@ extension RingtoneDataImporter {
                                 id: item.id,
                                 url: item.url,
                                 name: item.name,
+                                source: .gallery,
                                 error: .unexpected
                             )
                         )
@@ -189,7 +194,8 @@ extension RingtoneDataImporter {
                                     .init(
                                         id: item.id,
                                         url: outputURL,
-                                        name: item.name
+                                        name: item.name,
+                                        source: .gallery
                                     )
                                 )
                                 lock.unlock()
@@ -202,6 +208,7 @@ extension RingtoneDataImporter {
                                         id: item.id,
                                         url: item.url,
                                         name: item.name,
+                                        source: .gallery,
                                         error: .failedToCopyData(error)
                                     )
                                 )
@@ -216,6 +223,7 @@ extension RingtoneDataImporter {
                                     id: item.id,
                                     url: item.url,
                                     name: item.name,
+                                    source: .gallery,
                                     error: .failedToGetURLFromItemProvider(error)
                                 )
                             )
@@ -278,6 +286,9 @@ extension RingtoneDataImporter {
                 for url in urls {
                     group.enter()
                     
+                    let suggestedName = url.lastPathComponent
+                        .replacingOccurrences(of: ".\(url.pathExtension)", with: "")
+                    
                     do {
                         let outputURL = try self.copyDataFromUrl(url)
                         
@@ -286,7 +297,8 @@ extension RingtoneDataImporter {
                             .init(
                                 id: UUID(),
                                 url: outputURL,
-                                name: url.lastPathComponent
+                                name: suggestedName,
+                                source: .documents
                             )
                         )
                         lock.unlock()
@@ -298,7 +310,8 @@ extension RingtoneDataImporter {
                             .init(
                                 id: UUID(),
                                 url: url,
-                                name: url.lastPathComponent,
+                                name: suggestedName,
+                                source: .documents,
                                 error: .failedToCopyData(error)
                             )
                         )
@@ -336,7 +349,7 @@ extension RingtoneDataImporter {
 // MARK: - Load Item Provider
 extension RingtoneDataImporter {
     private func loadItemProvider(
-        _ itemProvider: NSItemProvider, isRemote: Bool = false,
+        _ itemProvider: NSItemProvider, isRemote: Bool,
         completion: @Sendable @escaping (Result<URL, RingtoneDataImporterError>) -> Void
     ) {
         guard let typeIdentifier = itemProvider.registeredTypeIdentifiers.first,

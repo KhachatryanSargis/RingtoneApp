@@ -11,4 +11,5 @@ public struct RingtoneDataImporterLocalItem: Sendable {
     let id: UUID
     let url: URL
     let name: String
+    let source: RingtoneDataImporterSource
 }
