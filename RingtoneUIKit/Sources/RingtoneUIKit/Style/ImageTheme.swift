@@ -40,6 +40,10 @@ public struct ImageTheme {
     
     // MARK: - RingtoneCreatedViewController
     public let import_fill = UIImage(systemName: "square.and.arrow.down.fill")!.withConfiguration(configuration)
+    public let menu = UIImage(systemName: "ellipsis.circle")!.withConfiguration(configuration)
+    public let select = UIImage(systemName: "checkmark.circle")!.withConfiguration(configuration)
+    public let gallery = UIImage(systemName: "photo")!.withConfiguration(configuration)
+    public let files = UIImage(systemName: "folder")!.withConfiguration(configuration)
     
     // MARK: - RingtoneCreatedFailedHeader
     public let retry = UIImage(systemName: "arrow.circlepath")!.withConfiguration(configuration)

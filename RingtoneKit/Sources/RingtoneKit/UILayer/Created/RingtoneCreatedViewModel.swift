@@ -14,8 +14,13 @@ public protocol RingtoneCreatedViewModelFactory {
 public final class RingtoneCreatedViewModel {
     // MARK: - Properties
     @Published public private(set) var isLoading: Bool = false
+    @Published public private(set) var canSelect: Bool = false
     @Published public private(set) var action: RingtoneCreatedAction?
-    @Published public private(set) var audios: [RingtoneAudio] = []
+    @Published public private(set) var audios: [RingtoneAudio] = [] {
+        didSet {
+            canSelect = audios.firstIndex(where: { $0.isFailed == false }) != nil
+        }
+    }
     
     public let audioFavoriteStatusChangeResponder: RingtoneAudioFavoriteStatusChangeResponder
     public let audioImportResponder: RingtoneAudioImportResponder
@@ -97,12 +102,7 @@ extension RingtoneCreatedViewModel {
             .sink { [weak self] audios in
                 guard let self = self else { return }
                 
-                // Removing already exiting audios (loading).
-                var currentAudios = self.audios
-                let newAudioIDs = audios.map { $0.id }
-                currentAudios.removeAll(where: { newAudioIDs.contains($0.id) })
-                
-                self.audios = currentAudios + audios
+                self.audios.append(contentsOf: audios)
             }
             .store(in: &cancellables)
         

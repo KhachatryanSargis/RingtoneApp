@@ -39,6 +39,10 @@ extension CreatedCoordinator {
                 switch action {
                 case .importAudio:
                     self.showImportMenu()
+                case .importAudioFromGallery:
+                    self.onImportFromGallery()
+                case .importAudioFromFiles:
+                    self.onImportFromFiles()
                 case .export(let audio):
                     self.onExportAudio(audio)
                 case .edit(let audio):

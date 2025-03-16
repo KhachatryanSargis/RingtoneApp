@@ -29,8 +29,11 @@ public final class RingtoneCreatedViewController: NiblessViewController {
     
     public override func loadView() {
         let viewModel = viewModelFactory.makeRingtoneCreatedViewModel()
+        
         observeViewModelAction(viewModel)
         observeViewModelLoading(viewModel)
+        observeViewModelSelection(viewModel)
+        
         view = RingtoneCreatedView(viewModel: viewModel)
     }
     
@@ -57,17 +60,129 @@ extension RingtoneCreatedViewController {
             comment: "The title of the ringtone created screen."
         )
         
-        navigationItem.rightBarButtonItem = .init(
-            image: .theme.import_fill,
+        addMenuBarButtonItem()
+    }
+    
+    private func addMenuBarButtonItem(animated: Bool = false) {
+        let menuBarButtonItem = createMenuBarButtonItem()
+        navigationItem.setRightBarButton(
+            menuBarButtonItem,
+            animated: animated
+        )
+    }
+    
+    private func reloadMenuBarButtonItem() {
+        addMenuBarButtonItem(animated: true)
+    }
+    
+    private func disableMenuBarButtonItem() {
+        navigationItem.rightBarButtonItem?.isEnabled = false
+    }
+    
+    private func enableMenuBarButtonItem() {
+        navigationItem.rightBarButtonItem?.isEnabled = true
+    }
+    
+    private func createMenuBarButtonItem() -> UIBarButtonItem {
+        let menu = UIMenu(
+            title: "",
+            children: [
+                createSelectAction(),
+                createImportFromGalleryAction(),
+                createImportFromFilesAction()
+            ]
+        )
+        
+        return UIBarButtonItem(
+            image: .theme.menu,
+            menu: menu
+        )
+    }
+    
+    private func createSelectAllBarButtonItem() -> UIBarButtonItem {
+        return UIBarButtonItem(
+            title: "Select All",
             style: .plain,
             target: self,
-            action: #selector(onImport)
+            action: #selector(onSelectAll)
         )
     }
     
     @objc
-    private func onImport() {
-        actionSubject.send(.importAudio)
+    private func onSelectAll() {
+        
+    }
+    
+    private func createDoneBarButtonItem() -> UIBarButtonItem {
+        return UIBarButtonItem(
+            barButtonSystemItem: .done,
+            target: self,
+            action: #selector(onDone)
+        )
+    }
+    
+    @objc
+    private func onDone() {
+        self.navigationItem.setRightBarButton(
+            self.createMenuBarButtonItem(),
+            animated: true
+        )
+        
+        self.navigationItem.setLeftBarButton(
+            nil,
+            animated: true
+        )
+    }
+}
+
+// MARK: - Menu Actions
+extension RingtoneCreatedViewController {
+    private func createSelectAction() -> UIAction {
+        let action = UIAction(title: "Select", image: .theme.select) {
+            [weak self] _ in
+            
+            guard let self = self else { return }
+            
+            self.navigationItem.setLeftBarButton(
+                self.createSelectAllBarButtonItem(),
+                animated: true
+            )
+            
+            self.navigationItem.setRightBarButton(
+                self.createDoneBarButtonItem(),
+                animated: true
+            )
+        }
+        
+        let viewModel = viewModelFactory.makeRingtoneCreatedViewModel()
+        
+        if viewModel.canSelect {
+            action.attributes = []
+        } else {
+            action.attributes = [.disabled]
+        }
+        
+        return action
+    }
+    
+    private func createImportFromGalleryAction() -> UIAction {
+        UIAction(title: "Import From Gallery", image: .theme.gallery) {
+            [weak self] _ in
+            
+            guard let self = self else { return }
+            
+            self.actionSubject.send(.importAudioFromGallery)
+        }
+    }
+    
+    private func createImportFromFilesAction() -> UIAction {
+        UIAction(title: "Import From Files", image: .theme.files) {
+            [weak self] _ in
+            
+            guard let self = self else { return }
+            
+            self.actionSubject.send(.importAudioFromFiles)
+        }
     }
 }
 
@@ -82,6 +197,10 @@ extension RingtoneCreatedViewController {
                 switch action {
                 case .importAudio:
                     self.actionSubject.send(.importAudio)
+                case .importAudioFromGallery:
+                    self.actionSubject.send(.importAudioFromGallery)
+                case .importAudioFromFiles:
+                    self.actionSubject.send(.importAudioFromFiles)
                 case .export(let audio):
                     self.actionSubject.send(.export(audio))
                 case .edit(let audio):
@@ -101,7 +220,28 @@ extension RingtoneCreatedViewController {
             .sink { [weak self] isLoading in
                 guard let self = self else { return }
                 
-                isLoading ? self.startLoading() : self.stopLoading()
+                if isLoading {
+                    self.startLoading()
+                    self.disableMenuBarButtonItem()
+                } else {
+                    self.stopLoading()
+                    self.enableMenuBarButtonItem()
+                }
+            }
+            .store(in: &cancelables)
+    }
+}
+
+// MARK: - View Model Loading
+extension RingtoneCreatedViewController {
+    private func observeViewModelSelection(_ viewModel: RingtoneCreatedViewModel) {
+        viewModel.$canSelect
+            .receive(on: DispatchQueue.main)
+            .removeDuplicates()
+            .sink { [weak self] canSelect in
+                guard let self = self else { return }
+                
+                self.reloadMenuBarButtonItem()
             }
             .store(in: &cancelables)
     }
