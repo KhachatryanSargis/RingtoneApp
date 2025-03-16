@@ -9,7 +9,6 @@ import Foundation
 
 public struct RingtoneDataImporterFailedItem: Sendable {
     let id: UUID
-    let url: URL?
     let name: String
     let source: RingtoneDataImporterSource
     let error: RingtoneDataImporterError

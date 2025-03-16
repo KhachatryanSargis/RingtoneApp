@@ -1,11 +1,11 @@
 //
-//  RingtoneDataConverterResult.swift
+//  File.swift
 //  RingtoneKit
 //
-//  Created by Sargis Khachatryan on 05.03.25.
+//  Created by Sargis Khachatryan on 14.03.25.
 //
 
 public struct RingtoneDataConverterResult {
-    let audios: [RingtoneAudio]
-    let errors: [RingtoneDataConverterError]
+    let completeItems: [RingtoneDataConverterCompleteItem]
+    let failedItems: [RingtoneDataConverterFailedItem]
 }

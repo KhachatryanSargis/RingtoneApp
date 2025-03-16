@@ -17,7 +17,7 @@ final class RingtoneDiscoverView: NiblessView {
             frame: .zero,
             collectionViewLayout: UICollectionViewLayout()
         )
-        collectionView.showsVerticalScrollIndicator = false
+        collectionView.showsVerticalScrollIndicator = true
         collectionView.showsHorizontalScrollIndicator = false
         collectionView.backgroundColor = .clear
         collectionView.allowsSelection = false

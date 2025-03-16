@@ -22,7 +22,7 @@ final class RingtoneFavoritesView: NiblessView {
             frame: .zero,
             collectionViewLayout: UICollectionViewLayout()
         )
-        collectionView.showsVerticalScrollIndicator = false
+        collectionView.showsVerticalScrollIndicator = true
         collectionView.showsHorizontalScrollIndicator = false
         collectionView.backgroundColor = .clear
         return collectionView

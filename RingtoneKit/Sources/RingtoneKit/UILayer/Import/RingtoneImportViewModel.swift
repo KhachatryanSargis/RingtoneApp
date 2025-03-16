@@ -23,6 +23,9 @@ public final class RingtoneImportViewModel {
     private let dataImporterFactory: () -> IRingtoneDataImporter
     private let dataConverterFactory: () -> IRingtoneDataConverter
     
+    private var failedImporterItems: [RingtoneDataImporterFailedItem] = []
+    private var failedConverterItems: [RingtoneDataConverterFailedItem] = []
+    
     // MARK: - Methods
     public init(
         audioRepository: IRingtoneAudioRepository,
@@ -41,17 +44,17 @@ public final class RingtoneImportViewModel {
         isloadingSubject.send(true)
         
         dataImporter.importDataFromGallery(itemProviders)
-            .sink { [weak self] result in
+            .sink { [weak self] importerResult in
                 guard let self = self else { return }
                 
-                let localItems = result.localItems
-                let remoteItems = result.remoteItems
-                let loadingAudios = remoteItems.map { RingtoneAudio.loading(item: $0) }
+                let imports = processImporterResult(importerResult)
                 
-                dataConverter.convertDataImporterLocalItems(localItems)
-                    .sink { result in
+                dataConverter.convertDataImporterCompleteItems(imports)
+                    .sink { converterResult in
                         
-                        self.audioRepository.addRingtoneAudios(result.audios)
+                        let audios = self.processConverterResult(converterResult)
+                        
+                        self.audioRepository.addRingtoneAudios(audios)
                             .sink { completion in
                                 self.isloadingSubject.send(false)
                                 
@@ -60,9 +63,7 @@ public final class RingtoneImportViewModel {
                                 // TODO: Clean all the saved audio data if this fails.
                                 print(error)
                             } receiveValue: { audios in
-                                self.importDataFromRemoteItems(remoteItems)
-                                
-                                self.audiosSubject.send(audios + loadingAudios)
+                                self.audiosSubject.send(audios)
                             }
                             .store(in: &self.cancellables)
                     }
@@ -78,17 +79,17 @@ public final class RingtoneImportViewModel {
         isloadingSubject.send(true)
         
         dataImporter.importDataFromDocuments(urls)
-            .sink { [weak self] result in
+            .sink { [weak self] importerResult in
                 guard let self = self else { return }
                 
-                let localItems = result.localItems
+                let imports = self.processImporterResult(importerResult)
                 
-                dataConverter.convertDataImporterLocalItems(localItems)
-                    .sink { result in
+                dataConverter.convertDataImporterCompleteItems(imports)
+                    .sink { converterResult in
                         
-                        print("convertToRingtoneAudios", result.errors)
+                        let audios = self.processConverterResult(converterResult)
                         
-                        self.audioRepository.addRingtoneAudios(result.audios)
+                        self.audioRepository.addRingtoneAudios(audios)
                             .sink { completion in
                                 self.isloadingSubject.send(false)
                                 
@@ -105,36 +106,6 @@ public final class RingtoneImportViewModel {
             }
             .store(in: &cancellables)
     }
-    
-    private func importDataFromRemoteItems(_ items: [RingtoneDataImporterRemoteItem]) {
-        let dataImporter = dataImporterFactory()
-        let dataConverter = dataConverterFactory()
-        
-        dataImporter.importRemoteItemsFromGallery(items)
-//            .delay(for: .seconds(1), scheduler: DispatchQueue.global())
-            .sink { [weak self] result in
-                guard let self = self else { return }
-                
-                let localItems = result.localItems
-                
-                dataConverter.convertDataImporterLocalItems(localItems)
-                    .sink { result in
-                        
-                        self.audioRepository.addRingtoneAudios(result.audios)
-                            .sink { completion in
-                                guard case .failure(let error) = completion else { return }
-                                
-                                // TODO: Clean all the saved audio data if this fails.
-                                print(error)
-                            } receiveValue: { audios in
-                                self.audiosSubject.send(audios)
-                            }
-                            .store(in: &self.cancellables)
-                    }
-                    .store(in: &self.cancellables)
-            }
-            .store(in: &cancellables)
-    }
 }
 
 // MARK: - RingtoneAudioImportResponder
@@ -145,5 +116,55 @@ extension RingtoneImportViewModel: RingtoneAudioImportResponder {
     
     public var audiosPublisher: AnyPublisher<[RingtoneAudio], Never> {
         audiosSubject.eraseToAnyPublisher()
+    }
+    
+    public func retryAll() {
+        
+    }
+    
+    public func retryByID(_ id: String) {
+        
+    }
+    
+    public func clearAll() {
+        failedImporterItems = []
+    }
+    
+    public func clearByID(_ id: String) {
+        failedImporterItems.removeAll(where: { $0.id.uuidString == id })
+    }
+}
+
+// MARK: - Process Results
+extension RingtoneImportViewModel {
+    private func processImporterResult(_ result: RingtoneDataImporterResult) -> [RingtoneDataImporterCompleteItem] {
+        let failedItems = result.failedItems
+        self.failedImporterItems = failedItems
+        
+        let failedAudios = failedItems.map { RingtoneAudio.importFailed(item: $0) }
+        self.audiosSubject.send(failedAudios)
+        
+        return result.completeItems
+    }
+    
+    private func processConverterResult(_ result: RingtoneDataConverterResult) -> [RingtoneAudio] {
+        let failedItems = result.failedItems
+        self.failedConverterItems = failedItems
+        
+        let failedAudios = failedItems.map { RingtoneAudio.conversionFailed(item: $0) }
+        self.audiosSubject.send(failedAudios)
+        
+        let completeItems = result.completeItems
+        
+        let audios = completeItems.map {
+            RingtoneAudio.init(
+                id: $0.id.uuidString,
+                title: $0.name,
+                desciption: $0.description,
+                url: $0.url
+            )
+        }
+        
+        return audios
     }
 }

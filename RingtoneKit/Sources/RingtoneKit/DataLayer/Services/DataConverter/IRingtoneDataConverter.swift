@@ -9,5 +9,5 @@ import Foundation
 import Combine
 
 public protocol IRingtoneDataConverter {
-    func convertDataImporterLocalItems(_ items: [RingtoneDataImporterLocalItem]) -> AnyPublisher<RingtoneDataConverterResult, Never>
+    func convertDataImporterCompleteItems(_ items: [RingtoneDataImporterCompleteItem]) -> AnyPublisher<RingtoneDataConverterResult, Never>
 }

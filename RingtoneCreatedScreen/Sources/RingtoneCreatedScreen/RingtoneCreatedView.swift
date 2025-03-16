@@ -13,13 +13,13 @@ import RingtoneKit
 fileprivate enum RingtoneCreatedViewSection: Int {
     case empty
     case created
-    case loading
+    case failed
 }
 
 fileprivate enum RingtoneCreatedViewItem: Hashable {
     case empty
     case createdAudio(RingtoneAudio)
-    case loadingAudio(RingtoneAudio)
+    case failedAudio(RingtoneAudio)
 }
 
 final class RingtoneCreatedView: NiblessView {
@@ -29,7 +29,7 @@ final class RingtoneCreatedView: NiblessView {
             frame: .zero,
             collectionViewLayout: UICollectionViewLayout()
         )
-        collectionView.showsVerticalScrollIndicator = false
+        collectionView.showsVerticalScrollIndicator = true
         collectionView.showsHorizontalScrollIndicator = false
         collectionView.backgroundColor = .clear
         return collectionView
@@ -99,10 +99,16 @@ extension RingtoneCreatedView {
             )
         }
         
-        let loadingCellRegistration = UICollectionView.CellRegistration<RingtoneCreatedLoadingCell, RingtoneAudio> {
-            cell, indexPath, audio in
+        let failedCellRegistration = UICollectionView.CellRegistration<RingtoneCreatedFailedCell, RingtoneAudio> {
+            [weak self] cell, indexPath, audio in
             
-            cell.setAudio(audio)
+            guard let self = self else { return }
+            
+            cell.setAudio(audio) { audio in
+                self.viewModel.cleanFailedRingtoneAudio(audio)
+            } onRetryButtonTapped: { audio in
+                self.viewModel.retryFailedRingtoneAudio(audio)
+            }
         }
         
         let emptyCellRegistration = UICollectionView.CellRegistration<RingtoneCreatedEmptyCell, RingtoneCreatedViewItem> {
@@ -132,24 +138,45 @@ extension RingtoneCreatedView {
                     for: indexPath,
                     item: audio
                 )
-            case .loadingAudio(let audio):
+            case .failedAudio(let audio):
                 return collectionView.dequeueConfiguredReusableCell(
-                    using: loadingCellRegistration,
+                    using: failedCellRegistration,
                     for: indexPath,
                     item: audio
                 )
             }
         }
         
-        let loadingHeaderRegistration = UICollectionView.SupplementaryRegistration<RingtoneCreatedLoadingHeader>(
+        let failedHeaderRegistration = UICollectionView.SupplementaryRegistration<RingtoneCreatedFailedHeader>(
             elementKind: UICollectionView.elementKindSectionHeader
-        ) { categoryHeader, elementKind, indexPath in }
+        ) { header, elementKind, indexPath in
+            
+            header.onClearButtonTapped = { [weak self] in
+                guard let self = self else { return }
+                
+                self.viewModel.clearFailedRingtoneAudios()
+            }
+            
+            header.onRetryButtonTapped = { [weak self] in
+                guard let self = self else { return }
+                
+                self.viewModel.retryFailedRingtoneAudios()
+            }
+        }
         
         dataSource.supplementaryViewProvider = { collectionView, kind, indexPath in
-            return collectionView.dequeueConfiguredReusableSupplementary(
-                using: loadingHeaderRegistration,
-                for: indexPath
-            )
+            guard let section = RingtoneCreatedViewSection(rawValue: indexPath.section)
+            else { fatalError("unexpected created view section") }
+            
+            switch section {
+            case .failed:
+                return collectionView.dequeueConfiguredReusableSupplementary(
+                    using: failedHeaderRegistration,
+                    for: indexPath
+                )
+            default:
+                return nil
+            }
         }
         
         return dataSource
@@ -159,16 +186,16 @@ extension RingtoneCreatedView {
         let layout = UICollectionViewCompositionalLayout { [weak self] sectionIndex, environment in
             guard let self = self else { return .none }
             
-            guard let favoritesViewSection = RingtoneCreatedViewSection(rawValue: sectionIndex)
+            guard let section = RingtoneCreatedViewSection(rawValue: sectionIndex)
             else { fatalError("unexpected created view section") }
             
-            switch favoritesViewSection {
+            switch section {
             case .empty:
                 return self.createEmptySection()
             case .created:
                 return self.createLoadedSection()
-            case .loading:
-                return self.createLoadingSection()
+            case .failed:
+                return self.createFailedSection()
             }
         }
         
@@ -228,7 +255,7 @@ extension RingtoneCreatedView {
         return section
     }
     
-    private func createLoadingSection() -> NSCollectionLayoutSection {
+    private func createFailedSection() -> NSCollectionLayoutSection {
         let item = NSCollectionLayoutItem(
             layoutSize: NSCollectionLayoutSize(
                 widthDimension: .fractionalWidth(1),
@@ -246,19 +273,21 @@ extension RingtoneCreatedView {
         group.contentInsets = .init(top: 0, leading: 8, bottom: 0, trailing: 8)
         group.interItemSpacing = .fixed(8)
         
-        let header = NSCollectionLayoutBoundarySupplementaryItem(
-            layoutSize: NSCollectionLayoutSize(
-                widthDimension: .fractionalWidth(1),
-                heightDimension: .estimated(50)
-            ),
-            elementKind: UICollectionView.elementKindSectionHeader,
-            alignment: .top
-        )
-        
         let section = NSCollectionLayoutSection(group: group)
-        section.boundarySupplementaryItems = [header]
         section.interGroupSpacing = 8
         section.contentInsets = .init(top: 0, leading: 0, bottom: 16, trailing: 0)
+        
+        if !dataSource.snapshot().itemIdentifiers(inSection: .failed).isEmpty {
+            let header = NSCollectionLayoutBoundarySupplementaryItem(
+                layoutSize: NSCollectionLayoutSize(
+                    widthDimension: .fractionalWidth(1),
+                    heightDimension: .estimated(50)
+                ),
+                elementKind: UICollectionView.elementKindSectionHeader,
+                alignment: .top
+            )
+            section.boundarySupplementaryItems = [header]
+        }
         
         return section
     }
@@ -284,20 +313,19 @@ extension RingtoneCreatedView {
                 guard let self = self else { return }
                 
                 var snapshot = NSDiffableDataSourceSnapshot<RingtoneCreatedViewSection, RingtoneCreatedViewItem>()
-                snapshot.appendSections([.empty, .created])
+                snapshot.appendSections([.empty, .created, .failed])
                 
                 if audios.isEmpty {
                     snapshot.appendItems([.empty], toSection: .empty)
                 } else {
-                    let createdAudios = audios.filter { $0.isLoading == false }
+                    let createdAudios = audios.filter { $0.isFailed == false }
                     if !createdAudios.isEmpty {
                         snapshot.appendItems(createdAudios.map { .createdAudio($0) }, toSection: .created)
                     }
                     
-                    let loadingAudios = audios.filter { $0.isLoading == true }
-                    if !loadingAudios.isEmpty {
-                        snapshot.appendSections([.loading])
-                        snapshot.appendItems(loadingAudios.map { .loadingAudio($0) }, toSection: .loading)
+                    let failedAudios = audios.filter { $0.isFailed == true }
+                    if !failedAudios.isEmpty {
+                        snapshot.appendItems(failedAudios.map { .failedAudio($0) }, toSection: .failed)
                     }
                 }
                 

@@ -6,7 +6,6 @@
 //
 
 public struct RingtoneDataImporterResult: Sendable {
-    let localItems: [RingtoneDataImporterLocalItem]
-    let remoteItems: [RingtoneDataImporterRemoteItem]
+    let completeItems: [RingtoneDataImporterCompleteItem]
     let failedItems: [RingtoneDataImporterFailedItem]
 }

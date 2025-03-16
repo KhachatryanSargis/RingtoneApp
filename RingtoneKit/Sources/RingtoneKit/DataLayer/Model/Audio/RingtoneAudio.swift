@@ -15,8 +15,9 @@ public struct RingtoneAudio: Identifiable, Equatable, Hashable, Sendable {
     public let isCreated: Bool
     public let isPlaying: Bool
     public let isFavorite: Bool
-    public let isLoading: Bool
-    public let isFailed: Bool
+    public let failedToImport: Bool
+    public let failedToConvert: Bool
+    public var isFailed: Bool { failedToImport || failedToConvert }
     public let url: URL
     
     public init(
@@ -27,8 +28,9 @@ public struct RingtoneAudio: Identifiable, Equatable, Hashable, Sendable {
         isCreated: Bool = false,
         isPlaying: Bool = false,
         isLiked: Bool = false,
-        isLoading: Bool = false,
-        isFailed: Bool = false,
+        isImporting: Bool = false,
+        failedToImport: Bool = false,
+        failedToConvert: Bool = false,
         url: URL
     ) {
         self.id = id
@@ -38,8 +40,8 @@ public struct RingtoneAudio: Identifiable, Equatable, Hashable, Sendable {
         self.isCreated = isCreated
         self.isPlaying = isPlaying
         self.isFavorite = isLiked
-        self.isLoading = isLoading
-        self.isFailed = isFailed
+        self.failedToImport = failedToImport
+        self.failedToConvert = failedToConvert
         self.url = url
     }
 }
@@ -55,8 +57,8 @@ extension RingtoneAudio {
             isCreated: self.isCreated,
             isPlaying: self.isPlaying,
             isLiked: true,
-            isLoading: self.isLoading,
-            isFailed: self.isFailed,
+            failedToImport: self.failedToImport,
+            failedToConvert: self.failedToConvert,
             url: self.url
         )
     }
@@ -70,8 +72,8 @@ extension RingtoneAudio {
             isCreated: self.isCreated,
             isPlaying: self.isPlaying,
             isLiked: false,
-            isLoading: self.isLoading,
-            isFailed: self.isFailed,
+            failedToImport: self.failedToImport,
+            failedToConvert: self.failedToConvert,
             url: self.url
         )
     }
@@ -88,8 +90,8 @@ extension RingtoneAudio {
             isCreated: self.isCreated,
             isPlaying: true,
             isLiked: self.isFavorite,
-            isLoading: self.isLoading,
-            isFailed: self.isFailed,
+            failedToImport: self.failedToImport,
+            failedToConvert: self.failedToConvert,
             url: self.url
         )
     }
@@ -103,8 +105,8 @@ extension RingtoneAudio {
             isCreated: self.isCreated,
             isPlaying: false,
             isLiked: self.isFavorite,
-            isLoading: self.isLoading,
-            isFailed: self.isFailed,
+            failedToImport: self.failedToImport,
+            failedToConvert: self.failedToConvert,
             url: self.url
         )
     }
@@ -121,34 +123,17 @@ extension RingtoneAudio {
             isCreated: false,
             isPlaying: false,
             isLiked: false,
-            isLoading: false,
-            isFailed: false,
+            isImporting: false,
+            failedToImport: false,
+            failedToConvert: false,
             url: URL(string: "skh.com")!
-        )
-    }
-}
-
-// MARK: - Loading
-extension RingtoneAudio {
-    public static func loading(item: RingtoneDataImporterRemoteItem) -> RingtoneAudio {
-        .init(
-            id: item.id.uuidString,
-            title: item.name,
-            desciption: "",
-            categoryID: "",
-            isCreated: false,
-            isPlaying: false,
-            isLiked: false,
-            isLoading: true,
-            isFailed: false,
-            url: item.url
         )
     }
 }
 
 // MARK: - Failed
 extension RingtoneAudio {
-    public static func failed(item: RingtoneDataImporterFailedItem) -> RingtoneAudio {
+    public static func importFailed(item: RingtoneDataImporterFailedItem) -> RingtoneAudio {
         .init(
             id: item.id.uuidString,
             title: item.name,
@@ -157,9 +142,26 @@ extension RingtoneAudio {
             isCreated: false,
             isPlaying: false,
             isLiked: false,
-            isLoading: false,
-            isFailed: true,
-            url: item.url ?? URL(string: "skh.com")!
+            isImporting: false,
+            failedToImport: true,
+            failedToConvert: false,
+            url: URL(string: "skh.com")!
+        )
+    }
+    
+    public static func conversionFailed(item: RingtoneDataConverterFailedItem) -> RingtoneAudio {
+        .init(
+            id: item.id.uuidString,
+            title: item.name,
+            desciption: "\(item.error)",
+            categoryID: "",
+            isCreated: false,
+            isPlaying: false,
+            isLiked: false,
+            isImporting: false,
+            failedToImport: false,
+            failedToConvert: true,
+            url: URL(string: "skh.com")!
         )
     }
 }

@@ -18,10 +18,10 @@ public final class RingtoneCreatedViewModel {
     @Published public private(set) var audios: [RingtoneAudio] = []
     
     public let audioFavoriteStatusChangeResponder: RingtoneAudioFavoriteStatusChangeResponder
+    public let audioImportResponder: RingtoneAudioImportResponder
     private let audioPlayer: IRingtoneAudioPlayer
     private var cancellables: Set<AnyCancellable> = []
     private let audioRepository: IRingtoneAudioRepository
-    private let audioImportResponder: RingtoneAudioImportResponder
     
     // MARK: - Methods
     public init(
@@ -39,6 +39,26 @@ public final class RingtoneCreatedViewModel {
         observeFavoriteAudios()
         observeAudioPlayerStatus()
         observeImportedAudios()
+    }
+    
+    public func clearFailedRingtoneAudios() {
+        audios.removeAll(where: { $0.failedToImport || $0.failedToConvert })
+        audioImportResponder.clearAll()
+    }
+    
+    public func retryFailedRingtoneAudio(_ audio: RingtoneAudio) {
+        audios.removeAll(where: { $0.id == audio.id })
+        audioImportResponder.clearByID(audio.id)
+    }
+    
+    public func retryFailedRingtoneAudios() {
+        audios.removeAll(where: { $0.failedToImport || $0.failedToConvert })
+        audioImportResponder.retryAll()
+    }
+    
+    public func cleanFailedRingtoneAudio(_ audio: RingtoneAudio) {
+        audios.removeAll(where: { $0.id == audio.id })
+        audioImportResponder.retryByID(audio.id)
     }
 }
 

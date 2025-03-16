@@ -7,7 +7,7 @@
 
 import Foundation
 
-public enum RingtoneDataImporterError: Error {
+public enum RingtoneDataImporterError: Error, Sendable {
     case unsupportedDataFormat
     case failedToGetURLFromItemProvider(Error)
     case failedToCopyData(Error)

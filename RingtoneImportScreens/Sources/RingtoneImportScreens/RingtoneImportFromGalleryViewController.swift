@@ -8,6 +8,7 @@
 import PhotosUI
 import RingtoneUIKit
 import RingtoneKit
+import UniformTypeIdentifiers
 
 public final class RingtoneImportFromGalleryViewController: NiblessViewController {
     // MARK: - Properties
