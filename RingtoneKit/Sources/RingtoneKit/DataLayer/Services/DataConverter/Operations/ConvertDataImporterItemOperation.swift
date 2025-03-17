@@ -87,7 +87,7 @@ class ConvertDataImporterItemOperation: AsyncOperation, @unchecked Sendable {
                 return
             }
             
-            let fileName = item.id.uuidString + ".m4a"
+            let fileName = item.id.uuidString + ".wav"
             let outputURL = rootDirectoryURL.appendingPathComponent(fileName)
             
             session.outputURL = outputURL
