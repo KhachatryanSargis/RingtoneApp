@@ -147,7 +147,8 @@ extension RingtoneDataConverter {
                 
                 let sizeFormatted: String
                 if fileSizeInMB < 1 {
-                    sizeFormatted = String(format: "%.2f MB", fileSizeInMB)
+                    let fileSizeInKB = fileSize.doubleValue / 1024
+                    sizeFormatted = String(format: "%.1f KB", fileSizeInKB)
                 } else {
                     sizeFormatted = String(format: "%.1f MB", fileSizeInMB)
                 }
