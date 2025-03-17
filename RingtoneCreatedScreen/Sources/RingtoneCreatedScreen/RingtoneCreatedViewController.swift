@@ -239,26 +239,15 @@ extension RingtoneCreatedViewController {
     }
     
     private func onDeleteButtonTapped() {
-        let alertController = UIAlertController(
-            title: "Are you sure you want to delete selected ringtones?",
-            message: "You can't undo this action.",
-            preferredStyle: .alert
-        )
-        
-        let cancelAction = UIAlertAction(title: "Cancel", style: .cancel)
-        let deleteAction = UIAlertAction(title: "Delete", style: .destructive) { [weak self] _ in
+        let deleteAlertController = UIAlertController.deleteAlertController { [weak self] in
             guard let self = self else { return }
-            
             let viewModel = self.viewModelFactory.makeRingtoneCreatedViewModel()
             let audios = viewModel.audios.filter { $0.isSelected == true }
             
             viewModel.deleteRingtoneAudios(audios)
         }
         
-        alertController.addAction(cancelAction)
-        alertController.addAction(deleteAction)
-        
-        present(alertController, animated: true)
+        present(deleteAlertController, animated: true)
     }
     
     private func enableExportDeleteView() {
