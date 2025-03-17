@@ -26,6 +26,8 @@ public final class RingtoneImportViewModel {
     private var failedImporterItems: [RingtoneDataImporterFailedItem] = []
     private var failedConverterItems: [RingtoneDataConverterFailedItem] = []
     
+    private var failedAudios: [RingtoneAudio] = []
+    
     // MARK: - Methods
     public init(
         audioRepository: IRingtoneAudioRepository,
@@ -63,7 +65,7 @@ public final class RingtoneImportViewModel {
                                 // TODO: Clean all the saved audio data if this fails.
                                 print(error)
                             } receiveValue: { audios in
-                                self.audiosSubject.send(audios)
+                                self.audiosSubject.send(audios + self.failedAudios)
                             }
                             .store(in: &self.cancellables)
                     }
@@ -98,7 +100,7 @@ public final class RingtoneImportViewModel {
                                 // TODO: Clean all the saved audio data if this fails.
                                 print(error)
                             } receiveValue: { audios in
-                                self.audiosSubject.send(audios)
+                                self.audiosSubject.send(audios + self.failedAudios)
                             }
                             .store(in: &self.cancellables)
                     }
@@ -142,7 +144,7 @@ extension RingtoneImportViewModel {
         self.failedImporterItems = failedItems
         
         let failedAudios = failedItems.map { RingtoneAudio.importFailed(item: $0) }
-        self.audiosSubject.send(failedAudios)
+        self.failedAudios.append(contentsOf: failedAudios)
         
         return result.completeItems
     }
@@ -152,7 +154,7 @@ extension RingtoneImportViewModel {
         self.failedConverterItems = failedItems
         
         let failedAudios = failedItems.map { RingtoneAudio.conversionFailed(item: $0) }
-        self.audiosSubject.send(failedAudios)
+        self.failedAudios.append(contentsOf: failedAudios)
         
         let completeItems = result.completeItems
         

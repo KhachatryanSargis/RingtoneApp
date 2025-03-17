@@ -18,6 +18,7 @@ public struct RingtoneAudio: Identifiable, Equatable, Hashable, Sendable {
     public let failedToImport: Bool
     public let failedToConvert: Bool
     public var isFailed: Bool { failedToImport || failedToConvert }
+    public let isSelected: Bool?
     public let url: URL
     
     public init(
@@ -31,6 +32,7 @@ public struct RingtoneAudio: Identifiable, Equatable, Hashable, Sendable {
         isImporting: Bool = false,
         failedToImport: Bool = false,
         failedToConvert: Bool = false,
+        isSelected: Bool? = nil,
         url: URL
     ) {
         self.id = id
@@ -42,6 +44,7 @@ public struct RingtoneAudio: Identifiable, Equatable, Hashable, Sendable {
         self.isFavorite = isLiked
         self.failedToImport = failedToImport
         self.failedToConvert = failedToConvert
+        self.isSelected = isSelected
         self.url = url
     }
 }
@@ -59,6 +62,7 @@ extension RingtoneAudio {
             isLiked: true,
             failedToImport: self.failedToImport,
             failedToConvert: self.failedToConvert,
+            isSelected: self.isSelected,
             url: self.url
         )
     }
@@ -74,6 +78,7 @@ extension RingtoneAudio {
             isLiked: false,
             failedToImport: self.failedToImport,
             failedToConvert: self.failedToConvert,
+            isSelected: self.isSelected,
             url: self.url
         )
     }
@@ -92,6 +97,7 @@ extension RingtoneAudio {
             isLiked: self.isFavorite,
             failedToImport: self.failedToImport,
             failedToConvert: self.failedToConvert,
+            isSelected: self.isSelected,
             url: self.url
         )
     }
@@ -107,6 +113,58 @@ extension RingtoneAudio {
             isLiked: self.isFavorite,
             failedToImport: self.failedToImport,
             failedToConvert: self.failedToConvert,
+            isSelected: self.isSelected,
+            url: self.url
+        )
+    }
+}
+
+// MARK: - Select, Deselect, No Selection
+extension RingtoneAudio {
+    public func selected() -> RingtoneAudio {
+        RingtoneAudio(
+            id: self.id,
+            title: self.title,
+            desciption: self.desciption,
+            categoryID: self.categoryID,
+            isCreated: self.isCreated,
+            isPlaying: self.isPlaying,
+            isLiked: self.isFavorite,
+            failedToImport: self.failedToImport,
+            failedToConvert: self.failedToConvert,
+            isSelected: true,
+            url: self.url
+        )
+    }
+    
+    public func deselected() -> RingtoneAudio {
+        RingtoneAudio(
+            id: self.id,
+            title: self.title,
+            desciption: self.desciption,
+            categoryID: self.categoryID,
+            isCreated: self.isCreated,
+            isPlaying: self.isPlaying,
+            isLiked: self.isFavorite,
+            failedToImport: self.failedToImport,
+            failedToConvert: self.failedToConvert,
+            isSelected: false,
+            url: self.url
+        )
+    }
+    
+    public func noSelection() -> RingtoneAudio {
+        RingtoneAudio(
+            id: self.id,
+            title: self.title,
+            desciption: self.desciption,
+            categoryID: self.categoryID,
+            isCreated: self.isCreated,
+            isPlaying: self.isPlaying,
+            isLiked: self.isFavorite,
+            failedToImport: self.failedToImport,
+            failedToConvert: self.failedToConvert,
+            isSelected: nil,
             url: self.url
         )
     }
@@ -126,6 +184,7 @@ extension RingtoneAudio {
             isImporting: false,
             failedToImport: false,
             failedToConvert: false,
+            isSelected: nil,
             url: URL(string: "skh.com")!
         )
     }
@@ -145,6 +204,7 @@ extension RingtoneAudio {
             isImporting: false,
             failedToImport: true,
             failedToConvert: false,
+            isSelected: nil,
             url: URL(string: "skh.com")!
         )
     }
@@ -161,6 +221,7 @@ extension RingtoneAudio {
             isImporting: false,
             failedToImport: false,
             failedToConvert: true,
+            isSelected: nil,
             url: URL(string: "skh.com")!
         )
     }

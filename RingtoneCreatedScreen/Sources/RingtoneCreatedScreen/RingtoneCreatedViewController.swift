@@ -13,6 +13,11 @@ import RingtoneKit
 
 public final class RingtoneCreatedViewController: NiblessViewController {
     // MARK: - Properties
+    private let exportDeleteView: RingtoneExportDeleteView = {
+        let view = RingtoneExportDeleteView(frame: .zero)
+        return view
+    }()
+    
     public var actionPublisher: AnyPublisher<RingtoneCreatedAction, Never> {
         actionSubject.eraseToAnyPublisher()
     }
@@ -40,6 +45,7 @@ public final class RingtoneCreatedViewController: NiblessViewController {
     public override func viewDidLoad() {
         super.viewDidLoad()
         configureTabBarItem()
+        configureExportDeleteView()
     }
 }
 
@@ -63,26 +69,64 @@ extension RingtoneCreatedViewController {
         addMenuBarButtonItem()
     }
     
-    private func addMenuBarButtonItem(animated: Bool = false) {
-        let menuBarButtonItem = createMenuBarButtonItem()
-        navigationItem.setRightBarButton(
-            menuBarButtonItem,
-            animated: animated
+    private func createSelectAllBarButtonItem() -> UIBarButtonItem {
+        return UIBarButtonItem(
+            title: "Select All",
+            style: .plain,
+            target: self,
+            action: #selector(onSelectAll)
         )
     }
     
-    private func reloadMenuBarButtonItem() {
-        addMenuBarButtonItem(animated: true)
+    private func createDeselectAllBarButtonItem() -> UIBarButtonItem {
+        return UIBarButtonItem(
+            title: "Deselect All",
+            style: .plain,
+            target: self,
+            action: #selector(onDeselectAll)
+        )
     }
     
-    private func disableMenuBarButtonItem() {
-        navigationItem.rightBarButtonItem?.isEnabled = false
+    private func createDoneBarButtonItem() -> UIBarButtonItem {
+        return UIBarButtonItem(
+            barButtonSystemItem: .done,
+            target: self,
+            action: #selector(onDone)
+        )
     }
     
-    private func enableMenuBarButtonItem() {
-        navigationItem.rightBarButtonItem?.isEnabled = true
+    @objc
+    private func onSelectAll() {
+        navigationItem.setLeftBarButton(
+            createDeselectAllBarButtonItem(),
+            animated: true
+        )
+        
+        let viewModel = viewModelFactory.makeRingtoneCreatedViewModel()
+        viewModel.selectAllRingtoneAudios()
     }
     
+    @objc
+    private func onDeselectAll() {
+        navigationItem.setLeftBarButton(
+            createSelectAllBarButtonItem(),
+            animated: true
+        )
+        
+        let viewModel = viewModelFactory.makeRingtoneCreatedViewModel()
+        viewModel.deselectAllRingtoneAudios()
+    }
+    
+    @objc
+    private func onDone() {
+        let viewModel = viewModelFactory.makeRingtoneCreatedViewModel()
+        viewModel.deselectAllRingtoneAudios()
+        viewModel.disableSelection()
+    }
+}
+
+// MARK: - Menu
+extension RingtoneCreatedViewController {
     private func createMenuBarButtonItem() -> UIBarButtonItem {
         let menu = UIMenu(
             title: "",
@@ -99,62 +143,12 @@ extension RingtoneCreatedViewController {
         )
     }
     
-    private func createSelectAllBarButtonItem() -> UIBarButtonItem {
-        return UIBarButtonItem(
-            title: "Select All",
-            style: .plain,
-            target: self,
-            action: #selector(onSelectAll)
-        )
-    }
-    
-    @objc
-    private func onSelectAll() {
-        
-    }
-    
-    private func createDoneBarButtonItem() -> UIBarButtonItem {
-        return UIBarButtonItem(
-            barButtonSystemItem: .done,
-            target: self,
-            action: #selector(onDone)
-        )
-    }
-    
-    @objc
-    private func onDone() {
-        self.navigationItem.setRightBarButton(
-            self.createMenuBarButtonItem(),
-            animated: true
-        )
-        
-        self.navigationItem.setLeftBarButton(
-            nil,
-            animated: true
-        )
-    }
-}
-
-// MARK: - Menu Actions
-extension RingtoneCreatedViewController {
     private func createSelectAction() -> UIAction {
-        let action = UIAction(title: "Select", image: .theme.select) {
-            [weak self] _ in
-            
-            guard let self = self else { return }
-            
-            self.navigationItem.setLeftBarButton(
-                self.createSelectAllBarButtonItem(),
-                animated: true
-            )
-            
-            self.navigationItem.setRightBarButton(
-                self.createDoneBarButtonItem(),
-                animated: true
-            )
-        }
-        
         let viewModel = viewModelFactory.makeRingtoneCreatedViewModel()
+        
+        let action = UIAction(title: "Select", image: .theme.select) { _ in
+            viewModel.enableSelection()
+        }
         
         if viewModel.canSelect {
             action.attributes = []
@@ -184,7 +178,98 @@ extension RingtoneCreatedViewController {
             self.actionSubject.send(.importAudioFromFiles)
         }
     }
+    
+    private func addMenuBarButtonItem(animated: Bool = false) {
+        let menuBarButtonItem = createMenuBarButtonItem()
+        navigationItem.setRightBarButton(
+            menuBarButtonItem,
+            animated: animated
+        )
+    }
+    
+    private func reloadMenuBarButtonItem() {
+        addMenuBarButtonItem(animated: true)
+    }
+    
+    private func disableMenuBarButtonItem() {
+        navigationItem.rightBarButtonItem?.isEnabled = false
+    }
+    
+    private func enableMenuBarButtonItem() {
+        navigationItem.rightBarButtonItem?.isEnabled = true
+    }
 }
+
+// MARK: Export Delete Action View
+extension RingtoneCreatedViewController {
+    private func addExportDeleteViewOnTabBar(_ tabBar: UITabBar) {
+        exportDeleteView.frame = tabBar.frame
+        exportDeleteView.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(exportDeleteView)
+        NSLayoutConstraint.activate([
+            exportDeleteView.leftAnchor.constraint(equalTo: view.leftAnchor),
+            exportDeleteView.rightAnchor.constraint(equalTo: view.rightAnchor),
+            exportDeleteView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            exportDeleteView.heightAnchor.constraint(equalToConstant: tabBar.bounds.height)
+        ])
+        
+        tabBar.alpha = 0
+    }
+    
+    private func removeExportDeleteViewFromTabBar(_ tabBar: UITabBar) {
+        exportDeleteView.removeFromSuperview()
+        tabBar.alpha = 1
+    }
+    
+    private func configureExportDeleteView() {
+        exportDeleteView.onExportButtonTapped = { [weak self] in
+            guard let self = self else { return }
+            
+            let viewModel = self.viewModelFactory.makeRingtoneCreatedViewModel()
+            let audios = viewModel.audios.filter { $0.isSelected == true }
+            
+            self.actionSubject.send(.export(audios))
+        }
+        
+        exportDeleteView.onDeleteButtonTapped = { [weak self] in
+            guard let self = self else { return }
+            
+            self.onDeleteButtonTapped()
+        }
+    }
+    
+    private func onDeleteButtonTapped() {
+        let alertController = UIAlertController(
+            title: "Are you sure you want to delete selected ringtones?",
+            message: "You can't undo this action.",
+            preferredStyle: .alert
+        )
+        
+        let cancelAction = UIAlertAction(title: "Cancel", style: .cancel)
+        let deleteAction = UIAlertAction(title: "Delete", style: .destructive) { [weak self] _ in
+            guard let self = self else { return }
+            
+            let viewModel = self.viewModelFactory.makeRingtoneCreatedViewModel()
+            let audios = viewModel.audios.filter { $0.isSelected == true }
+            
+            viewModel.deleteRingtoneAudios(audios)
+        }
+        
+        alertController.addAction(cancelAction)
+        alertController.addAction(deleteAction)
+        
+        present(alertController, animated: true)
+    }
+    
+    private func enableExportDeleteView() {
+        exportDeleteView.isEnabled = true
+    }
+    
+    private func disableExportDeleteView() {
+        exportDeleteView.isEnabled = false
+    }
+}
+
 
 // MARK: - View Model Actions
 extension RingtoneCreatedViewController {
@@ -201,8 +286,8 @@ extension RingtoneCreatedViewController {
                     self.actionSubject.send(.importAudioFromGallery)
                 case .importAudioFromFiles:
                     self.actionSubject.send(.importAudioFromFiles)
-                case .export(let audio):
-                    self.actionSubject.send(.export(audio))
+                case .export(let audios):
+                    self.actionSubject.send(.export(audios))
                 case .edit(let audio):
                     self.actionSubject.send(.edit(audio))
                 }
@@ -232,7 +317,7 @@ extension RingtoneCreatedViewController {
     }
 }
 
-// MARK: - View Model Loading
+// MARK: - View Model Selection
 extension RingtoneCreatedViewController {
     private func observeViewModelSelection(_ viewModel: RingtoneCreatedViewModel) {
         viewModel.$canSelect
@@ -244,5 +329,62 @@ extension RingtoneCreatedViewController {
                 self.reloadMenuBarButtonItem()
             }
             .store(in: &cancelables)
+        
+        viewModel.$isSelectionEnabled
+            .receive(on: DispatchQueue.main)
+            .removeDuplicates()
+            .sink { [weak self] isSelectionEnabled in
+                guard let self = self else { return }
+                
+                guard let tabBar = tabBarController?.tabBar
+                else { return }
+                
+                if isSelectionEnabled {
+                    self.addSelectionEnabledBarButtonItems()
+                    self.addExportDeleteViewOnTabBar(tabBar)
+                } else {
+                    self.addSelectionDisabledBarButtonItems()
+                    self.removeExportDeleteViewFromTabBar(tabBar)
+                }
+            }
+            .store(in: &cancelables)
+        
+        viewModel.$hasSelectedAudios
+            .receive(on: DispatchQueue.main)
+            .removeDuplicates()
+            .sink { [weak self] hasSelectedAudios in
+                guard let self = self else { return }
+                
+                if hasSelectedAudios {
+                    self.enableExportDeleteView()
+                } else {
+                    self.disableExportDeleteView()
+                }
+            }
+            .store(in: &cancelables)
+    }
+    
+    private func addSelectionEnabledBarButtonItems() {
+        self.navigationItem.setLeftBarButton(
+            self.createSelectAllBarButtonItem(),
+            animated: true
+        )
+        
+        self.navigationItem.setRightBarButton(
+            self.createDoneBarButtonItem(),
+            animated: true
+        )
+    }
+    
+    private func addSelectionDisabledBarButtonItems() {
+        self.navigationItem.setRightBarButton(
+            createMenuBarButtonItem(),
+            animated: true
+        )
+        
+        self.navigationItem.setLeftBarButton(
+            nil,
+            animated: true
+        )
     }
 }

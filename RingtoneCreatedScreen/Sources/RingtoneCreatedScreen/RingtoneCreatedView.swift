@@ -84,6 +84,17 @@ extension RingtoneCreatedView {
         collectionView.collectionViewLayout = makeLayout()
     }
     
+    private func enableCollectionViewSelection() {
+        collectionView.allowsSelection = true
+    }
+    
+    private func disableCollecitonViewSelection() {
+        collectionView.allowsSelection = false
+    }
+}
+
+// MARK: - Data Source
+extension RingtoneCreatedView {
     private func makeDataSource() -> UICollectionViewDiffableDataSource<RingtoneCreatedViewSection, RingtoneCreatedViewItem> {
         let audioCellRegistration = UICollectionView.CellRegistration<RingtoneAudioCell, RingtoneAudio> {
             [weak self] cell, indexPath, audio in
@@ -293,10 +304,30 @@ extension RingtoneCreatedView {
     }
 }
 
-// MARK: - Collection View Delegate
+// MARK: - Collection View Delegate, Selection
 extension RingtoneCreatedView: UICollectionViewDelegate {
     func collectionView(_ collectionView: UICollectionView, shouldSelectItemAt indexPath: IndexPath) -> Bool {
-        return false
+        guard let section = RingtoneCreatedViewSection(rawValue: indexPath.section)
+        else { fatalError("unexpected created view section") }
+        
+        switch section {
+        case .created:
+            return true
+        default:
+            return false
+        }
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        guard let item = dataSource.itemIdentifier(for: indexPath)
+        else { return }
+        
+        switch item {
+        case .createdAudio(let audio):
+            viewModel.toggleRingtoneAudioSelection(audio)
+        default:
+            fatalError("unexpected created view selection")
+        }
     }
 }
 
@@ -304,6 +335,7 @@ extension RingtoneCreatedView: UICollectionViewDelegate {
 extension RingtoneCreatedView {
     private func observeViewModel() {
         observeAudios()
+        observeSelectionState()
     }
     
     private func observeAudios() {
@@ -331,6 +363,22 @@ extension RingtoneCreatedView {
                 
                 self.dataSource.apply(snapshot, animatingDifferences: true)
             })
+            .store(in: &cancellables)
+    }
+    
+    private func observeSelectionState() {
+        viewModel.$isSelectionEnabled
+            .receive(on: DispatchQueue.main)
+            .removeDuplicates()
+            .sink { [weak self] isSelectionEnabled in
+                guard let self = self else { return }
+                
+                if isSelectionEnabled {
+                    self.enableCollectionViewSelection()
+                } else {
+                    self.disableCollecitonViewSelection()
+                }
+            }
             .store(in: &cancellables)
     }
 }

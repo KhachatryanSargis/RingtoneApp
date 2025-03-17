@@ -5,6 +5,7 @@
 //  Created by Sargis Khachatryan on 24.02.25.
 //
 
+import Foundation
 import Combine
 
 public protocol RingtoneCreatedViewModelFactory {
@@ -15,10 +16,14 @@ public final class RingtoneCreatedViewModel {
     // MARK: - Properties
     @Published public private(set) var isLoading: Bool = false
     @Published public private(set) var canSelect: Bool = false
+    @Published public private(set) var isSelectionEnabled: Bool = false
+    @Published public private(set) var hasSelectedAudios: Bool = false
     @Published public private(set) var action: RingtoneCreatedAction?
     @Published public private(set) var audios: [RingtoneAudio] = [] {
         didSet {
-            canSelect = audios.firstIndex(where: { $0.isFailed == false }) != nil
+            canSelect = audios.contains(where: { $0.isFailed == false })
+            hasSelectedAudios = audios.contains(where: { $0.isSelected == true })
+            if audios.isEmpty { isSelectionEnabled = false }
         }
     }
     
@@ -64,6 +69,76 @@ public final class RingtoneCreatedViewModel {
     public func cleanFailedRingtoneAudio(_ audio: RingtoneAudio) {
         audios.removeAll(where: { $0.id == audio.id })
         audioImportResponder.retryByID(audio.id)
+    }
+}
+
+// MARK: - Selection
+extension RingtoneCreatedViewModel {
+    @discardableResult
+    public func enableSelection() -> Bool {
+        guard !isSelectionEnabled else { return canSelect }
+        
+        isSelectionEnabled = true
+        
+        let audios = audios.map { $0.deselected() }
+        self.audios = audios
+        
+        return canSelect
+    }
+    
+    @discardableResult
+    public func disableSelection() -> Bool {
+        guard isSelectionEnabled else { return canSelect }
+        
+        isSelectionEnabled = false
+        
+        let audios = audios.map { $0.noSelection() }
+        self.audios = audios
+        
+        return canSelect
+    }
+    
+    public func toggleRingtoneAudioSelection(_ audio: RingtoneAudio) {
+        guard let isSelected = audio.isSelected else { return }
+        
+        if isSelected {
+            guard let index = audios.firstIndex(where: { audio.id == $0.id })
+            else { return }
+            
+            audios[index] = audio.deselected()
+        } else {
+            guard let index = audios.firstIndex(where: { audio.id == $0.id })
+            else { return }
+            
+            audios[index] = audio.selected()
+        }
+    }
+    
+    public func selectAllRingtoneAudios() {
+        let selectedAudios = audios.map { $0.selected() }
+        self.audios = selectedAudios
+    }
+    
+    public func deselectAllRingtoneAudios() {
+        let deselectedAudios = audios.map { $0.deselected() }
+        self.audios = deselectedAudios
+    }
+    
+    public func deleteRingtoneAudios(_ audios: [RingtoneAudio]) {
+        // TODO: Delete audios from the repository.
+        // TODO: Sync views.
+        
+        guard !audios.isEmpty else { return }
+        
+        var currentAudios = self.audios
+        
+        for audio in audios {
+            guard let index = currentAudios.firstIndex(where: { audio.id == $0.id })
+            else { continue }
+            currentAudios.remove(at: index)
+        }
+        
+        self.audios = currentAudios
     }
 }
 
@@ -184,7 +259,7 @@ extension RingtoneCreatedViewModel: RingtoneAudioPlaybackStatusChangeResponder {
 // MARK: - Export
 extension RingtoneCreatedViewModel: RingtoneAudioExportResponder {
     public func exportRingtoneAudio(_ audio: RingtoneAudio) {
-        action = .export(audio)
+        action = .export([audio])
     }
 }
 

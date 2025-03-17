@@ -48,4 +48,7 @@ public struct ImageTheme {
     // MARK: - RingtoneCreatedFailedHeader
     public let retry = UIImage(systemName: "arrow.circlepath")!.withConfiguration(configuration)
     public let clear = UIImage(systemName: "minus.circle")!.withConfiguration(configuration)
+    
+    // MARK: - RingtoneCreatedActionHeader
+    public let delete = UIImage(systemName: "trash")!.withConfiguration(configuration)
 }

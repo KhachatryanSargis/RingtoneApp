@@ -184,6 +184,19 @@ extension RingtoneAudioCell {
         descriptionLabel.text = audio.desciption
         playPauseButton.setImage(audio.isPlaying ? .theme.pause : .theme.play, for: .normal)
         likeUnlikeButton.setImage(audio.isFavorite ? .theme.liked : .theme.like, for: .normal)
+        
+        if audio.isSelected == true {
+            layer.borderWidth = 1
+            layer.borderColor = UIColor.theme.accent.cgColor
+        } else {
+            layer.borderWidth = 0
+            layer.borderColor = UIColor.clear.cgColor
+        }
+        
+        playPauseButton.isEnabled = audio.isSelected == nil
+        likeUnlikeButton.isEnabled = audio.isSelected == nil
+        useButton.isEnabled = audio.isSelected == nil
+        editButton.isEnabled = audio.isSelected == nil
     }
 }
 
