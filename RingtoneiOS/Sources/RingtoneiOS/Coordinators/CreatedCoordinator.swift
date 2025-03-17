@@ -53,45 +53,21 @@ extension CreatedCoordinator {
     }
 }
 
-// MARK: - Show Import Menu
+// MARK: - Import Alert Controller
 extension CreatedCoordinator {
     private func showImportMenu() {
-        let alertController = UIAlertController(
-            title: nil,
-            message: nil,
-            preferredStyle: .actionSheet
-        )
-        
-        let importFromGalleryAction = RingtoneAlertAction(
-            title: "Import from Gallery",
-            style: .default
-        ) { [weak self] _ in
+        let importAlertController = UIAlertController.importAlertController { [weak self] in
             guard let self = self else { return }
             
             self.onImportFromGallery()
-        }
-        
-        let importFromFilesAction = RingtoneAlertAction(
-            title: "Import from Files",
-            style: .default
-        ) { [weak self] _ in
+        } fromFiles: { [weak self] in
             guard let self = self else { return }
             
             self.onImportFromFiles()
         }
         
-        let cancelAction = RingtoneAlertAction(
-            title: "Cancel",
-            style: .cancel,
-            handler: nil
-        )
-        
-        alertController.addAction(importFromGalleryAction)
-        alertController.addAction(importFromFilesAction)
-        alertController.addAction(cancelAction)
-        
         presentable.toViewController().present(
-            alertController,
+            importAlertController,
             animated: true,
             completion: nil
         )
