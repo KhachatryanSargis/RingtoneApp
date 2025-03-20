@@ -43,9 +43,9 @@ extension CreatedCoordinator {
                     self.onImportFromGallery()
                 case .importAudioFromFiles:
                     self.onImportFromFiles()
-                case .export(let audios):
-                    self.onExportAudios(audios)
-                case .edit(let audio):
+                case .exportGarageBandProjects(let urls):
+                    self.onExportGarageBandProjects(urls)
+                case .editAudio(let audio):
                     print(audio)
                 }
             }
@@ -98,10 +98,8 @@ extension CreatedCoordinator {
 
 // MARK: - Export
 extension CreatedCoordinator {
-    private func onExportAudios(_ audios: [RingtoneAudio]) {
-        guard !audios.isEmpty else { return }
-        
-        let urls = audios.map { $0.url }
+    private func onExportGarageBandProjects(_ urls: [URL]) {
+        guard !urls.isEmpty else { return }
         
         let activityViewController = UIActivityViewController(
             activityItems: urls,

@@ -1,12 +1,11 @@
 //
-//  RingtoneDataExporterResult 2.swift
+//  RingtoneDataExporterResult.swift
 //  RingtoneKit
 //
 //  Created by Sargis Khachatryan on 18.03.25.
 //
 
-
-public struct RingtoneDataExporterResult {
+public struct RingtoneDataExporterResult: Sendable {
     let completeItems: [RingtoneDataExporterCompleteItem]
-    let failedItem: [RingtoneDataExporterFailedItem]
+    let failedItems: [RingtoneDataExporterFailedItem]
 }

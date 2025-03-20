@@ -54,11 +54,14 @@ public final class AppDependencyContainer {
             dataConverterFactory: dataConverterFactory
         )
         
+        let dataExporterFactory = { RingtoneDataExporter() }
+        
         createdViewModel = RingtoneCreatedViewModel(
             audioRepository: ringtoneAudioRepository,
             audiofavoriteStatusChangeResponder: favoritesViewModel,
             audioPlayer: ringtoneAudioPlayer,
-            audioImportResponder: importViewModel
+            audioImportResponder: importViewModel,
+            dataExporterFactory: dataExporterFactory
         )
     }
 }

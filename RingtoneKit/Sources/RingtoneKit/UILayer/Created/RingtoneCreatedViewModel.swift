@@ -27,23 +27,27 @@ public final class RingtoneCreatedViewModel {
         }
     }
     
+    private var cancellables: Set<AnyCancellable> = []
+    
+    private let audioRepository: IRingtoneAudioRepository
     public let audioFavoriteStatusChangeResponder: RingtoneAudioFavoriteStatusChangeResponder
     public let audioImportResponder: RingtoneAudioImportResponder
     private let audioPlayer: IRingtoneAudioPlayer
-    private var cancellables: Set<AnyCancellable> = []
-    private let audioRepository: IRingtoneAudioRepository
+    private let dataExporterFactory: () -> IRingtoneDataExporter
     
     // MARK: - Methods
     public init(
         audioRepository: IRingtoneAudioRepository,
         audiofavoriteStatusChangeResponder: RingtoneAudioFavoriteStatusChangeResponder,
         audioPlayer: IRingtoneAudioPlayer,
-        audioImportResponder: RingtoneAudioImportResponder
+        audioImportResponder: RingtoneAudioImportResponder,
+        dataExporterFactory: @escaping () -> IRingtoneDataExporter
     ) {
         self.audioRepository = audioRepository
         self.audioFavoriteStatusChangeResponder = audiofavoriteStatusChangeResponder
         self.audioPlayer = audioPlayer
         self.audioImportResponder = audioImportResponder
+        self.dataExporterFactory = dataExporterFactory
         
         getCreatedRingtoneAudios()
         observeFavoriteAudios()
@@ -259,13 +263,28 @@ extension RingtoneCreatedViewModel: RingtoneAudioPlaybackStatusChangeResponder {
 // MARK: - Export
 extension RingtoneCreatedViewModel: RingtoneAudioExportResponder {
     public func exportRingtoneAudio(_ audio: RingtoneAudio) {
-        action = .export([audio])
+        exportRingtoneAudios([audio])
+    }
+    
+    public func exportRingtoneAudios(_ audios: [RingtoneAudio]) {
+        let dataExporter = dataExporterFactory()
+        
+        return dataExporter.exportRingtoneAudios(audios)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] result in
+                guard let self = self else { return }
+                
+                let urls = result.completeItems.map { $0.url }
+                
+                self.action = .exportGarageBandProjects(urls)
+            }
+            .store(in: &cancellables)
     }
 }
 
 // MARK: - Edit
 extension RingtoneCreatedViewModel: RingtoneAudioEditResponder {
     public func ringtoneAudioEdit(_ audio: RingtoneAudio) {
-        action = .edit(audio)
+        action = .editAudio(audio)
     }
 }

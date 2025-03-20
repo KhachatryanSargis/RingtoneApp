@@ -228,7 +228,7 @@ extension RingtoneCreatedViewController {
             let viewModel = self.viewModelFactory.makeRingtoneCreatedViewModel()
             let audios = viewModel.audios.filter { $0.isSelected == true }
             
-            self.actionSubject.send(.export(audios))
+            viewModel.exportRingtoneAudios(audios)
         }
         
         exportDeleteView.onDeleteButtonTapped = { [weak self] in
@@ -275,10 +275,10 @@ extension RingtoneCreatedViewController {
                     self.actionSubject.send(.importAudioFromGallery)
                 case .importAudioFromFiles:
                     self.actionSubject.send(.importAudioFromFiles)
-                case .export(let audios):
-                    self.actionSubject.send(.export(audios))
-                case .edit(let audio):
-                    self.actionSubject.send(.edit(audio))
+                case .exportGarageBandProjects(let urls):
+                    self.actionSubject.send(.exportGarageBandProjects(urls))
+                case .editAudio(let audio):
+                    self.actionSubject.send(.editAudio(audio))
                 }
             }
             .store(in: &cancelables)
