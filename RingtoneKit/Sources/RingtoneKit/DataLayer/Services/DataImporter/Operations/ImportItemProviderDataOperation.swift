@@ -8,7 +8,7 @@
 import Foundation
 import UniformTypeIdentifiers
 
-class ImportItemProviderDataOperation: AsyncOperation, @unchecked Sendable {
+final class ImportItemProviderDataOperation: AsyncOperation, @unchecked Sendable {
     // MARK: - Properties
     private let fileCoordinator = NSFileCoordinator()
     private let fileManager = FileManager.default

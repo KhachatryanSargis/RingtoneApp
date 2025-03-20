@@ -7,7 +7,7 @@
 
 import AVFoundation
 
-class ConvertDataImporterItemOperation: AsyncOperation, @unchecked Sendable {
+final class ConvertDataImporterItemOperation: AsyncOperation, @unchecked Sendable {
     // MARK: - Properties
     private var rootDirectoryURL: URL {
         guard let documentDirectoryURL = FileManager.default.urls(

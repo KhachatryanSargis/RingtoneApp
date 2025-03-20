@@ -7,7 +7,7 @@
 
 import Foundation
 
-class ImportFileDataOpertation: AsyncOperation, @unchecked Sendable {
+final class ImportFileDataOpertation: AsyncOperation, @unchecked Sendable {
     // MARK: - Properties
     private let fileManager = FileManager.default
     private let fileURL: URL
