@@ -157,7 +157,7 @@ extension RingtoneDiscoverViewModel: RingtoneAudioExportResponder {
 
 // MARK: - RingtoneAudioEditResponder
 extension RingtoneDiscoverViewModel: RingtoneAudioEditResponder {
-    public func ringtoneAudioEdit(_ audio: RingtoneAudio) {
+    public func editRingtoneAudio(_ audio: RingtoneAudio) {
         action = .edit(audio)
     }
 }

@@ -125,7 +125,7 @@ extension RingtoneFavoritesViewModel: RingtoneAudioExportResponder {
 
 // MARK: - RingtoneAudioEditResponder
 extension RingtoneFavoritesViewModel: RingtoneAudioEditResponder {
-    public func ringtoneAudioEdit(_ audio: RingtoneAudio) {
+    public func editRingtoneAudio(_ audio: RingtoneAudio) {
         print("ringtoneAudioEdit")
     }
 }

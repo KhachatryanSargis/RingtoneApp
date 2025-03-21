@@ -6,5 +6,5 @@
 //
 
 public protocol RingtoneAudioEditResponder {
-    func ringtoneAudioEdit(_ audio: RingtoneAudio)
+    func editRingtoneAudio(_ audio: RingtoneAudio)
 }

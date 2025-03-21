@@ -242,7 +242,7 @@ extension RingtoneAudioCell {
               let audio = audio
         else { return }
         
-        responder.ringtoneAudioEdit(audio)
+        responder.editRingtoneAudio(audio)
     }
 }
 
