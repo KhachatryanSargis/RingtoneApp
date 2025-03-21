@@ -19,6 +19,23 @@ public final class RingtoneAudioStore: IRingtoneAudioStore {
             .eraseToAnyPublisher()
     }
     
+    public func deleteRingtoneAudios(_ audios: [RingtoneAudio]) -> AnyPublisher<[RingtoneAudio], RingtoneAudioStoreError> {
+        var currentItems = self.items
+        
+        for audio in audios {
+            guard let index = items.firstIndex(where: { audio.id == $0.id })
+            else { continue }
+            
+            currentItems.remove(at: index)
+        }
+        
+        self.items = currentItems
+        
+        return Just(audios)
+            .setFailureType(to: RingtoneAudioStoreError.self)
+            .eraseToAnyPublisher()
+    }
+    
     public func getRingtoneAudiosInCategory(_ category: RingtoneCategory) -> AnyPublisher<[RingtoneAudio], RingtoneAudioStoreError> {
         let filteredAudios = items.filter { $0.categoryID == category.displayName }.map { $0.convertToAudio() }
         return Just(filteredAudios)

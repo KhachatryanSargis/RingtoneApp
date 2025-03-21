@@ -22,6 +22,12 @@ public final class RingtoneAudioRepository: IRingtoneAudioRepository {
             .eraseToAnyPublisher()
     }
     
+    public func deleteRingtoneAudios(_ audios: [RingtoneAudio]) -> AnyPublisher<[RingtoneAudio], RingtoneAudioRepositoryError> {
+        store.deleteRingtoneAudios(audios)
+            .mapError { .storeError($0) }
+            .eraseToAnyPublisher()
+    }
+    
     public func getRingtoneAudiosInCategory(_ category: RingtoneCategory) -> AnyPublisher<[RingtoneAudio], RingtoneAudioRepositoryError> {
         store.getRingtoneAudiosInCategory(category)
             .mapError { .storeError($0) }
