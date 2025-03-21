@@ -11,11 +11,6 @@ public protocol RingtoneDiscoverViewModelFactory {
     func makeRingtoneDiscoverViewModel() -> RingtoneDiscoverViewModel
 }
 
-public enum RingtoneDiscoverViewModelAction {
-    case export(RingtoneAudio)
-    case edit(RingtoneAudio)
-}
-
 public final class RingtoneDiscoverViewModel {
     // MARK: - Properties
     @Published public private(set) var action: RingtoneDiscoverViewModelAction?
