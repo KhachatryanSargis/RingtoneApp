@@ -48,7 +48,7 @@ public final class RingtoneFavoritesViewModel {
 
 // MARK: - RingtoneAudioPlaybackStatusChangeResponder
 extension RingtoneFavoritesViewModel: RingtoneAudioPlaybackStatusChangeResponder {
-    public func ringtoneAudioPlaybackStatusChange(_ audio: RingtoneAudio) {
+    public func changeRingtoneAudioPlaybackStatus(_ audio: RingtoneAudio) {
         if audio.isPlaying {
             audioPlayer.pause()
         } else {

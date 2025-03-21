@@ -6,5 +6,5 @@
 //
 
 public protocol RingtoneAudioPlaybackStatusChangeResponder {
-    func ringtoneAudioPlaybackStatusChange(_ audio: RingtoneAudio)
+    func changeRingtoneAudioPlaybackStatus(_ audio: RingtoneAudio)
 }

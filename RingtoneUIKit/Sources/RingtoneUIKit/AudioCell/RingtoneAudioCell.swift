@@ -215,7 +215,7 @@ extension RingtoneAudioCell {
               let audio = audio
         else { return }
         
-        responder.ringtoneAudioPlaybackStatusChange(audio)
+        responder.changeRingtoneAudioPlaybackStatus(audio)
     }
     
     @objc
