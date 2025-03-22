@@ -23,7 +23,7 @@ public final class RingtoneAudioStore: IRingtoneAudioStore {
         var currentItems = self.items
         
         for audio in audios {
-            guard let index = items.firstIndex(where: { audio.id == $0.id })
+            guard let index = currentItems.firstIndex(where: { audio.id == $0.id })
             else { continue }
             
             currentItems.remove(at: index)
@@ -58,7 +58,7 @@ public final class RingtoneAudioStore: IRingtoneAudioStore {
     }
     
     public func toggleRingtoneAudioFavoriteStatus(_ audio: RingtoneAudio) -> AnyPublisher<RingtoneAudio, RingtoneAudioStoreError> {
-        guard let audioIndex = items.firstIndex(where: { audio.id == $0.id })
+        guard let index = items.firstIndex(where: { audio.id == $0.id })
         else {
             return Fail<RingtoneAudio, RingtoneAudioStoreError>(
                 error: .toggleRingtoneAudioFavoriteStatus
@@ -68,7 +68,7 @@ public final class RingtoneAudioStore: IRingtoneAudioStore {
         
         let updatedAudio = audio.isFavorite ? audio.unliked() : audio.liked()
         
-        items[audioIndex] = .constrcutFromAudio(updatedAudio)
+        items[index] = .constrcutFromAudio(updatedAudio)
         
         return Just(updatedAudio)
             .setFailureType(to: RingtoneAudioStoreError.self)
