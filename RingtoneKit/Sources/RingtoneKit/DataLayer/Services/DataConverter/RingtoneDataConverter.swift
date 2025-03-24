@@ -27,64 +27,60 @@ public final class RingtoneDataConverter: IRingtoneDataConverter, @unchecked Sen
 
 // MARK: - Convert
 extension RingtoneDataConverter {
-    public func convertDataImporterCompleteItems(
-        _ items: [RingtoneDataImporterCompleteItem]
-    ) -> AnyPublisher<RingtoneDataConverterResult, Never> {
-        Deferred {
-            Future { [weak self] promise in
-                guard let self = self else { return }
-                
-                self.promise = promise
-                
-                guard !items.isEmpty
-                else {
-                    self.fulfillPromise()
-                    return
-                }
-                
-                let fulfillPromiseOperation = BlockOperation()
-                fulfillPromiseOperation.completionBlock = {
-                    self.fulfillPromise()
-                }
-                
-                for item in items {
-                    let convertDataImporterItemOperation = ConvertDataImporterItemOperation(
-                        item: item
-                    ) { result in
-                        switch result {
-                        case .success(let response):
-                            self.createCompleteItem(
-                                item: item,
-                                url: response.url,
-                                asset: response.asset
-                            )
-                        case .failure(let error):
-                            self.createFailedItem(
-                                item: item,
-                                error: error
-                            )
-                        }
-                    }
-                    
-                    fulfillPromiseOperation.addDependency(convertDataImporterItemOperation)
-                    
-                    self.queue.addOperation(convertDataImporterItemOperation)
-                }
-                
-                self.queue.addOperation(fulfillPromiseOperation)
+    public func convertDataImporterCompleteItems(_ items: [RingtoneDataImporterCompleteItem]) -> AnyPublisher<RingtoneDataConverterResult, Never> {
+        Future { [weak self] promise in
+            guard let self = self else { return }
+            
+            self.promise = promise
+            
+            guard !items.isEmpty
+            else {
+                self.fulfillPromise()
+                return
             }
+            
+            var operations: [Operation] = []
+            
+            let fulfillPromiseOperation = BlockOperation()
+            fulfillPromiseOperation.completionBlock = {
+                self.fulfillPromise()
+            }
+            
+            operations.append(fulfillPromiseOperation)
+            
+            for item in items {
+                let convertDataImporterItemOperation = ConvertDataImporterItemOperation(
+                    item: item
+                ) { result in
+                    switch result {
+                    case .success(let response):
+                        self.createCompleteItem(
+                            item: item,
+                            url: response.url,
+                            asset: response.asset
+                        )
+                    case .failure(let error):
+                        self.createFailedItem(
+                            item: item,
+                            error: error
+                        )
+                    }
+                }
+                
+                fulfillPromiseOperation.addDependency(convertDataImporterItemOperation)
+                operations.append(convertDataImporterItemOperation)
+            }
+            
+            self.queue.addOperations(operations, waitUntilFinished: false)
         }
+        .subscribe(on: queue)
         .eraseToAnyPublisher()
     }
 }
 
 // MARK: - Create Complete Item
 extension RingtoneDataConverter {
-    private func createCompleteItem(
-        item: RingtoneDataImporterCompleteItem,
-        url: URL,
-        asset: AVAsset
-    ) {
+    private func createCompleteItem(item: RingtoneDataImporterCompleteItem, url: URL, asset: AVAsset) {
         let description = getAssetDurationAndSize(asset, at: url)
         
         let completeItem = RingtoneDataConverterCompleteItem(
@@ -101,10 +97,7 @@ extension RingtoneDataConverter {
 
 // MARK: - Create Failed Item
 extension RingtoneDataConverter {
-    private func createFailedItem(
-        item: RingtoneDataImporterCompleteItem,
-        error: RingtoneDataConverterError
-    ) {
+    private func createFailedItem(item: RingtoneDataImporterCompleteItem, error: RingtoneDataConverterError) {
         let failedItem = RingtoneDataConverterFailedItem(
             souce: .importerItem(item),
             error: error

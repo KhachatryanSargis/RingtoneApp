@@ -29,49 +29,51 @@ public final class RingtoneDataImporter: IRingtoneDataImporter, @unchecked Senda
 // MARK: - From Gallery
 extension RingtoneDataImporter {
     public func importDataFromGallery(_ itemProviders: [NSItemProvider]) -> AnyPublisher<RingtoneDataImporterResult, Never> {
-        Deferred {
-            Future { [weak self] promise in
-                guard let self = self else { return }
-                
-                self.promise = promise
-                
-                guard !itemProviders.isEmpty
-                else {
-                    self.fulfillPromise()
-                    return
-                }
-                
-                let fulfillPromiseOperation = BlockOperation()
-                fulfillPromiseOperation.completionBlock = {
-                    self.fulfillPromise()
-                }
-                
-                for itemProvider in itemProviders {
-                    let importItemProviderDataOperation = ImportItemProviderDataOperation(
-                        itemProvider: itemProvider
-                    ) { result in
-                        switch result {
-                        case .success(let url):
-                            self.createCompleteItem(
-                                url: url,
-                                source: .gallery(itemProvider)
-                            )
-                        case .failure(let error):
-                            self.createFailedItem(
-                                error: .failedToCopyData(error),
-                                source: .gallery(itemProvider)
-                            )
-                        }
-                    }
-                    
-                    fulfillPromiseOperation.addDependency(importItemProviderDataOperation)
-                    
-                    self.queue.addOperation(importItemProviderDataOperation)
-                }
-                
-                self.queue.addOperation(fulfillPromiseOperation)
+        Future { [weak self] promise in
+            guard let self = self else { return }
+            
+            self.promise = promise
+            
+            guard !itemProviders.isEmpty
+            else {
+                self.fulfillPromise()
+                return
             }
+            
+            var operations: [Operation] = []
+            
+            let fulfillPromiseOperation = BlockOperation()
+            fulfillPromiseOperation.completionBlock = {
+                self.fulfillPromise()
+            }
+            
+            operations.append(fulfillPromiseOperation)
+            
+            for itemProvider in itemProviders {
+                let importItemProviderDataOperation = ImportItemProviderDataOperation(
+                    itemProvider: itemProvider
+                ) { result in
+                    switch result {
+                    case .success(let url):
+                        self.createCompleteItem(
+                            url: url,
+                            source: .gallery(itemProvider)
+                        )
+                    case .failure(let error):
+                        self.createFailedItem(
+                            error: .failedToCopyData(error),
+                            source: .gallery(itemProvider)
+                        )
+                    }
+                }
+                
+                fulfillPromiseOperation.addDependency(importItemProviderDataOperation)
+                operations.append(importItemProviderDataOperation)
+            }
+            
+            self.queue.addOperations(operations, waitUntilFinished: false)
         }
+        .subscribe(on: queue)
         .eraseToAnyPublisher()
     }
 }
@@ -79,51 +81,51 @@ extension RingtoneDataImporter {
 // MARK: - From Documents
 extension RingtoneDataImporter {
     public func importDataFromDocuments(_ urls: [URL]) -> AnyPublisher<RingtoneDataImporterResult, Never> {
-        Deferred {
-            Future { [weak self] promise in
-                guard let self = self else { return }
-                
-                self.promise = promise
-                
-                guard !urls.isEmpty
-                else {
-                    self.fulfillPromise()
-                    return
-                }
-                
-                let fulfillPromiseOperation = BlockOperation()
-                fulfillPromiseOperation.completionBlock = { [weak self] in
-                    guard let self = self else { return }
-                    
-                    self.fulfillPromise()
-                }
-                
-                for url in urls {
-                    let importFileDataOperation = ImportFileDataOpertation(
-                        fileURL: url
-                    ) { result in
-                        switch result {
-                        case .success(let url):
-                            self.createCompleteItem(
-                                url: url,
-                                source: .documents(url)
-                            )
-                        case .failure(let error):
-                            self.createFailedItem(
-                                error: .failedToCopyData(error),
-                                source: .documents(url)
-                            )
-                        }
-                    }
-                    
-                    fulfillPromiseOperation.addDependency(importFileDataOperation)
-                    
-                    self.queue.addOperation(importFileDataOperation)
-                }
-                
-                self.queue.addOperation(fulfillPromiseOperation)
+        Future { [weak self] promise in
+            guard let self = self else { return }
+            
+            self.promise = promise
+            
+            guard !urls.isEmpty
+            else {
+                self.fulfillPromise()
+                return
             }
+            
+            var operations: [Operation] = []
+            
+            let fulfillPromiseOperation = BlockOperation()
+            fulfillPromiseOperation.completionBlock = {
+                self.fulfillPromise()
+            }
+            
+            operations.append(fulfillPromiseOperation)
+            
+            for url in urls {
+                let importFileDataOperation = ImportFileDataOpertation(
+                    fileURL: url
+                ) { result in
+                    switch result {
+                    case .success(let url):
+                        self.createCompleteItem(
+                            url: url,
+                            source: .documents(url)
+                        )
+                    case .failure(let error):
+                        self.createFailedItem(
+                            error: .failedToCopyData(error),
+                            source: .documents(url)
+                        )
+                    }
+                }
+                
+                fulfillPromiseOperation.addDependency(importFileDataOperation)
+                operations.append(importFileDataOperation)
+            }
+            
+            self.queue.addOperations(operations, waitUntilFinished: false)
         }
+        .subscribe(on: queue)
         .eraseToAnyPublisher()
     }
 }
