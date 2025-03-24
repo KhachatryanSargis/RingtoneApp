@@ -20,24 +20,31 @@ final class ImportFileDataOpertation: AsyncOperation, @unchecked Sendable {
     }
     
     override func main() {
-        let accessing = fileURL.startAccessingSecurityScopedResource()
-        defer {
-            if accessing { fileURL.stopAccessingSecurityScopedResource() }
-            
-            self.state = .finished
-        }
+        let coordinator = NSFileCoordinator()
         
-        let temporaryDirectory = fileManager.temporaryDirectory
-        let ouputName = UUID().uuidString + ".\(fileURL.pathExtension)"
-        let outputURL = temporaryDirectory
-            .appendingPathComponent(ouputName)
-        
-        do {
-            try self.fileManager.copyItem(at: fileURL, to: outputURL)
+        var fileCoordinatorError: NSError? = nil
+        coordinator.coordinate(readingItemAt: fileURL, error: &fileCoordinatorError) { [weak self] newUrl in
+            guard let self = self else { return }
             
-            completion?(.success(outputURL))
-        } catch {
-            completion?(.failure(.failedToCopyData(error)))
+            let accessing = newUrl.startAccessingSecurityScopedResource()
+            
+            defer {
+                if accessing { newUrl.stopAccessingSecurityScopedResource() }
+                
+                self.state = .finished
+            }
+            
+            let temporaryDirectory = fileManager.temporaryDirectory
+            let ouputName = UUID().uuidString + ".\(newUrl.pathExtension)"
+            let outputURL = temporaryDirectory.appendingPathComponent(ouputName)
+            
+            do {
+                try self.fileManager.copyItem(at: newUrl, to: outputURL)
+                
+                completion?(.success(outputURL))
+            } catch {
+                completion?(.failure(.failedToCopyData(error)))
+            }
         }
     }
 }

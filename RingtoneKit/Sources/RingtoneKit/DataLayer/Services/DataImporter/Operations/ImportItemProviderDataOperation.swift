@@ -10,7 +10,6 @@ import UniformTypeIdentifiers
 
 final class ImportItemProviderDataOperation: AsyncOperation, @unchecked Sendable {
     // MARK: - Properties
-    private let fileCoordinator = NSFileCoordinator()
     private let fileManager = FileManager.default
     private var progress: Progress?
     private let itemProvider: NSItemProvider
@@ -31,6 +30,8 @@ final class ImportItemProviderDataOperation: AsyncOperation, @unchecked Sendable
               utType.conforms(to: .movie) else {
             
             completion?(.failure(.unsupportedDataFormat))
+            
+            state = .finished
             return
         }
         
@@ -53,42 +54,26 @@ final class ImportItemProviderDataOperation: AsyncOperation, @unchecked Sendable
                 return
             }
             
-            let temporaryDirectory = self.fileManager.temporaryDirectory
-            let ouputName = UUID().uuidString + ".\(url.pathExtension)"
-            let outputURL = temporaryDirectory.appendingPathComponent(ouputName)
+            let coordinator = NSFileCoordinator()
             
-            let accessing = url.startAccessingSecurityScopedResource()
-            
-            defer {
-                if accessing { url.stopAccessingSecurityScopedResource() }
-                
-                self.state = .finished
+            var fileCoordinatorError: NSError? = nil
+            coordinator.coordinate(readingItemAt: url, error: &fileCoordinatorError) { newUrl in
+                do {
+                    let temporaryDirectory = self.fileManager.temporaryDirectory
+                    let ouputName = UUID().uuidString + ".\(newUrl.pathExtension)"
+                    let outputURL = temporaryDirectory.appendingPathComponent(ouputName)
+                    
+                    try self.fileManager.copyItem(at: newUrl, to: outputURL)
+                    
+                    self.completion?(.success(outputURL))
+                    
+                    self.state = .finished
+                } catch {
+                    self.completion?(.failure(.failedToCopyData(error)))
+                    
+                    self.state = .finished
+                }
             }
-            
-            do {
-                try fileManager.copyItem(at: url, to: outputURL)
-                
-                completion?(.success(outputURL))
-            } catch {
-                completion?(.failure(.failedToCopyData(error)))
-            }
-        }
-    }
-    
-    private func copyDataFromUrl(_ url: URL) throws -> URL {
-        let accessing = url.startAccessingSecurityScopedResource()
-        defer { if accessing { url.stopAccessingSecurityScopedResource() } }
-        
-        let fileManager = FileManager.default
-        let temporaryDirectory = fileManager.temporaryDirectory
-        let ouputName = UUID().uuidString + ".\(url.pathExtension)"
-        let outputURL = temporaryDirectory.appendingPathComponent(ouputName)
-        
-        do {
-            try fileManager.copyItem(at: url, to: outputURL)
-            return outputURL
-        } catch {
-            throw error
         }
     }
 }
