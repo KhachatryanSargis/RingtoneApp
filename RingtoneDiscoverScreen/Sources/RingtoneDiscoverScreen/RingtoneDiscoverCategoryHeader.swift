@@ -11,7 +11,7 @@ import RingtoneKit
 
 final class RingtoneDiscoverCategoryHeader: NiblessCollectionReusableView {
     // MARK: - Properties
-    private var categorySelectionResponder: RingtoneDiscoverCategorySelectionResponder?
+    private var categorySelectionResponder: RingtoneAudioCategorySelectionResponder?
     
     private let collectionView: UICollectionView = {
         let collectionView = UICollectionView(
@@ -40,7 +40,7 @@ final class RingtoneDiscoverCategoryHeader: NiblessCollectionReusableView {
         setBlurEffect()
     }
     
-    func setCategories(_ categories: [RingtoneCategory], responder: RingtoneDiscoverCategorySelectionResponder) {
+    func setCategories(_ categories: [RingtoneCategory], responder: RingtoneAudioCategorySelectionResponder) {
         self.categorySelectionResponder = responder
         
         var snapshot = NSDiffableDataSourceSnapshot<Int, RingtoneCategory>()
