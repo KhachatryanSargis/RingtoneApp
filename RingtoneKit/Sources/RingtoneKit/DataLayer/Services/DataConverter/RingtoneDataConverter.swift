@@ -20,7 +20,7 @@ public final class RingtoneDataConverter: IRingtoneDataConverter, @unchecked Sen
     
     // MARK: - Methods
     public init() {
-        queue.qualityOfService = .background
+        queue.underlyingQueue = .global(qos: .utility)
         queue.maxConcurrentOperationCount = 10
     }
 }
