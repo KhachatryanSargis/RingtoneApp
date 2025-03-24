@@ -1,3 +1,12 @@
+//
+//  RingtoneFavoriteAudiosMediator.swift
+//  RingtoneKit
+//
+//  Created by Sargis Khachatryan on 25.03.25.
+//
+
+import Combine
+
 public protocol RingtoneFavoriteAudiosMediator {
     // MARK: - Properties
     var favoriteAudiosPublisher: AnyPublisher<[RingtoneAudio], Never> { get }

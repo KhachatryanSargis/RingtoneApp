@@ -1,3 +1,12 @@
+//
+//  RingtoneDiscoverAudiosMediator.swift
+//  RingtoneKit
+//
+//  Created by Sargis Khachatryan on 25.03.25.
+//
+
+import Combine
+
 public protocol RingtoneDiscoverAudiosMediator {
     // MARK: - Properties
     var discoverAudiosPublisher: AnyPublisher<[RingtoneAudio], Never> { get }
