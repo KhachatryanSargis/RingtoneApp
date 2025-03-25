@@ -104,7 +104,7 @@ extension RingtoneCreatedView {
             cell.setAudio(
                 audio,
                 playbackResponder: self.viewModel,
-                favoriteResponder: self.viewModel.audioFavoriteStatusChangeResponder,
+                favoriteResponder: self.viewModel,
                 editResponder: self.viewModel,
                 exportResponder: self.viewModel
             )
@@ -324,7 +324,7 @@ extension RingtoneCreatedView: UICollectionViewDelegate {
         
         switch item {
         case .createdAudio(let audio):
-            viewModel.toggleRingtoneAudioSelection(audio)
+            viewModel.toggleRingtoneAudioSelectionStatus(audio)
         default:
             fatalError("unexpected created view selection")
         }
