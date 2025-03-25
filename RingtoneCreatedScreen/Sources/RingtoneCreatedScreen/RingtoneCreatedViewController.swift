@@ -264,6 +264,7 @@ extension RingtoneCreatedViewController {
 extension RingtoneCreatedViewController {
     private func observeViewModelAction(_ viewModel: RingtoneCreatedViewModel) {
         viewModel.$action
+            .receive(on: DispatchQueue.main)
             .compactMap { $0 }
             .sink { [weak self] action in
                 guard let self = self else { return }
