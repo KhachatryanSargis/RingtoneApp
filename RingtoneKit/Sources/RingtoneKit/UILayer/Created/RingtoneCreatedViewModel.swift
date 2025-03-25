@@ -26,137 +26,36 @@ public final class RingtoneCreatedViewModel {
             if audios.isEmpty { isSelectionEnabled = false }
         }
     }
-    
     private var cancellables: Set<AnyCancellable> = []
     
-    private let audioRepository: IRingtoneAudioRepository
-    public let audioFavoriteStatusChangeResponder: RingtoneAudioFavoriteStatusChangeResponder
-    public let audioImportResponder: RingtoneAudioImportResponder
     private let audioPlayer: IRingtoneAudioPlayer
+    private let createdAudiosMediator: RingtoneCreatedAudiosMediator
+    private let audioImportResponder: RingtoneAudioImportResponder
     private let dataExporterFactory: () -> IRingtoneDataExporter
     
     // MARK: - Methods
     public init(
-        audioRepository: IRingtoneAudioRepository,
-        audiofavoriteStatusChangeResponder: RingtoneAudioFavoriteStatusChangeResponder,
         audioPlayer: IRingtoneAudioPlayer,
+        createdAudiosMediator: RingtoneCreatedAudiosMediator,
         audioImportResponder: RingtoneAudioImportResponder,
         dataExporterFactory: @escaping () -> IRingtoneDataExporter
     ) {
-        self.audioRepository = audioRepository
-        self.audioFavoriteStatusChangeResponder = audiofavoriteStatusChangeResponder
         self.audioPlayer = audioPlayer
+        self.createdAudiosMediator = createdAudiosMediator
         self.audioImportResponder = audioImportResponder
         self.dataExporterFactory = dataExporterFactory
         
-        getCreatedRingtoneAudios()
-        observeFavoriteAudios()
+        observeCreatedAudios()
+        observeAudioImportResponder()
         observeAudioPlayerStatus()
-        observeImportedAudios()
     }
     
-    public func clearFailedRingtoneAudios() {
-        audios.removeAll(where: { $0.failedToImport || $0.failedToConvert })
-        audioImportResponder.clearAll()
-    }
-    
-    public func retryFailedRingtoneAudio(_ audio: RingtoneAudio) {
-        audios.removeAll(where: { $0.id == audio.id })
-        audioImportResponder.clearByID(audio.id)
-    }
-    
-    public func retryFailedRingtoneAudios() {
-        audios.removeAll(where: { $0.failedToImport || $0.failedToConvert })
-        audioImportResponder.retryAll()
-    }
-    
-    public func cleanFailedRingtoneAudio(_ audio: RingtoneAudio) {
-        audios.removeAll(where: { $0.id == audio.id })
-        audioImportResponder.retryByID(audio.id)
-    }
-}
-
-// MARK: - Selection
-extension RingtoneCreatedViewModel {
-    @discardableResult
-    public func enableSelection() -> Bool {
-        guard !isSelectionEnabled else { return canSelect }
-        
-        isSelectionEnabled = true
-        
-        let audios = audios.map { $0.deselected() }
-        self.audios = audios
-        
-        return canSelect
-    }
-    
-    @discardableResult
-    public func disableSelection() -> Bool {
-        guard isSelectionEnabled else { return canSelect }
-        
-        isSelectionEnabled = false
-        
-        let audios = audios.map { $0.noSelection() }
-        self.audios = audios
-        
-        return canSelect
-    }
-    
-    public func toggleRingtoneAudioSelection(_ audio: RingtoneAudio) {
-        guard let isSelected = audio.isSelected else { return }
-        
-        if isSelected {
-            guard let index = audios.firstIndex(where: { audio.id == $0.id })
-            else { return }
-            
-            audios[index] = audio.deselected()
-        } else {
-            guard let index = audios.firstIndex(where: { audio.id == $0.id })
-            else { return }
-            
-            audios[index] = audio.selected()
-        }
-    }
-    
-    public func selectAllRingtoneAudios() {
-        let selectedAudios = audios.map { $0.selected() }
-        self.audios = selectedAudios
-    }
-    
-    public func deselectAllRingtoneAudios() {
-        let deselectedAudios = audios.map { $0.deselected() }
-        self.audios = deselectedAudios
-    }
-    
-    public func deleteRingtoneAudios(_ audios: [RingtoneAudio]) {
-        // TODO: Delete audios from the repository.
-        // TODO: Sync views.
-        
-        guard !audios.isEmpty else { return }
-        
-        var currentAudios = self.audios
-        
-        for audio in audios {
-            guard let index = currentAudios.firstIndex(where: { audio.id == $0.id })
-            else { continue }
-            currentAudios.remove(at: index)
-        }
-        
-        self.audios = currentAudios
-    }
-}
-
-// MARK: - Get Created Ringtones
-extension RingtoneCreatedViewModel {
-    private func getCreatedRingtoneAudios() {
-        audioRepository.getCreatedRingtoneAudios()
-            .sink { completion in
-                guard case .failure(let error) = completion else { return }
-                print(error)
-            } receiveValue: { [weak self] audios in
+    private func observeCreatedAudios() {
+        createdAudiosMediator.createdAudiosPublisher
+            .sink { [weak self] createdAudios in
                 guard let self = self else { return }
                 
-                var audios = audios
+                var audios = createdAudios
                 
                 // Syncing playback status.
                 if let currentAudioID = self.audioPlayer.currentAudioID,
@@ -170,54 +69,80 @@ extension RingtoneCreatedViewModel {
     }
 }
 
-// MARK: - Import
-extension RingtoneCreatedViewModel {
-    public func importRingtoneAudio() {
-        action = .importAudio
+// MARK: - Selection
+extension RingtoneCreatedViewModel: RingtoneAudioSelectionResponder {
+    public func enableSelection() {
+        guard !isSelectionEnabled else { return }
+        
+        isSelectionEnabled = true
+        
+        createdAudiosMediator.enableCreatedAudiosSelection()
     }
     
-    private func observeImportedAudios() {
-        audioImportResponder.audiosPublisher
-            .sink { [weak self] audios in
-                guard let self = self else { return }
-                
-                self.audios.append(contentsOf: audios)
-            }
-            .store(in: &cancellables)
+    public func disableSelection() {
+        guard isSelectionEnabled else { return }
         
-        audioImportResponder.isLoadingPublisher
-            .sink { [weak self] isLoading in
+        isSelectionEnabled = false
+        
+        createdAudiosMediator.disableCreatedAudiosSelection()
+    }
+    
+    public func toggleRingtoneAudioSelectionStatus(_ audio: RingtoneAudio) {
+        createdAudiosMediator.toggleCreatedAudioSelection(audio)
+    }
+    
+    public func selectAllRingtoneAudios() {
+        createdAudiosMediator.selectAllCreatedAudios()
+    }
+    
+    public func deselectAllRingtoneAudios() {
+        createdAudiosMediator.deselectAllCreatedAudios()
+    }
+}
+
+// MARK: - Favorite
+extension RingtoneCreatedViewModel: RingtoneAudioFavoriteStatusChangeResponder {
+    public func changeAudioFavoriteStatus(_ audio: RingtoneAudio) {
+        createdAudiosMediator.changeAudioFavoriteStatus(audio)
+    }
+}
+
+// MARK: - Edit
+extension RingtoneCreatedViewModel: RingtoneAudioEditResponder {
+    public func editRingtoneAudio(_ audio: RingtoneAudio) {
+        action = .editAudio(audio)
+    }
+}
+
+// MARK: - Delete
+extension RingtoneCreatedViewModel: RingtoneAudioDeleteResponder {
+    public func deleteRingtoneAudios(_ audios: [RingtoneAudio]) {
+        createdAudiosMediator.deleteRingtoneAudios(audios)
+    }
+}
+
+// MARK: - Export
+extension RingtoneCreatedViewModel: RingtoneAudioExportResponder {
+    public func exportRingtoneAudio(_ audio: RingtoneAudio) {
+        exportRingtoneAudios([audio])
+    }
+    
+    public func exportRingtoneAudios(_ audios: [RingtoneAudio]) {
+        let dataExporter = dataExporterFactory()
+        
+        return dataExporter.exportRingtoneAudios(audios)
+            .sink { [weak self] result in
                 guard let self = self else { return }
-                self.isLoading = isLoading
+                
+                let urls = result.completeItems.map { $0.url }
+                
+                self.action = .exportGarageBandProjects(urls)
             }
             .store(in: &cancellables)
     }
 }
 
-// MARK: - Sync Favorite Audios
-extension RingtoneCreatedViewModel {
-    private func observeFavoriteAudios() {
-        audioFavoriteStatusChangeResponder.audiosPublisher
-            .sink { [weak self] favoriteAudios in
-                guard let self = self else { return }
-                
-                var audios = self.audios
-                
-                for (index, audio) in audios.enumerated() {
-                    if let favoriteIndex = favoriteAudios.firstIndex(where: { audio.id == $0.id }) {
-                        audios[index] = favoriteAudios[favoriteIndex]
-                    } else {
-                        audios[index] = audio.unliked()
-                    }
-                }
-                
-                self.audios = audios
-            }
-            .store(in: &cancellables)
-    }
-}
-
-// MARK: - RingtoneAudioPlaybackStatusChangeResponder
+// MARK: - Playback
 extension RingtoneCreatedViewModel: RingtoneAudioPlaybackStatusChangeResponder {
     public func changeRingtoneAudioPlaybackStatus(_ audio: RingtoneAudio) {
         if audio.isPlaying {
@@ -246,13 +171,7 @@ extension RingtoneCreatedViewModel: RingtoneAudioPlaybackStatusChangeResponder {
                     }
                     
                     self.audios = audios
-                case .pausedPlaying:
-                    self.audios = self.audios.map { $0.paused() }
-                case .finishedPlaying:
-                    self.audios = self.audios.map { $0.paused() }
-                case .failedToPlay:
-                    self.audios = self.audios.map { $0.paused() }
-                case .failedToInitialize(_):
+                default:
                     self.audios = self.audios.map { $0.paused() }
                 }
             }
@@ -260,31 +179,54 @@ extension RingtoneCreatedViewModel: RingtoneAudioPlaybackStatusChangeResponder {
     }
 }
 
-// MARK: - Export
-extension RingtoneCreatedViewModel: RingtoneAudioExportResponder {
-    public func exportRingtoneAudio(_ audio: RingtoneAudio) {
-        exportRingtoneAudios([audio])
+// MARK: - Import
+extension RingtoneCreatedViewModel: RingtoneAudioImportResponder {
+    public func importRingtoneAudio() {
+        action = .importAudio
     }
     
-    public func exportRingtoneAudios(_ audios: [RingtoneAudio]) {
-        let dataExporter = dataExporterFactory()
-        
-        return dataExporter.exportRingtoneAudios(audios)
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] result in
+    public var isLoadingPublisher: AnyPublisher<Bool, Never> {
+        audioImportResponder.isLoadingPublisher
+    }
+    
+    public var importedAudiosPublisher: AnyPublisher<[RingtoneAudio], Never> {
+        audioImportResponder.importedAudiosPublisher
+    }
+    
+    public func clearFailedRingtoneAudios() {
+        audioImportResponder.clearFailedRingtoneAudios()
+    }
+    
+    public func retryFailedRingtoneAudio(_ audio: RingtoneAudio) {
+        audioImportResponder.cleanFailedRingtoneAudio(audio)
+    }
+    
+    public func retryFailedRingtoneAudios() {
+        audioImportResponder.retryFailedRingtoneAudios()
+    }
+    
+    public func cleanFailedRingtoneAudio(_ audio: RingtoneAudio) {
+        audioImportResponder.retryFailedRingtoneAudio(audio)
+    }
+    
+    private func observeAudioImportResponder() {
+        audioImportResponder.isLoadingPublisher
+            .sink { [weak self] isLoading in
                 guard let self = self else { return }
-                
-                let urls = result.completeItems.map { $0.url }
-                
-                self.action = .exportGarageBandProjects(urls)
+                self.isLoading = isLoading
             }
             .store(in: &cancellables)
-    }
-}
-
-// MARK: - Edit
-extension RingtoneCreatedViewModel: RingtoneAudioEditResponder {
-    public func editRingtoneAudio(_ audio: RingtoneAudio) {
-        action = .editAudio(audio)
+        
+        audioImportResponder.importedAudiosPublisher
+            .sink { [weak self] importedAudios in
+                guard let self = self else { return }
+                
+                let failedAudios = importedAudios.filter { $0.isFailed == true }
+                self.audios.append(contentsOf: failedAudios)
+                
+                let successAudios = importedAudios.filter { $0.isFailed == false }
+                self.createdAudiosMediator.addRingtoneAudios(successAudios)
+            }
+            .store(in: &cancellables)
     }
 }

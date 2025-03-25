@@ -14,39 +14,63 @@ public protocol RingtoneFavoritesViewModelFactory {
 public final class RingtoneFavoritesViewModel {
     // MARK: - Properties
     @Published public private(set) var audios: [RingtoneAudio] = []
-    public var audiosPublisher: AnyPublisher<[RingtoneAudio], Never> {
-        $audios.eraseToAnyPublisher()
-    }
+    
     private var cancellables: Set<AnyCancellable> = []
-    private let audioRepository: IRingtoneAudioRepository
+    
     private let audioPlayer: IRingtoneAudioPlayer
+    private let favoriteAudiosMediator: RingtoneFavoriteAudiosMediator
     
     // MARK: - Methods
     public init(
-        audioRepository: IRingtoneAudioRepository,
-        audioPlayer: IRingtoneAudioPlayer
+        audioPlayer: IRingtoneAudioPlayer,
+        favoriteAudiosMediator: RingtoneFavoriteAudiosMediator
     ) {
-        self.audioRepository = audioRepository
         self.audioPlayer = audioPlayer
+        self.favoriteAudiosMediator = favoriteAudiosMediator
         
-        getFavoriteAudios()
+        observeFavoriteAudios()
         observeAudioPlayerStatus()
     }
     
-    private func getFavoriteAudios() {
-        audioRepository.getFavoriteRingtoneAudios()
-            .sink { completion in
-                guard case .failure(let error) = completion else { return }
-                print(error)
-            } receiveValue: { [weak self] audios in
+    private func observeFavoriteAudios() {
+        favoriteAudiosMediator.favoriteAudiosPublisher
+            .sink { [weak self] favoriteAudios in
                 guard let self = self else { return }
-                self.audios = audios
+                
+                // Syncing playback status.
+                if let currentAudioID = self.audioPlayer.currentAudioID,
+                   let index = audios.firstIndex(where: { $0.id == currentAudioID }) {
+                    audios[index] = audios[index].played()
+                }
+                
+                self.audios = favoriteAudios
             }
             .store(in: &cancellables)
     }
 }
 
-// MARK: - RingtoneAudioPlaybackStatusChangeResponder
+// MARK: - Favorite
+extension RingtoneFavoritesViewModel: RingtoneAudioFavoriteStatusChangeResponder {
+    public func changeAudioFavoriteStatus(_ audio: RingtoneAudio) {
+        favoriteAudiosMediator.changeAudioFavoriteStatus(audio)
+    }
+}
+
+// MARK: - Edit
+extension RingtoneFavoritesViewModel: RingtoneAudioEditResponder {
+    public func editRingtoneAudio(_ audio: RingtoneAudio) {
+        print("ringtoneAudioEdit")
+    }
+}
+
+// MARK: - Export
+extension RingtoneFavoritesViewModel: RingtoneAudioExportResponder {
+    public func exportRingtoneAudio(_ audio: RingtoneAudio) {
+        print("exportRingtoneAudio")
+    }
+}
+
+// MARK: - Playback
 extension RingtoneFavoritesViewModel: RingtoneAudioPlaybackStatusChangeResponder {
     public func changeRingtoneAudioPlaybackStatus(_ audio: RingtoneAudio) {
         if audio.isPlaying {
@@ -75,57 +99,10 @@ extension RingtoneFavoritesViewModel: RingtoneAudioPlaybackStatusChangeResponder
                     }
                     
                     self.audios = audios
-                case .pausedPlaying:
-                    self.audios = self.audios.map { $0.paused() }
-                case .finishedPlaying:
-                    self.audios = self.audios.map { $0.paused() }
-                case .failedToPlay:
-                    self.audios = self.audios.map { $0.paused() }
-                case .failedToInitialize(_):
+                default:
                     self.audios = self.audios.map { $0.paused() }
                 }
             }
             .store(in: &cancellables)
-    }
-}
-
-// MARK: - RingtoneAudioFavoriteStatusChangeResponder
-extension RingtoneFavoritesViewModel: RingtoneAudioFavoriteStatusChangeResponder {
-    public func changeAudioFavoriteStatus(_ audio: RingtoneAudio) {
-        audioRepository.toggleRingtoneAudioFavoriteStatus(audio)
-            .sink { completion in
-                guard case .failure(let error) = completion else { return }
-                
-                print(error)
-            } receiveValue: { [weak self] audio in
-                guard let self = self else { return }
-                
-                if audio.isFavorite {
-                    guard self.audios.firstIndex(where: { audio.id == $0.id }) == nil
-                    else { return }
-                    
-                    self.audios.append(audio)
-                } else {
-                    guard let index = self.audios.firstIndex(where: { audio.id == $0.id })
-                    else { return }
-                    
-                    self.audios.remove(at: index)
-                }
-            }
-            .store(in: &cancellables)
-    }
-}
-
-// MARK: - RingtoneAudioExportResponder
-extension RingtoneFavoritesViewModel: RingtoneAudioExportResponder {
-    public func exportRingtoneAudio(_ audio: RingtoneAudio) {
-        print("exportRingtoneAudio")
-    }
-}
-
-// MARK: - RingtoneAudioEditResponder
-extension RingtoneFavoritesViewModel: RingtoneAudioEditResponder {
-    public func editRingtoneAudio(_ audio: RingtoneAudio) {
-        print("ringtoneAudioEdit")
     }
 }

@@ -15,26 +15,22 @@ public protocol RingtoneImportViewModelFactory {
 
 public final class RingtoneImportViewModel {
     // MARK: - Properties
-    private let isloadingSubject = PassthroughSubject<Bool, Never>()
+    private let isLoadingSubject = CurrentValueSubject<Bool, Never>(false)
     private let audiosSubject = PassthroughSubject<[RingtoneAudio], Never>()
     private var cancellables: Set<AnyCancellable> = []
     
-    private let audioRepository: IRingtoneAudioRepository
+    private var failedImporterItems: [RingtoneDataImporterFailedItem] = []
+    private var failedConverterItems: [RingtoneDataConverterFailedItem] = []
+    private var failedAudios: [RingtoneAudio] = []
+    
     private let dataImporterFactory: () -> IRingtoneDataImporter
     private let dataConverterFactory: () -> IRingtoneDataConverter
     
-    private var failedImporterItems: [RingtoneDataImporterFailedItem] = []
-    private var failedConverterItems: [RingtoneDataConverterFailedItem] = []
-    
-    private var failedAudios: [RingtoneAudio] = []
-    
     // MARK: - Methods
     public init(
-        audioRepository: IRingtoneAudioRepository,
         dataImporterFactory: @escaping () -> IRingtoneDataImporter,
         dataConverterFactory: @escaping () -> IRingtoneDataConverter
     ) {
-        self.audioRepository = audioRepository
         self.dataImporterFactory = dataImporterFactory
         self.dataConverterFactory = dataConverterFactory
     }
@@ -43,7 +39,7 @@ public final class RingtoneImportViewModel {
         let dataImporter = dataImporterFactory()
         let dataConverter = dataConverterFactory()
         
-        isloadingSubject.send(true)
+        isLoadingSubject.send(true)
         
         dataImporter.importDataFromGallery(itemProviders)
             .sink { [weak self] importerResult in
@@ -54,20 +50,9 @@ public final class RingtoneImportViewModel {
                 dataConverter.convertDataImporterCompleteItems(imports)
                     .sink { converterResult in
                         
-                        let audios = self.processConverterResult(converterResult)
+                        self.processConverterResult(converterResult)
                         
-                        self.audioRepository.addRingtoneAudios(audios)
-                            .sink { completion in
-                                self.isloadingSubject.send(false)
-                                
-                                guard case .failure(let error) = completion else { return }
-                                
-                                // TODO: Clean all the saved audio data if this fails.
-                                print(error)
-                            } receiveValue: { audios in
-                                self.audiosSubject.send(audios + self.failedAudios)
-                            }
-                            .store(in: &self.cancellables)
+                        self.isLoadingSubject.send(false)
                     }
                     .store(in: &self.cancellables)
             }
@@ -78,7 +63,7 @@ public final class RingtoneImportViewModel {
         let dataImporter = dataImporterFactory()
         let dataConverter = dataConverterFactory()
         
-        isloadingSubject.send(true)
+        isLoadingSubject.send(true)
         
         dataImporter.importDataFromDocuments(urls)
             .sink { [weak self] importerResult in
@@ -89,51 +74,13 @@ public final class RingtoneImportViewModel {
                 dataConverter.convertDataImporterCompleteItems(imports)
                     .sink { converterResult in
                         
-                        let audios = self.processConverterResult(converterResult)
+                        self.processConverterResult(converterResult)
                         
-                        self.audioRepository.addRingtoneAudios(audios)
-                            .sink { completion in
-                                self.isloadingSubject.send(false)
-                                
-                                guard case .failure(let error) = completion else { return }
-                                
-                                // TODO: Clean all the saved audio data if this fails.
-                                print(error)
-                            } receiveValue: { audios in
-                                self.audiosSubject.send(audios + self.failedAudios)
-                            }
-                            .store(in: &self.cancellables)
+                        self.isLoadingSubject.send(false)
                     }
                     .store(in: &cancellables)
             }
             .store(in: &cancellables)
-    }
-}
-
-// MARK: - RingtoneAudioImportResponder
-extension RingtoneImportViewModel: RingtoneAudioImportResponder {
-    public var isLoadingPublisher: AnyPublisher<Bool, Never> {
-        isloadingSubject.eraseToAnyPublisher()
-    }
-    
-    public var audiosPublisher: AnyPublisher<[RingtoneAudio], Never> {
-        audiosSubject.eraseToAnyPublisher()
-    }
-    
-    public func retryAll() {
-        
-    }
-    
-    public func retryByID(_ id: String) {
-        
-    }
-    
-    public func clearAll() {
-        failedImporterItems = []
-    }
-    
-    public func clearByID(_ id: String) {
-        failedImporterItems.removeAll(where: { $0.id.uuidString == id })
     }
 }
 
@@ -144,12 +91,12 @@ extension RingtoneImportViewModel {
         self.failedImporterItems = failedItems
         
         let failedAudios = failedItems.map { RingtoneAudio.importFailed(item: $0) }
-        self.failedAudios.append(contentsOf: failedAudios)
+        self.failedAudios = failedAudios
         
         return result.completeItems
     }
     
-    private func processConverterResult(_ result: RingtoneDataConverterResult) -> [RingtoneAudio] {
+    private func processConverterResult(_ result: RingtoneDataConverterResult) {
         let failedItems = result.failedItems
         self.failedConverterItems = failedItems
         
@@ -158,7 +105,7 @@ extension RingtoneImportViewModel {
         
         let completeItems = result.completeItems
         
-        let audios = completeItems.map {
+        let completeAudios = completeItems.map {
             RingtoneAudio.init(
                 id: $0.id.uuidString,
                 title: $0.name,
@@ -167,6 +114,38 @@ extension RingtoneImportViewModel {
             )
         }
         
-        return audios
+        audiosSubject.send(completeAudios + self.failedAudios)
+        
+        self.failedAudios = []
+    }
+}
+
+// MARK: - RingtoneAudioImportResponder
+extension RingtoneImportViewModel: RingtoneAudioImportResponder {
+    public var importedAudiosPublisher: AnyPublisher<[RingtoneAudio], Never> {
+        audiosSubject.eraseToAnyPublisher()
+    }
+    
+    public var isLoadingPublisher: AnyPublisher<Bool, Never> {
+        isLoadingSubject.eraseToAnyPublisher()
+    }
+    
+    
+    public func retryFailedRingtoneAudio(_ audio: RingtoneAudio) {
+        
+    }
+    
+    public func retryFailedRingtoneAudios() {
+        
+    }
+    
+    public func clearFailedRingtoneAudios() {
+        failedImporterItems = []
+        failedConverterItems = []
+    }
+    
+    public func cleanFailedRingtoneAudio(_ audio: RingtoneAudio) {
+        failedImporterItems.removeAll(where: { $0.id.uuidString == audio.id })
+        failedConverterItems.removeAll(where: { $0.id.uuidString == audio.id })
     }
 }

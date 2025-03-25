@@ -34,22 +34,20 @@ public final class AppDependencyContainer {
         self.audioPlayerProgressPublisher = ringtoneAudioPlayer
         
         favoritesViewModel = RingtoneFavoritesViewModel(
-            audioRepository: ringtoneAudioRepository,
-            audioPlayer: ringtoneAudioPlayer
+            audioPlayer: ringtoneAudioPlayer,
+            favoriteAudiosMediator: ringtoneAudioRepository
         )
         
         discoverViewModel = RingtoneDiscoverViewModel(
-            categoreisRepository: ringtoneCategoriesRepository,
-            audioRepository: ringtoneAudioRepository,
-            audiofavoriteStatusChangeResponder: favoritesViewModel,
-            audioPlayer: ringtoneAudioPlayer
+            audioPlayer: ringtoneAudioPlayer,
+            discoverAudiosMediator: ringtoneAudioRepository,
+            categoreisRepository: ringtoneCategoriesRepository
         )
         
         let dataImporterFactory = { RingtoneDataImporter() }
         let dataConverterFactory = { RingtoneDataConverter() }
         
         importViewModel = RingtoneImportViewModel(
-            audioRepository: ringtoneAudioRepository,
             dataImporterFactory: dataImporterFactory,
             dataConverterFactory: dataConverterFactory
         )
@@ -57,9 +55,8 @@ public final class AppDependencyContainer {
         let dataExporterFactory = { RingtoneDataExporter() }
         
         createdViewModel = RingtoneCreatedViewModel(
-            audioRepository: ringtoneAudioRepository,
-            audiofavoriteStatusChangeResponder: favoritesViewModel,
             audioPlayer: ringtoneAudioPlayer,
+            createdAudiosMediator: ringtoneAudioRepository,
             audioImportResponder: importViewModel,
             dataExporterFactory: dataExporterFactory
         )
