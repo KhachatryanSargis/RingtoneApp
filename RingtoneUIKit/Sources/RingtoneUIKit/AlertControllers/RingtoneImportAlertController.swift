@@ -10,7 +10,8 @@ import UIKit
 extension UIAlertController {
     public static func importAlertController(
         fromGallery: @escaping () -> Void,
-        fromFiles: @escaping () -> Void
+        fromFiles: @escaping () -> Void,
+        fromURL: @escaping () -> Void
     ) -> UIAlertController {
         let alertController = UIAlertController(
             title: nil,
@@ -32,6 +33,13 @@ extension UIAlertController {
             fromFiles()
         }
         
+        let importFromURLAction = RingtoneAlertAction(
+            title: "Download From a Link",
+            style: .default
+        ) { _ in
+            fromURL()
+        }
+        
         let cancelAction = RingtoneAlertAction(
             title: "Cancel",
             style: .cancel,
@@ -40,6 +48,7 @@ extension UIAlertController {
         
         alertController.addAction(importFromGalleryAction)
         alertController.addAction(importFromFilesAction)
+        alertController.addAction(importFromURLAction)
         alertController.addAction(cancelAction)
         
         return alertController

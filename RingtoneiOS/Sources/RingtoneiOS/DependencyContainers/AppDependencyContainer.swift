@@ -115,6 +115,11 @@ extension AppDependencyContainer: RingtoneImportViewModelFactory {
         RingtoneImportFromGalleryViewController(viewModelFactory: self)
     }
     
+    @MainActor
+    internal func makeRingtoneImportFromURLViewController() -> RingtoneImportFromURLViewController {
+        RingtoneImportFromURLViewController(viewModelFactory: self)
+    }
+    
     public func makeRingtoneImportViewModel() -> RingtoneImportViewModel {
         importViewModel
     }

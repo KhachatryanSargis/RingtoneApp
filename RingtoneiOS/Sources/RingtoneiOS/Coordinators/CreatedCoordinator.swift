@@ -43,6 +43,8 @@ extension CreatedCoordinator {
                     self.onImportFromGallery()
                 case .importAudioFromFiles:
                     self.onImportFromFiles()
+                case .importAudioFromURL:
+                    self.onImportFromURL()
                 case .exportGarageBandProjects(let urls):
                     self.onExportGarageBandProjects(urls)
                 case .editAudio(let audio):
@@ -64,6 +66,10 @@ extension CreatedCoordinator {
             guard let self = self else { return }
             
             self.onImportFromFiles()
+        } fromURL: { [weak self] in
+            guard let self = self else { return }
+            
+            self.onImportFromURL()
         }
         
         presentable.toViewController().present(
@@ -91,6 +97,17 @@ extension CreatedCoordinator {
         let ringtoneImportFromFilesViewController = container.makeRingtoneImportFromFilesViewController()
         presentable.toViewController().present(
             ringtoneImportFromFilesViewController,
+            animated: true
+        )
+    }
+}
+
+// MARK: - Import From URL
+extension CreatedCoordinator {
+    private func onImportFromURL() {
+        let ringtoneImportFromURLViewController = container.makeRingtoneImportFromURLViewController()
+        presentable.toViewController().present(
+            ringtoneImportFromURLViewController,
             animated: true
         )
     }

@@ -44,6 +44,7 @@ public struct ImageTheme {
     public let select = UIImage(systemName: "checkmark.circle")!.withConfiguration(configuration)
     public let gallery = UIImage(systemName: "photo")!.withConfiguration(configuration)
     public let files = UIImage(systemName: "folder")!.withConfiguration(configuration)
+    public let link = UIImage(systemName: "link")!.withConfiguration(configuration)
     
     // MARK: - RingtoneCreatedFailedHeader
     public let retry = UIImage(systemName: "arrow.circlepath")!.withConfiguration(configuration)

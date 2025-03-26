@@ -133,7 +133,8 @@ extension RingtoneCreatedViewController {
             children: [
                 createSelectAction(),
                 createImportFromGalleryAction(),
-                createImportFromFilesAction()
+                createImportFromFilesAction(),
+                createImportFromURLAction()
             ]
         )
         
@@ -176,6 +177,16 @@ extension RingtoneCreatedViewController {
             guard let self = self else { return }
             
             self.actionSubject.send(.importAudioFromFiles)
+        }
+    }
+    
+    private func createImportFromURLAction() -> UIAction {
+        UIAction(title: "Download From a Link", image: .theme.link) {
+            [weak self] _ in
+            
+            guard let self = self else { return }
+            
+            self.actionSubject.send(.importAudioFromURL)
         }
     }
     
@@ -276,6 +287,8 @@ extension RingtoneCreatedViewController {
                     self.actionSubject.send(.importAudioFromGallery)
                 case .importAudioFromFiles:
                     self.actionSubject.send(.importAudioFromFiles)
+                case .importAudioFromURL:
+                    self.actionSubject.send(.importAudioFromURL)
                 case .exportGarageBandProjects(let urls):
                     self.actionSubject.send(.exportGarageBandProjects(urls))
                 case .editAudio(let audio):
