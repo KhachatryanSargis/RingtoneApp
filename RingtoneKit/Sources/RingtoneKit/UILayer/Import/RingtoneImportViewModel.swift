@@ -24,14 +24,17 @@ public final class RingtoneImportViewModel {
     private var failedAudios: [RingtoneAudio] = []
     
     private let dataImporterFactory: () -> IRingtoneDataImporter
+    private let dataDownloaderFactory: () -> IRingtoneDataDownloader
     private let dataConverterFactory: () -> IRingtoneDataConverter
     
     // MARK: - Methods
     public init(
         dataImporterFactory: @escaping () -> IRingtoneDataImporter,
+        dataDownloaderFactory: @escaping () -> IRingtoneDataDownloader,
         dataConverterFactory: @escaping () -> IRingtoneDataConverter
     ) {
         self.dataImporterFactory = dataImporterFactory
+        self.dataDownloaderFactory = dataDownloaderFactory
         self.dataConverterFactory = dataConverterFactory
     }
     
@@ -79,6 +82,33 @@ public final class RingtoneImportViewModel {
                         self.isLoadingSubject.send(false)
                     }
                     .store(in: &cancellables)
+            }
+            .store(in: &cancellables)
+    }
+    
+    func downloadFromUrl(_ url: URL) {
+        let dataDownloader = dataDownloaderFactory()
+        let dataConverter = dataConverterFactory()
+        
+        isLoadingSubject.send(true)
+        
+        dataDownloader.download(url: url)
+            .sink { [weak self] downloaderResult in
+                guard let self = self else { return }
+                
+                switch downloaderResult {
+                case .complete(let item):
+                    dataConverter.convertDataDownloaderCompleteItem(item)
+                        .sink { converterResult in
+                            
+                            self.processConverterResult(converterResult)
+                            
+                            self.isLoadingSubject.send(false)
+                        }
+                        .store(in: &cancellables)
+                case .failed(let item):
+                    print(item)
+                }
             }
             .store(in: &cancellables)
     }

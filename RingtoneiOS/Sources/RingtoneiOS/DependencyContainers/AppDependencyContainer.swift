@@ -46,9 +46,11 @@ public final class AppDependencyContainer {
         
         let dataImporterFactory = { RingtoneDataImporter() }
         let dataConverterFactory = { RingtoneDataConverter() }
+        let dataDownloaderFactory = { RingtoneTikTokDataDownloader() }
         
         importViewModel = RingtoneImportViewModel(
             dataImporterFactory: dataImporterFactory,
+            dataDownloaderFactory: dataDownloaderFactory,
             dataConverterFactory: dataConverterFactory
         )
         

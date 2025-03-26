@@ -7,7 +7,7 @@
 
 import Foundation
 
-public struct RingtoneDataImporterCompleteItem: Sendable {
+public struct RingtoneDataImporterCompleteItem: IRingtoneDataConverterCompatibleItem, Sendable {
     let id: UUID
     let name: String
     let source: RingtoneDataImporterSource

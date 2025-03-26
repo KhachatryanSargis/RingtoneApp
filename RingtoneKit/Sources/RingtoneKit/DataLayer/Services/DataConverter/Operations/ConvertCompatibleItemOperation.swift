@@ -1,5 +1,5 @@
 //
-//  ConvertDataImporterItemOperation.swift
+//  ConvertCompatibleItemOperation.swift
 //  RingtoneKit
 //
 //  Created by Sargis Khachatryan on 16.03.25.
@@ -7,7 +7,7 @@
 
 import AVFoundation
 
-final class ConvertDataImporterItemOperation: AsyncOperation, @unchecked Sendable {
+final class ConvertCompatibleItemOperation: AsyncOperation, @unchecked Sendable {
     // MARK: - Properties
     private var rootDirectoryURL: URL {
         guard let documentDirectoryURL = FileManager.default.urls(
@@ -33,12 +33,12 @@ final class ConvertDataImporterItemOperation: AsyncOperation, @unchecked Sendabl
     
     private var session: AVAssetExportSession?
     
-    private let item: RingtoneDataImporterCompleteItem
+    private let item: IRingtoneDataConverterCompatibleItem
     private let completion: ((Result<(url: URL, asset: AVAsset), RingtoneDataConverterError>) -> Void)?
     
     // MARK: - Methods
     init(
-        item: RingtoneDataImporterCompleteItem,
+        item: IRingtoneDataConverterCompatibleItem,
         completion: ((Result<(url: URL, asset: AVAsset), RingtoneDataConverterError>) -> Void)?
     ) {
         self.item = item

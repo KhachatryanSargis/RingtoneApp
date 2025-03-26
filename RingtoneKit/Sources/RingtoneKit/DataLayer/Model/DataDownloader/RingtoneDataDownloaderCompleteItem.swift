@@ -7,7 +7,7 @@
 
 import Foundation
 
-public struct RingtoneDataDownloaderCompleteItem {
+public struct RingtoneDataDownloaderCompleteItem: IRingtoneDataConverterCompatibleItem, Sendable {
     let id: UUID
     let name: String
     let source: URL

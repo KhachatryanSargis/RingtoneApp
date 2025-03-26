@@ -49,7 +49,7 @@ extension RingtoneDataConverter {
             operations.append(fulfillPromiseOperation)
             
             for item in items {
-                let convertDataImporterItemOperation = ConvertDataImporterItemOperation(
+                let convertDataImporterItemOperation = ConvertCompatibleItemOperation(
                     item: item
                 ) { result in
                     switch result {
@@ -76,6 +76,48 @@ extension RingtoneDataConverter {
         .subscribe(on: queue)
         .eraseToAnyPublisher()
     }
+    
+    public func convertDataDownloaderCompleteItem(_ item: RingtoneDataDownloaderCompleteItem) -> AnyPublisher<RingtoneDataConverterResult, Never> {
+        Future { [weak self] promise in
+            guard let self = self else { return }
+            
+            self.promise = promise
+            
+            var operations: [Operation] = []
+            
+            let fulfillPromiseOperation = BlockOperation()
+            fulfillPromiseOperation.completionBlock = {
+                self.fulfillPromise()
+            }
+            
+            operations.append(fulfillPromiseOperation)
+            
+            let convertDataDownloaderItemOperation = ConvertCompatibleItemOperation(
+                item: item
+            ) { result in
+                switch result {
+                case .success(let response):
+                    self.createCompleteItem(
+                        item: item,
+                        url: response.url,
+                        asset: response.asset
+                    )
+                case .failure(let error):
+                    self.createFailedItem(
+                        item: item,
+                        error: error
+                    )
+                }
+            }
+            
+            fulfillPromiseOperation.addDependency(convertDataDownloaderItemOperation)
+            operations.append(convertDataDownloaderItemOperation)
+            
+            self.queue.addOperations(operations, waitUntilFinished: false)
+        }
+        .subscribe(on: queue)
+        .eraseToAnyPublisher()
+    }
 }
 
 // MARK: - Create Complete Item
@@ -93,6 +135,20 @@ extension RingtoneDataConverter {
         completeItems.append(completeItem)
         completeItemLock.unlock()
     }
+    
+    private func createCompleteItem(item: RingtoneDataDownloaderCompleteItem, url: URL, asset: AVAsset) {
+        let description = getAssetDurationAndSize(asset, at: url)
+        
+        let completeItem = RingtoneDataConverterCompleteItem(
+            description: description,
+            souce: .downloaderItem(item),
+            url: url
+        )
+        
+        completeItemLock.lock()
+        completeItems.append(completeItem)
+        completeItemLock.unlock()
+    }
 }
 
 // MARK: - Create Failed Item
@@ -100,6 +156,17 @@ extension RingtoneDataConverter {
     private func createFailedItem(item: RingtoneDataImporterCompleteItem, error: RingtoneDataConverterError) {
         let failedItem = RingtoneDataConverterFailedItem(
             souce: .importerItem(item),
+            error: error
+        )
+        
+        failedItemLock.lock()
+        failedItems.append(failedItem)
+        failedItemLock.unlock()
+    }
+    
+    private func createFailedItem(item: RingtoneDataDownloaderCompleteItem, error: RingtoneDataConverterError) {
+        let failedItem = RingtoneDataConverterFailedItem(
+            souce: .downloaderItem(item),
             error: error
         )
         

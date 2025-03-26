@@ -9,13 +9,12 @@ import Foundation
 
 enum RingtoneDataConverterSouce {
     case importerItem(RingtoneDataImporterCompleteItem)
-    // TODO: Create RingtoneDataDownlaoder and it's Item.
-    case downloaderItem
+    case downloaderItem(RingtoneDataDownloaderCompleteItem)
     
     var id: UUID {
         switch self {
-        case .downloaderItem:
-            return UUID()
+        case .downloaderItem(let item):
+            return item.id
         case .importerItem(let item):
             return item.id
         }
@@ -23,8 +22,8 @@ enum RingtoneDataConverterSouce {
     
     var suggestedName: String {
         switch self {
-        case .downloaderItem:
-            return "My Ringtone"
+        case .downloaderItem(let item):
+            return item.name
         case .importerItem(let item):
             return item.name
         }
