@@ -106,8 +106,6 @@ final class ConvertCompatibleItemOperation: AsyncOperation, @unchecked Sendable 
                     return
                 }
                 
-                session.cancelExport()
-                
                 if let error = session.error {
                     completion?(.failure(.exportSessionError(error)))
                     return

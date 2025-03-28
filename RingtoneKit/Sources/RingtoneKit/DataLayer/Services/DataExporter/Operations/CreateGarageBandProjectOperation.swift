@@ -65,10 +65,12 @@ final class CreateGarageBandProjectOperation: AsyncOperation, @unchecked Sendabl
         
         let projectFolderURL = rootFolderURL.appendingPathComponent("\(audio.title).band")
         let mediaFolderURL = projectFolderURL.appendingPathComponent("Media")
+        let outputFolderURL = projectFolderURL.appendingPathComponent("Output")
         
         try fileManager.createDirectory(at: rootFolderURL, withIntermediateDirectories: true, attributes: nil)
         try fileManager.createDirectory(at: projectFolderURL, withIntermediateDirectories: true, attributes: nil)
         try fileManager.createDirectory(at: mediaFolderURL, withIntermediateDirectories: true, attributes: nil)
+        try fileManager.createDirectory(at: outputFolderURL, withIntermediateDirectories: true, attributes: nil)
         
         return projectFolderURL
     }
