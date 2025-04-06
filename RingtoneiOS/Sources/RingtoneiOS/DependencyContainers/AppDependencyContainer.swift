@@ -35,19 +35,11 @@ public final class AppDependencyContainer {
             audioPlayerStatusPublisher: ringtoneAudioPlayer
         )
         
-        favoritesViewModel = RingtoneFavoritesViewModel(
-            audioPlayer: ringtoneAudioPlayer,
-            favoriteAudiosMediator: ringtoneAudioRepository
-        )
-        
-        discoverViewModel = RingtoneDiscoverViewModel(
-            audioPlayer: ringtoneAudioPlayer,
-            discoverAudiosMediator: ringtoneAudioRepository,
-            categoreisRepository: ringtoneCategoriesRepository
-        )
-        
         let dataImporterFactory = { RingtoneDataImporter() }
+        
         let dataConverterFactory = { RingtoneDataConverter() }
+        
+        let dataExporterFactory = { RingtoneDataExporter() }
         
         let dataDownloaderFactory = { (url: URL) -> IRingtoneDataDownloader in
             if SocialMediaDataDownloader.isSupportedHost(url: url) {
@@ -57,13 +49,23 @@ public final class AppDependencyContainer {
             }
         }
         
+        favoritesViewModel = RingtoneFavoritesViewModel(
+            audioPlayer: ringtoneAudioPlayer,
+            favoriteAudiosMediator: ringtoneAudioRepository,
+            dataExporterFactory: dataExporterFactory
+        )
+        
+        discoverViewModel = RingtoneDiscoverViewModel(
+            audioPlayer: ringtoneAudioPlayer,
+            discoverAudiosMediator: ringtoneAudioRepository,
+            categoreisRepository: ringtoneCategoriesRepository
+        )
+        
         importViewModel = RingtoneImportViewModel(
             dataImporterFactory: dataImporterFactory,
             dataDownloaderFactory: dataDownloaderFactory,
             dataConverterFactory: dataConverterFactory
         )
-        
-        let dataExporterFactory = { RingtoneDataExporter() }
         
         createdViewModel = RingtoneCreatedViewModel(
             audioPlayer: ringtoneAudioPlayer,
