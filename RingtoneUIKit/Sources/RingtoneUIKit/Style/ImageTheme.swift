@@ -52,4 +52,8 @@ public struct ImageTheme {
     
     // MARK: - RingtoneCreatedActionHeader
     public let delete = UIImage(systemName: "trash")!.withConfiguration(configuration)
+    
+    // MARK: - RingtoneImportFromURLViewController
+    public let download = UIImage(systemName: "arrow.down.circle")!.withConfiguration(configuration)
+    public let cancel = UIImage(systemName: "xmark.circle")!.withConfiguration(configuration)
 }

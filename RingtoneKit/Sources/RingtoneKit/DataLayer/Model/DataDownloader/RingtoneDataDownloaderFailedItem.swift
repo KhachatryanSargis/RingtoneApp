@@ -8,8 +8,8 @@
 import Foundation
 
 public struct RingtoneDataDownloaderFailedItem {
-    let id: UUID
-    let name: String
-    let source: URL
-    let error: RingtoneDataDownloaderError
+    public let id: UUID
+    public let name: String
+    public let source: URL
+    public let error: RingtoneDataDownloaderError
 }

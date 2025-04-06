@@ -17,20 +17,25 @@ public final class RingtoneImportViewModel {
     // MARK: - Properties
     private let isLoadingSubject = CurrentValueSubject<Bool, Never>(false)
     private let audiosSubject = PassthroughSubject<[RingtoneAudio], Never>()
-    private var cancellables: Set<AnyCancellable> = []
+    
+    public var downloadResultPublisher = PassthroughSubject<RingtoneDataDownloaderResult, Never>()
+    
+    private var importCancellables = Set<AnyCancellable>()
+    private var downloadCancellables = Set<AnyCancellable>()
+    private var convertCancellables = Set<AnyCancellable>()
     
     private var failedImporterItems: [RingtoneDataImporterFailedItem] = []
     private var failedConverterItems: [RingtoneDataConverterFailedItem] = []
     private var failedAudios: [RingtoneAudio] = []
     
     private let dataImporterFactory: () -> IRingtoneDataImporter
-    private let dataDownloaderFactory: () -> IRingtoneDataDownloader
+    private let dataDownloaderFactory: (_ url: URL) -> IRingtoneDataDownloader
     private let dataConverterFactory: () -> IRingtoneDataConverter
     
     // MARK: - Methods
     public init(
         dataImporterFactory: @escaping () -> IRingtoneDataImporter,
-        dataDownloaderFactory: @escaping () -> IRingtoneDataDownloader,
+        dataDownloaderFactory: @escaping (_ url: URL) -> IRingtoneDataDownloader,
         dataConverterFactory: @escaping () -> IRingtoneDataConverter
     ) {
         self.dataImporterFactory = dataImporterFactory
@@ -57,9 +62,9 @@ public final class RingtoneImportViewModel {
                         
                         self.isLoadingSubject.send(false)
                     }
-                    .store(in: &self.cancellables)
+                    .store(in: &self.convertCancellables)
             }
-            .store(in: &cancellables)
+            .store(in: &importCancellables)
     }
     
     public func importDataFromDocuments(_ urls: [URL]) {
@@ -81,23 +86,23 @@ public final class RingtoneImportViewModel {
                         
                         self.isLoadingSubject.send(false)
                     }
-                    .store(in: &cancellables)
+                    .store(in: &convertCancellables)
             }
-            .store(in: &cancellables)
+            .store(in: &importCancellables)
     }
     
-    func downloadFromUrl(_ url: URL) {
-        let dataDownloader = dataDownloaderFactory()
+    public func downloadFromUrl(_ url: URL) -> AnyPublisher<Progress, Never> {
+        let dataDownloader = dataDownloaderFactory(url)
         let dataConverter = dataConverterFactory()
         
-        isLoadingSubject.send(true)
-        
         dataDownloader.download(url: url)
-            .sink { [weak self] downloaderResult in
+            .sink(receiveValue: { [weak self] downloaderResult in
                 guard let self = self else { return }
                 
                 switch downloaderResult {
                 case .complete(let item):
+                    self.isLoadingSubject.send(true)
+                    
                     dataConverter.convertDataDownloaderCompleteItem(item)
                         .sink { converterResult in
                             
@@ -105,12 +110,21 @@ public final class RingtoneImportViewModel {
                             
                             self.isLoadingSubject.send(false)
                         }
-                        .store(in: &cancellables)
+                        .store(in: &convertCancellables)
+                    
+                    self.downloadResultPublisher.send(.complete(item))
                 case .failed(let item):
-                    print(item)
+                    self.downloadResultPublisher.send(.failed(item))
                 }
-            }
-            .store(in: &cancellables)
+            })
+            .store(in: &downloadCancellables)
+        
+        return dataDownloader.progressPublisher
+    }
+    
+    public func cancelCurrentDownloads() {
+        downloadCancellables.forEach { $0.cancel() }
+        downloadCancellables.removeAll()
     }
 }
 

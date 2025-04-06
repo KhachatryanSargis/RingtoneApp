@@ -106,8 +106,9 @@ extension CreatedCoordinator {
 extension CreatedCoordinator {
     private func onImportFromURL() {
         let ringtoneImportFromURLViewController = container.makeRingtoneImportFromURLViewController()
+        let navigationController = NiblessNavigationController(rootViewController: ringtoneImportFromURLViewController)
         presentable.toViewController().present(
-            ringtoneImportFromURLViewController,
+            navigationController,
             animated: true
         )
     }

@@ -7,6 +7,9 @@
 
 public enum RingtoneDataDownloaderError: Error {
     case network
-    case noAudioData
+    case missingMimeType
+    case unsupportedMimeType
+    case failedToFindData
     case other(Error)
+    case unexpected
 }

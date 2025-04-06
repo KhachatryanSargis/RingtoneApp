@@ -5,6 +5,7 @@
 //  Created by Sargis Khachatryan on 22.02.25.
 //
 
+import Foundation
 import RingtoneKit
 import RingtoneDiscoverScreen
 import RingtoneFavoritesScreen
@@ -46,7 +47,14 @@ public final class AppDependencyContainer {
         
         let dataImporterFactory = { RingtoneDataImporter() }
         let dataConverterFactory = { RingtoneDataConverter() }
-        let dataDownloaderFactory = { RingtoneTikTokDataDownloader() }
+        
+        let dataDownloaderFactory = { (url: URL) -> IRingtoneDataDownloader in
+            if SocialMediaDataDownloader.isSupportedHost(url: url) {
+                return SocialMediaDataDownloader()
+            } else {
+                return RingtoneDataDownloader()
+            }
+        }
         
         importViewModel = RingtoneImportViewModel(
             dataImporterFactory: dataImporterFactory,

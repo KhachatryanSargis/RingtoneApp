@@ -105,3 +105,6 @@ iOSInjectionProject/
 
 ### System ###
 *.DS_Store
+
+### API Key ###
+RingtoneApp/SocialMediaDownloaderAPIKey/APIKey.plist

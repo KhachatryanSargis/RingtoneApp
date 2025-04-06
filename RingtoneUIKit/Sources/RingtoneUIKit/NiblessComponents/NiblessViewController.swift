@@ -92,3 +92,20 @@ extension NiblessViewController {
         activityIndicatorView.removeFromSuperview()
     }
 }
+
+// MARK: - Show Alert
+extension NiblessViewController {
+    public final func showAlert(title: String, message: String) {
+        let alertViewContrller = UIAlertController(
+            title: title,
+            message: message,
+            preferredStyle: .alert
+        )
+        
+        let okAction = UIAlertAction.init(title: "Ok", style: .cancel)
+        
+        alertViewContrller.addAction(okAction)
+        
+        present(alertViewContrller, animated: true)
+    }
+}
