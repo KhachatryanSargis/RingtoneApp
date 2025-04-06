@@ -35,7 +35,6 @@ public final class RingtoneDiscoverViewModel {
         
         getCategories()
         observeDiscoverAudios()
-        observeAudioPlayerStatus()
     }
     
     private func getCategories() {
@@ -55,16 +54,7 @@ public final class RingtoneDiscoverViewModel {
             .sink { [weak self] discoverAudios in
                 guard let self = self else { return }
                 
-                var audios = discoverAudios
-                
-                // Syncing playback status.
-                if self.audioPlayer.isPlaying,
-                   let currentAudioID = self.audioPlayer.currentAudioID,
-                   let index = audios.firstIndex(where: { $0.id == currentAudioID }) {
-                    audios[index] = audios[index].played()
-                }
-                
-                self.audios = audios
+                self.audios = discoverAudios
             }
             .store(in: &cancellables)
     }
@@ -106,31 +96,5 @@ extension RingtoneDiscoverViewModel: RingtoneAudioPlaybackStatusChangeResponder 
         } else {
             audioPlayer.play(audio)
         }
-    }
-    
-    private func observeAudioPlayerStatus() {
-        audioPlayer.statusPublisher
-            .sink { [weak self] status in
-                guard let self = self else { return }
-                
-                switch status {
-                case .startedPlaying(let audioID):
-                    var audios = self.audios
-                    
-                    // TODO: Optimize.
-                    for (index, audio) in self.audios.enumerated() {
-                        if audioID == audio.id  {
-                            audios[index] = audios[index].played()
-                        } else {
-                            audios[index] = audios[index].paused()
-                        }
-                    }
-                    
-                    self.audios = audios
-                default:
-                    self.audios = self.audios.map { $0.paused() }
-                }
-            }
-            .store(in: &cancellables)
     }
 }

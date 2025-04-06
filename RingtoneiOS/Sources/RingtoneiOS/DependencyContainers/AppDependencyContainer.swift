@@ -23,16 +23,17 @@ public final class AppDependencyContainer {
     
     // MARK: - Methods
     public init () {
+        let ringtoneAudioPlayer = RingtoneAudioPlayer()
+        self.audioPlayerProgressPublisher = ringtoneAudioPlayer
+        
         let ringtoneCategoriesRepository = RingtoneCategoriesRepository(
             store: RingtoneCategoriesStore()
         )
         
         let ringtoneAudioRepository = RingtoneAudioRepository(
-            store: RingtoneAudioStore()
+            store: RingtoneAudioStore(),
+            audioPlayerStatusPublisher: ringtoneAudioPlayer
         )
-        
-        let ringtoneAudioPlayer = RingtoneAudioPlayer()
-        self.audioPlayerProgressPublisher = ringtoneAudioPlayer
         
         favoritesViewModel = RingtoneFavoritesViewModel(
             audioPlayer: ringtoneAudioPlayer,

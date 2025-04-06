@@ -17,10 +17,12 @@ public final class RingtoneAudioRepository: IRingtoneAudioRepository {
     private var cancellables: Set<AnyCancellable> = []
     
     private let store: IRingtoneAudioStore
+    private let audioPlayerStatusPublisher: IRingtoneAudioPlayerStatusPublisher
     
     // MARK: - Methods
-    public init(store: IRingtoneAudioStore) {
+    public init(store: IRingtoneAudioStore, audioPlayerStatusPublisher: IRingtoneAudioPlayerStatusPublisher) {
         self.store = store
+        self.audioPlayerStatusPublisher = audioPlayerStatusPublisher
         
         getCreatedRingtoneAudios()
             .subscribe(on: DispatchQueue.global(qos: .userInitiated))
@@ -39,6 +41,8 @@ public final class RingtoneAudioRepository: IRingtoneAudioRepository {
                 print(error)
             } receiveValue: { _ in }
             .store(in: &cancellables)
+        
+        observeAudioPlayerStatus()
     }
     
     public func addRingtoneAudios(_ audios: [RingtoneAudio]) -> AnyPublisher<[RingtoneAudio], RingtoneAudioRepositoryError> {
@@ -286,5 +290,79 @@ extension RingtoneAudioRepository: RingtoneAudioFavoriteStatusChangeResponder {
                 print(error)
             } receiveValue: { _ in }
             .store(in: &cancellables)
+    }
+}
+
+// MARK: - Playback Status
+extension RingtoneAudioRepository {
+    private func observeAudioPlayerStatus() {
+        audioPlayerStatusPublisher.statusPublisher
+            .sink { [weak self] status in
+                guard let self = self else { return }
+                
+                switch status {
+                case .failedToInitialize, .failedToPlay:
+                    self.pauseAllAudios()
+                case .startedPlaying(let audioID):
+                    self.playAudioByID(audioID)
+                case .pausedPlaying(let audioID):
+                    self.pauseAudioByID(audioID)
+                case .finishedPlaying(let audioID):
+                    self.pauseAudioByID(audioID)
+                }
+            }
+            .store(in: &cancellables)
+    }
+    
+    private func pauseAllAudios() {
+        discoverAudios = discoverAudios.map { $0.paused() }
+        favoriteAudios = favoriteAudios.map { $0.paused() }
+        createdAudios = createdAudios.map { $0.paused() }
+    }
+    
+    private func playAudioByID(_ id: String) {
+        var discoverAudios = self.discoverAudios
+        for (index, audio) in discoverAudios.enumerated() {
+            if audio.id == id {
+                discoverAudios[index] = audio.played()
+            } else {
+                discoverAudios[index] = audio.paused()
+            }
+        }
+        self.discoverAudios = discoverAudios
+        
+        var favoriteAudios = self.favoriteAudios
+        for (index, audio) in favoriteAudios.enumerated() {
+            if audio.id == id {
+                favoriteAudios[index] = audio.played()
+            } else {
+                favoriteAudios[index] = audio.paused()
+            }
+        }
+        self.favoriteAudios = favoriteAudios
+        
+        var createdAudios = self.createdAudios
+        for (index, audio) in createdAudios.enumerated() {
+            if audio.id == id {
+                createdAudios[index] = audio.played()
+            } else {
+                createdAudios[index] = audio.paused()
+            }
+        }
+        self.createdAudios = createdAudios
+    }
+    
+    private func pauseAudioByID(_ id: String) {
+        if let index = discoverAudios.firstIndex(where: { $0.id == id }) {
+            discoverAudios[index] = discoverAudios[index].paused()
+        }
+        
+        if let index = favoriteAudios.firstIndex(where: { $0.id == id }) {
+            favoriteAudios[index] = favoriteAudios[index].paused()
+        }
+        
+        if let index = createdAudios.firstIndex(where: { $0.id == id }) {
+            createdAudios[index] = createdAudios[index].paused()
+        }
     }
 }
