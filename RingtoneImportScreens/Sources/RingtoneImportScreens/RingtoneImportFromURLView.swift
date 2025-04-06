@@ -34,7 +34,7 @@ final class RingtoneImportFromURLView: NiblessView {
         let label = UILabel()
         label.font = .theme.subheadline
         label.textColor = .theme.secondaryLabel
-        label.text = "Please ensure that the files you download do not violate the rights of others. Copyrighted cannot should not be downloaded using this tool."
+        label.text = "Please ensure that the files you download do not violate the rights of others. Copyrighted content should not be downloaded using this tool."
         label.textAlignment = .left
         label.numberOfLines = 0
         return label
