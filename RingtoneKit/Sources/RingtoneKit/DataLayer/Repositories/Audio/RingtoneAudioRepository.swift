@@ -42,7 +42,9 @@ public final class RingtoneAudioRepository: IRingtoneAudioRepository {
     }
     
     public func addRingtoneAudios(_ audios: [RingtoneAudio]) -> AnyPublisher<[RingtoneAudio], RingtoneAudioRepositoryError> {
-        store.addRingtoneAudios(audios)
+        let completeAudios = audios.filter { $0.isFailed == false }
+        
+        return store.addRingtoneAudios(completeAudios)
             .map { [weak self] createdAudios in
                 guard let self = self else { return audios }
                 

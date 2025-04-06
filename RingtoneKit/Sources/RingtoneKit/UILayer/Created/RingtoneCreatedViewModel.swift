@@ -221,11 +221,7 @@ extension RingtoneCreatedViewModel: RingtoneAudioImportResponder {
             .sink { [weak self] importedAudios in
                 guard let self = self else { return }
                 
-                let failedAudios = importedAudios.filter { $0.isFailed == true }
-                self.audios.append(contentsOf: failedAudios)
-                
-                let successAudios = importedAudios.filter { $0.isFailed == false }
-                self.createdAudiosMediator.addRingtoneAudios(successAudios)
+                self.createdAudiosMediator.addRingtoneAudios(importedAudios)
             }
             .store(in: &cancellables)
     }
