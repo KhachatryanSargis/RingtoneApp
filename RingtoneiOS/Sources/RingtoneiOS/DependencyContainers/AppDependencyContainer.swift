@@ -58,7 +58,8 @@ public final class AppDependencyContainer {
         discoverViewModel = RingtoneDiscoverViewModel(
             audioPlayer: ringtoneAudioPlayer,
             discoverAudiosMediator: ringtoneAudioRepository,
-            categoreisRepository: ringtoneCategoriesRepository
+            categoreisRepository: ringtoneCategoriesRepository,
+            dataExporterFactory: dataExporterFactory
         )
         
         importViewModel = RingtoneImportViewModel(

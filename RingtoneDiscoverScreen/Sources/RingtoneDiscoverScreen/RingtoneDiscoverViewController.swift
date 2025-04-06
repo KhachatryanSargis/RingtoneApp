@@ -23,7 +23,9 @@ public final class RingtoneDiscoverViewController: NiblessViewController {
     
     public override func loadView() {
         let viewModel = viewModelFactory.makeRingtoneDiscoverViewModel()
-        observeViewModelAction(viewMode: viewModel)
+        
+        observeViewModelAction(viewModel)
+        
         view = RingtoneDiscoverView(viewModel: viewModel)
     }
     
@@ -53,90 +55,36 @@ extension RingtoneDiscoverViewController {
     }
 }
 
-// MARK: - View Model
+// MARK: - View Model Actions
 extension RingtoneDiscoverViewController {
-    private func observeViewModelAction(viewMode: RingtoneDiscoverViewModel) {
-        viewMode.$action
+    private func observeViewModelAction(_ viewModel: RingtoneDiscoverViewModel) {
+        viewModel.$action
+            .receive(on: DispatchQueue.main)
             .compactMap { $0 }
             .sink { [weak self] action in
                 guard let self = self else { return }
                 
                 switch action {
-                case .export(let audio):
-                    self.exportAudio(audio)
-                case .edit(let audio):
-                    self.editAudio(audio)
+                case .exportGarageBandProjects(let urls):
+                    self.onExportGarageBandProjects(urls)
+                case .editAudio(let audio):
+                    print(audio)
                 }
             }
             .store(in: &cancellables)
     }
-    
-    private func exportAudio(_ audio: RingtoneAudio) {
+}
+
+// MARK: - Export
+extension RingtoneDiscoverViewController {
+    private func onExportGarageBandProjects(_ urls: [URL]) {
+        guard !urls.isEmpty else { return }
+        
         let activityViewController = UIActivityViewController(
-            activityItems: [audio.url],
+            activityItems: urls,
             applicationActivities: nil
         )
         
-        if #available(iOS 16.4, *) {
-            activityViewController.excludedActivityTypes = [
-                .postToFacebook,
-                .postToTwitter,
-                .postToWeibo,
-                .message,
-                .mail,
-                .print,
-                .copyToPasteboard,
-                .assignToContact,
-                .saveToCameraRoll,
-                .addToReadingList,
-                .postToFlickr,
-                .postToVimeo,
-                .postToTencentWeibo,
-                .airDrop,
-                .openInIBooks,
-                .markupAsPDF,
-                .sharePlay,
-                .collaborationInviteWithLink,
-                .collaborationCopyLink,
-                .addToHomeScreen
-            ]
-        } else {
-            activityViewController.excludedActivityTypes = [
-                .postToFacebook,
-                .postToTwitter,
-                .postToWeibo,
-                .message,
-                .mail,
-                .print,
-                .copyToPasteboard,
-                .assignToContact,
-                .saveToCameraRoll,
-                .addToReadingList,
-                .postToFlickr,
-                .postToVimeo,
-                .postToTencentWeibo,
-                .airDrop,
-                .openInIBooks,
-                .markupAsPDF
-            ]
-        }
-        
-        present(activityViewController, animated: true, completion: nil)
-        
-        activityViewController.completionWithItemsHandler = { activity, completed, returnedItems, error in
-            if completed {
-                print("MP3 file successfully exported to GarageBand.")
-            } else {
-                if let error = error {
-                    print("Error exporting MP3 file: \(error.localizedDescription)")
-                } else {
-                    print("Export canceled.")
-                }
-            }
-        }
-    }
-    
-    private func editAudio(_ audio: RingtoneAudio) {
-        
+        present(activityViewController,animated: true,completion: nil)
     }
 }

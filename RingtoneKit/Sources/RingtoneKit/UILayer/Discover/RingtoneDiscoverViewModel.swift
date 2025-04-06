@@ -13,7 +13,7 @@ public protocol RingtoneDiscoverViewModelFactory {
 
 public final class RingtoneDiscoverViewModel {
     // MARK: - Properties
-    @Published public private(set) var action: RingtoneDiscoverViewModelAction?
+    @Published public private(set) var action: RingtoneDiscoverAction?
     @Published public private(set) var categories: [RingtoneCategory] = []
     @Published public private(set) var audios: [RingtoneAudio] = []
     
@@ -22,16 +22,19 @@ public final class RingtoneDiscoverViewModel {
     private let discoverAudiosMediator: RingtoneDiscoverAudiosMediator
     private let categoreisRepository: IRingtoneCategoriesRepository
     private let audioPlayer: IRingtoneAudioPlayer
+    private let dataExporterFactory: () -> IRingtoneDataExporter
     
     // MARK: - Methods
     public init(
         audioPlayer: IRingtoneAudioPlayer,
         discoverAudiosMediator: RingtoneDiscoverAudiosMediator,
-        categoreisRepository: IRingtoneCategoriesRepository
+        categoreisRepository: IRingtoneCategoriesRepository,
+        dataExporterFactory: @escaping () -> IRingtoneDataExporter
     ) {
         self.audioPlayer = audioPlayer
         self.discoverAudiosMediator = discoverAudiosMediator
         self.categoreisRepository = categoreisRepository
+        self.dataExporterFactory = dataExporterFactory
         
         getCategories()
         observeDiscoverAudios()
@@ -70,14 +73,28 @@ extension RingtoneDiscoverViewModel: RingtoneAudioFavoriteStatusChangeResponder 
 // MARK: - Edit
 extension RingtoneDiscoverViewModel: RingtoneAudioEditResponder {
     public func editRingtoneAudio(_ audio: RingtoneAudio) {
-        action = .edit(audio)
+        action = .editAudio(audio)
     }
 }
 
 // MARK: - Export
 extension RingtoneDiscoverViewModel: RingtoneAudioExportResponder {
     public func exportRingtoneAudio(_ audio: RingtoneAudio) {
-        action = .export(audio)
+        exportRingtoneAudios([audio])
+    }
+    
+    public func exportRingtoneAudios(_ audios: [RingtoneAudio]) {
+        let dataExporter = dataExporterFactory()
+        
+        return dataExporter.exportRingtoneAudios(audios)
+            .sink { [weak self] result in
+                guard let self = self else { return }
+                
+                let urls = result.completeItems.map { $0.url }
+                
+                self.action = .exportGarageBandProjects(urls)
+            }
+            .store(in: &cancellables)
     }
 }
 
