@@ -11,6 +11,7 @@ import RingtoneDiscoverScreen
 import RingtoneFavoritesScreen
 import RingtoneCreatedScreen
 import RingtoneImportScreens
+import RingtoneEditScreen
 
 public final class AppDependencyContainer {
     // MARK: - Properties
@@ -134,5 +135,13 @@ extension AppDependencyContainer: RingtoneImportViewModelFactory {
     
     public func makeRingtoneImportViewModel() -> RingtoneImportViewModel {
         importViewModel
+    }
+}
+
+// MARK: - Edit
+extension AppDependencyContainer {
+    @MainActor
+    internal func makeRingtoneEditViewController() -> RingtoneEditViewController {
+        RingtoneEditViewController()
     }
 }

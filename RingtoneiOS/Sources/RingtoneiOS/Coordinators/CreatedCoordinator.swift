@@ -48,7 +48,7 @@ extension CreatedCoordinator {
                 case .exportGarageBandProjects(let urls):
                     self.onExportGarageBandProjects(urls)
                 case .editAudio(let audio):
-                    print(audio)
+                    self.onEditAudio(audio)
                 }
             }
         storeCancellable(cancellable)
@@ -107,6 +107,18 @@ extension CreatedCoordinator {
     private func onImportFromURL() {
         let ringtoneImportFromURLViewController = container.makeRingtoneImportFromURLViewController()
         let navigationController = NiblessNavigationController(rootViewController: ringtoneImportFromURLViewController)
+        presentable.toViewController().present(
+            navigationController,
+            animated: true
+        )
+    }
+}
+
+// MARK: - Edit
+extension CreatedCoordinator {
+    private func onEditAudio(_ audio: RingtoneAudio) {
+        let ringtoneEditViewController = container.makeRingtoneEditViewController()
+        let navigationController = NiblessNavigationController(rootViewController: ringtoneEditViewController)
         presentable.toViewController().present(
             navigationController,
             animated: true

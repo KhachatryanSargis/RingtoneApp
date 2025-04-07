@@ -16,7 +16,8 @@ let package = Package(
         .package(path: "RingtoneUIKit"),
         .package(path: "RingtoneDiscoverScreen"),
         .package(path: "RingtoneFavoritesScreen"),
-        .package(path: "RingtoneCreatedScreen")
+        .package(path: "RingtoneCreatedScreen"),
+        .package(path: "RingtoneEditScreen")
     ],
     targets: [
         .target(
@@ -25,7 +26,8 @@ let package = Package(
                 "RingtoneUIKit",
                 "RingtoneDiscoverScreen",
                 "RingtoneFavoritesScreen",
-                "RingtoneCreatedScreen"
+                "RingtoneCreatedScreen",
+                "RingtoneEditScreen"
             ]
         ),
     ]
