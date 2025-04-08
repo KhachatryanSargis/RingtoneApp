@@ -30,11 +30,24 @@ public final class RingtoneImportFromURLViewController: NiblessViewController {
     public override func viewDidLoad() {
         super.viewDidLoad()
         configureNavigationItem()
+    }
+    
+    public override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
         disableSwipeDownDismiss()
     }
     
+    public override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        enableSwipeDownDismiss()
+    }
+    
     private func disableSwipeDownDismiss() {
-        isModalInPresentation = true
+        navigationController?.presentationController?.presentedView?.gestureRecognizers?.forEach { $0.isEnabled = false }
+    }
+    
+    private func enableSwipeDownDismiss() {
+        navigationController?.presentationController?.presentedView?.gestureRecognizers?.forEach { $0.isEnabled = true }
     }
 }
 
