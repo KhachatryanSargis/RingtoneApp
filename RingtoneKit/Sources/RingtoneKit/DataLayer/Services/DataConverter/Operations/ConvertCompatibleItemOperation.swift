@@ -33,8 +33,8 @@ final class ConvertCompatibleItemOperation: AsyncOperation, @unchecked Sendable 
     
     //    private var session: AVAssetExportSession?
     
-    private let reader: AVAssetReader
-    private let writer: AVAssetWriter
+    private var reader: AVAssetReader!
+    private var writer: AVAssetWriter!
     
     private let item: IRingtoneDataConverterCompatibleItem
     private let completion: ((Result<(url: URL, asset: AVAsset), RingtoneDataConverterError>) -> Void)?
@@ -46,20 +46,31 @@ final class ConvertCompatibleItemOperation: AsyncOperation, @unchecked Sendable 
     ) {
         self.item = item
         self.completion = completion
-        
-        let asset = AVURLAsset(url: item.url)
-        
-        // TODO: Handle the error properly!
-        reader = try! AVAssetReader(asset: asset)
-        
-        let fileName = item.id.uuidString + ".aiff"
-        let outputURL = Self.rootDirectoryURL.appendingPathComponent(fileName)
-        
-        // TODO: Handle the error properly!
-        writer = try! AVAssetWriter(outputURL: outputURL, fileType: .aiff)
     }
     
     override func main() {
+        do {
+            let asset = AVURLAsset(url: item.url)
+            reader = try AVAssetReader(asset: asset)
+        } catch {
+            completion?(.failure(.failedToCreateReader(error)))
+            
+            self.state = .finished
+            return
+        }
+        
+        do {
+            let fileName = item.id.uuidString + ".aiff"
+            let outputURL = Self.rootDirectoryURL.appendingPathComponent(fileName)
+            
+            writer = try AVAssetWriter(outputURL: outputURL, fileType: .aiff)
+        } catch {
+            completion?(.failure(.failedToCreateWriter(error)))
+            
+            self.state = .finished
+            return
+        }
+        
         reader.asset.loadTracks(withMediaType: AVMediaType.audio) {
             [weak self] tracks,
             error in
