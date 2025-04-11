@@ -6,7 +6,6 @@
 //
 
 import AVFoundation
-import Accelerate
 
 final class ConvertCompatibleItemOperation: AsyncOperation, @unchecked Sendable {
     // MARK: - Properties
