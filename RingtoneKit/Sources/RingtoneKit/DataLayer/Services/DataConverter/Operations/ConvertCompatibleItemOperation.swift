@@ -114,7 +114,6 @@ final class ConvertCompatibleItemOperation: AsyncOperation, @unchecked Sendable 
             ]
             
             let writerInput = AVAssetWriterInput(mediaType: .audio, outputSettings: writerOutputSettings)
-            writerInput.expectsMediaDataInRealTime = false
             self.writer.add(writerInput)
             
             self.reader.startReading()
