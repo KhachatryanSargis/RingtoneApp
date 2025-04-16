@@ -57,7 +57,8 @@ extension RingtoneDataConverter {
                         self.createCompleteItem(
                             item: item,
                             url: response.url,
-                            asset: response.asset
+                            waveformURL: response.waveformURL,
+                            duration: response.duration
                         )
                     case .failure(let error):
                         self.createFailedItem(
@@ -100,7 +101,8 @@ extension RingtoneDataConverter {
                     self.createCompleteItem(
                         item: item,
                         url: response.url,
-                        asset: response.asset
+                        waveformURL: response.waveformURL,
+                        duration: response.duration
                     )
                 case .failure(let error):
                     self.createFailedItem(
@@ -122,13 +124,14 @@ extension RingtoneDataConverter {
 
 // MARK: - Create Complete Item
 extension RingtoneDataConverter {
-    private func createCompleteItem(item: RingtoneDataImporterCompleteItem, url: URL, asset: AVAsset) {
-        let description = getAssetDurationAndSize(asset, at: url)
+    private func createCompleteItem(item: RingtoneDataImporterCompleteItem, url: URL, waveformURL: URL, duration: TimeInterval) {
+        let description = getFormattedDurationAndSize(duration: duration, url: url)
         
         let completeItem = RingtoneDataConverterCompleteItem(
             description: description,
             souce: .importerItem(item),
-            url: url
+            url: url,
+            waveformURL: waveformURL
         )
         
         completeItemLock.lock()
@@ -136,13 +139,14 @@ extension RingtoneDataConverter {
         completeItemLock.unlock()
     }
     
-    private func createCompleteItem(item: RingtoneDataDownloaderCompleteItem, url: URL, asset: AVAsset) {
-        let description = getAssetDurationAndSize(asset, at: url)
+    private func createCompleteItem(item: RingtoneDataDownloaderCompleteItem, url: URL, waveformURL: URL, duration: TimeInterval) {
+        let description = getFormattedDurationAndSize(duration: duration, url: url)
         
         let completeItem = RingtoneDataConverterCompleteItem(
             description: description,
             souce: .downloaderItem(item),
-            url: url
+            url: url,
+            waveformURL: waveformURL
         )
         
         completeItemLock.lock()
@@ -193,11 +197,9 @@ extension RingtoneDataConverter {
 
 // MARK: - Asset Duration and Size
 extension RingtoneDataConverter {
-    func getAssetDurationAndSize(_ asset: AVAsset, at url: URL) -> String {
-        let durationInSeconds = asset.duration.seconds
-        
-        let minutes = Int(durationInSeconds) / 60
-        let seconds = Int(durationInSeconds) % 60
+    func getFormattedDurationAndSize(duration: TimeInterval, url: URL) -> String {
+        let minutes = Int(duration) / 60
+        let seconds = Int(duration) % 60
         let durationFormatted = String(format: "%02d:%02d", minutes, seconds)
         
         do {
@@ -208,7 +210,7 @@ extension RingtoneDataConverter {
                 let sizeFormatted: String
                 if fileSizeInMB < 1 {
                     let fileSizeInKB = fileSize.doubleValue / 1024
-                    sizeFormatted = String(format: "%.1f KB", fileSizeInKB)
+                    sizeFormatted = String(format: "%.0f KB", fileSizeInKB)
                 } else {
                     sizeFormatted = String(format: "%.1f MB", fileSizeInMB)
                 }

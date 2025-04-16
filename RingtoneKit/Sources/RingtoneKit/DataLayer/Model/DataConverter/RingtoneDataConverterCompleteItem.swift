@@ -13,4 +13,5 @@ struct RingtoneDataConverterCompleteItem {
     let description: String
     let souce: RingtoneDataConverterSouce
     let url: URL
+    let waveformURL: URL
 }

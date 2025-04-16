@@ -15,17 +15,20 @@ import RingtoneEditScreen
 
 public final class AppDependencyContainer {
     // MARK: - Properties
-    unowned private(set) var audioPlayerProgressPublisher: IRingtoneAudioPlayerProgressPublisher
+    var audioPlayerProgressPublisher: IRingtoneAudioPlayerProgressPublisher {
+        return audioPlayer
+    }
     
     private let discoverViewModel: RingtoneDiscoverViewModel
     private let favoritesViewModel: RingtoneFavoritesViewModel
     private let createdViewModel: RingtoneCreatedViewModel
     private let importViewModel: RingtoneImportViewModel
+    private let audioPlayer: RingtoneAudioPlayer
     
     // MARK: - Methods
     public init () {
         let ringtoneAudioPlayer = RingtoneAudioPlayer()
-        self.audioPlayerProgressPublisher = ringtoneAudioPlayer
+        self.audioPlayer = ringtoneAudioPlayer
         
         let ringtoneCategoriesRepository = RingtoneCategoriesRepository(
             store: RingtoneCategoriesStore()
@@ -141,7 +144,12 @@ extension AppDependencyContainer: RingtoneImportViewModelFactory {
 // MARK: - Edit
 extension AppDependencyContainer {
     @MainActor
-    internal func makeRingtoneEditViewController() -> RingtoneEditViewController {
-        RingtoneEditViewController()
+    internal func makeRingtoneEditViewController(audio: RingtoneAudio) -> RingtoneEditViewController {
+        let viewModel = RingtoneEditViewModel(
+            audio: audio,
+            audioPlayer: audioPlayer
+        )
+        
+        return RingtoneEditViewController(viewModel: viewModel)
     }
 }

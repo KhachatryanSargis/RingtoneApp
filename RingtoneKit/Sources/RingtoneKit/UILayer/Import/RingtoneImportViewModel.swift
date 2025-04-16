@@ -154,7 +154,8 @@ extension RingtoneImportViewModel {
                 id: $0.id.uuidString,
                 title: $0.name,
                 desciption: $0.description,
-                url: $0.url
+                url: $0.url,
+                waveformURL: $0.waveformURL
             )
         }
         

@@ -117,8 +117,10 @@ extension CreatedCoordinator {
 // MARK: - Edit
 extension CreatedCoordinator {
     private func onEditAudio(_ audio: RingtoneAudio) {
-        let ringtoneEditViewController = container.makeRingtoneEditViewController()
+        let ringtoneEditViewController = container.makeRingtoneEditViewController(audio: audio)
         let navigationController = NiblessNavigationController(rootViewController: ringtoneEditViewController)
+        navigationController.modalPresentationStyle = .overFullScreen
+        navigationController.modalTransitionStyle = .crossDissolve
         presentable.toViewController().present(
             navigationController,
             animated: true

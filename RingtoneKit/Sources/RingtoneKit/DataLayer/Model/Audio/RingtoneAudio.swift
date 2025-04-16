@@ -8,6 +8,7 @@
 import Foundation
 
 public struct RingtoneAudio: Identifiable, Equatable, Hashable, Sendable {
+    // MARK: - Properties
     public let id: String
     public let title: String
     public let desciption: String
@@ -20,7 +21,9 @@ public struct RingtoneAudio: Identifiable, Equatable, Hashable, Sendable {
     public var isFailed: Bool { failedToImport || failedToConvert }
     public let isSelected: Bool?
     public let url: URL
+    public let waveformURL: URL
     
+    // MARK: - Methods
     public init(
         id: String,
         title: String,
@@ -33,7 +36,8 @@ public struct RingtoneAudio: Identifiable, Equatable, Hashable, Sendable {
         failedToImport: Bool = false,
         failedToConvert: Bool = false,
         isSelected: Bool? = nil,
-        url: URL
+        url: URL,
+        waveformURL: URL
     ) {
         self.id = id
         self.title = title
@@ -46,6 +50,20 @@ public struct RingtoneAudio: Identifiable, Equatable, Hashable, Sendable {
         self.failedToConvert = failedToConvert
         self.isSelected = isSelected
         self.url = url
+        self.waveformURL = waveformURL
+    }
+    
+    public func decodeWaveform() -> RingtoneAudioWaveform {
+        do {
+            let waveformData = try Data(contentsOf: waveformURL)
+            
+            return try JSONDecoder().decode(
+                RingtoneAudioWaveform.self,
+                from: waveformData
+            )
+        } catch {
+            preconditionFailure("Waveform data could not be loaded.")
+        }
     }
 }
 
@@ -63,7 +81,8 @@ extension RingtoneAudio {
             failedToImport: self.failedToImport,
             failedToConvert: self.failedToConvert,
             isSelected: self.isSelected,
-            url: self.url
+            url: self.url,
+            waveformURL: self.waveformURL
         )
     }
     
@@ -79,7 +98,8 @@ extension RingtoneAudio {
             failedToImport: self.failedToImport,
             failedToConvert: self.failedToConvert,
             isSelected: self.isSelected,
-            url: self.url
+            url: self.url,
+            waveformURL: self.waveformURL
         )
     }
 }
@@ -98,7 +118,8 @@ extension RingtoneAudio {
             failedToImport: self.failedToImport,
             failedToConvert: self.failedToConvert,
             isSelected: self.isSelected,
-            url: self.url
+            url: self.url,
+            waveformURL: self.waveformURL
         )
     }
     
@@ -114,7 +135,8 @@ extension RingtoneAudio {
             failedToImport: self.failedToImport,
             failedToConvert: self.failedToConvert,
             isSelected: self.isSelected,
-            url: self.url
+            url: self.url,
+            waveformURL: self.waveformURL
         )
     }
 }
@@ -133,7 +155,8 @@ extension RingtoneAudio {
             failedToImport: self.failedToImport,
             failedToConvert: self.failedToConvert,
             isSelected: true,
-            url: self.url
+            url: self.url,
+            waveformURL: self.waveformURL
         )
     }
     
@@ -149,7 +172,8 @@ extension RingtoneAudio {
             failedToImport: self.failedToImport,
             failedToConvert: self.failedToConvert,
             isSelected: false,
-            url: self.url
+            url: self.url,
+            waveformURL: self.waveformURL
         )
     }
     
@@ -165,7 +189,8 @@ extension RingtoneAudio {
             failedToImport: self.failedToImport,
             failedToConvert: self.failedToConvert,
             isSelected: nil,
-            url: self.url
+            url: self.url,
+            waveformURL: self.waveformURL
         )
     }
 }
@@ -185,7 +210,8 @@ extension RingtoneAudio {
             failedToImport: false,
             failedToConvert: false,
             isSelected: nil,
-            url: URL(string: "skh.com")!
+            url: URL(string: "skh.com")!,
+            waveformURL: URL(string: "skh.com")!
         )
     }
 }
@@ -205,7 +231,8 @@ extension RingtoneAudio {
             failedToImport: true,
             failedToConvert: false,
             isSelected: nil,
-            url: URL(string: "skh.com")!
+            url: URL(string: "skh.com")!,
+            waveformURL: URL(string: "skh.com")!
         )
     }
     
@@ -222,7 +249,8 @@ extension RingtoneAudio {
             failedToImport: false,
             failedToConvert: true,
             isSelected: nil,
-            url: URL(string: "skh.com")!
+            url: URL(string: "skh.com")!,
+            waveformURL: URL(string: "skh.com")!
         )
     }
 }

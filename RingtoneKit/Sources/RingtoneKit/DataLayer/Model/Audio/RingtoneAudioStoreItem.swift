@@ -28,6 +28,7 @@ struct RingtoneAudioStoreItem: Sendable {
     let isCreated: Bool
     let isFavorite: Bool
     let url: URL
+    let waveformURL: URL
     
     init(
         id: String = UUID().uuidString,
@@ -36,7 +37,8 @@ struct RingtoneAudioStoreItem: Sendable {
         categoryID: String = "Other",
         isCreated: Bool = false,
         isFavorite: Bool = false,
-        url: URL = dummyURL
+        url: URL = dummyURL,
+        waveformURL: URL = dummyURL
     ) {
         self.id = id
         self.title = title
@@ -45,6 +47,7 @@ struct RingtoneAudioStoreItem: Sendable {
         self.isCreated = isCreated
         self.isFavorite = isFavorite
         self.url = url
+        self.waveformURL = waveformURL
     }
 }
 
@@ -57,7 +60,8 @@ extension RingtoneAudioStoreItem {
             description: audio.desciption,
             categoryID: audio.categoryID,
             isCreated: audio.isCreated,
-            isFavorite: audio.isFavorite
+            isFavorite: audio.isFavorite,
+            waveformURL: audio.waveformURL
         )
     }
     
@@ -69,7 +73,8 @@ extension RingtoneAudioStoreItem {
             categoryID: self.categoryID,
             isPlaying: false,
             isLiked: self.isFavorite,
-            url: self.url
+            url: self.url,
+            waveformURL: self.waveformURL
         )
     }
 }

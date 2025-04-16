@@ -56,4 +56,8 @@ public struct ImageTheme {
     // MARK: - RingtoneImportFromURLViewController
     public let download = UIImage(systemName: "arrow.down.circle")!.withConfiguration(configuration)
     public let cancel = UIImage(systemName: "xmark.circle")!.withConfiguration(configuration)
+    
+    // MARK: - RingtoneEditViewController
+    public let zoomIn = UIImage(systemName: "plus.magnifyingglass")!.withConfiguration(configuration)
+    public let zoomOut = UIImage(systemName: "minus.magnifyingglass")!.withConfiguration(configuration)
 }
