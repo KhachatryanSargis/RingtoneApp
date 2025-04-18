@@ -9,10 +9,10 @@ import UIKit
 
 open class NiblessViewController: UIViewController {
     // MARK: - Properties
-    private final var activityIndicatorView: UIActivityIndicatorView = {
-        let indicator = UIActivityIndicatorView(style: .large)
-        indicator.color = .theme.accent
-        return indicator
+    private final let activityIndicatorView: RingtoneActivityIndicatorView = {
+        let activityIndicatorView = RingtoneActivityIndicatorView()
+        activityIndicatorView.translatesAutoresizingMaskIntoConstraints = false
+        return activityIndicatorView
     }()
     
     // MARK: - Methods
@@ -43,9 +43,7 @@ open class NiblessViewController: UIViewController {
         NotificationCenter.default.removeObserver(self)
     }
     
-    open func keyboardFrameChanged(_ frame: CGRect) {
-        
-    }
+    open func keyboardFrameChanged(_ frame: CGRect) {}
 }
 
 // MARK: - Keyboard
@@ -65,7 +63,6 @@ extension NiblessViewController {
         )
     }
     
-    
     @objc private func keyboardWillShow(_ notification: Notification) {
         guard let keyboardFrame = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey]
                 as? CGRect else { return }
@@ -83,7 +80,10 @@ extension NiblessViewController {
 extension NiblessViewController {
     public final func startLoading() {
         view.addSubview(activityIndicatorView)
-        activityIndicatorView.center = view.center
+        NSLayoutConstraint.activate([
+            activityIndicatorView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            activityIndicatorView.centerYAnchor.constraint(equalTo: view.centerYAnchor),
+        ])
         activityIndicatorView.startAnimating()
     }
     
