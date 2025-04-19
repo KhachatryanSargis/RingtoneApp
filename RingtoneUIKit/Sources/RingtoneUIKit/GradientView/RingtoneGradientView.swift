@@ -7,9 +7,9 @@
 
 import UIKit
 
-final class RingtoneGradientView: NiblessView {
+public final class RingtoneGradientView: NiblessView {
     // MARK: - Properties
-    override class var layerClass: AnyClass {
+    public override class var layerClass: AnyClass {
         return CAGradientLayer.self
     }
     
@@ -20,7 +20,7 @@ final class RingtoneGradientView: NiblessView {
     private let color: UIColor
     
     // MARK: - Methods
-    init(color: UIColor) {
+    public init(color: UIColor) {
         self.color = color
         super.init()
         isUserInteractionEnabled = false
@@ -28,7 +28,7 @@ final class RingtoneGradientView: NiblessView {
     }
     
     // MARK: - Color Theme Change
-    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+    public override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
         super.traitCollectionDidChange(previousTraitCollection)
         
         guard traitCollection.hasDifferentColorAppearance(comparedTo: previousTraitCollection)
