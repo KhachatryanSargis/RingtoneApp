@@ -7,38 +7,66 @@
 
 import UIKit
 import Accelerate
-import RingtoneUIKit
 import RingtoneKit
 
-final class RingtoneWaveformView: NiblessView {
-    // MARK: - Properties
-    private var waveform: RingtoneAudioWaveform = .empty
-    private var downsampledPoints: [CGFloat] = []
-    private var lastWidth: CGFloat = 0
-    
-    // MARK: - Public API
-    func setWaveform(_ waveform: RingtoneAudioWaveform) {
+// MARK: - Public API
+extension RingtoneWaveformView {
+    public func setWaveform(_ waveform: RingtoneAudioWaveform, animated: Bool) {
         self.waveform = waveform
-        setNeedsDisplay()
+        downsampledPoints = convertToPoints(waveform: waveform, width: bounds.width)
+        updateWaveformPath(animated: animated)
+    }
+}
+
+public final class RingtoneWaveformView: NiblessView {
+    // MARK: - Properties
+    public override class var layerClass: AnyClass {
+        return CAShapeLayer.self
     }
     
-    override init() {
+    private var shapeLayer: CAShapeLayer {
+        return self.layer as! CAShapeLayer
+    }
+    
+    private var waveform: RingtoneAudioWaveform = .empty
+    
+    private var downsampledPoints: [CGFloat] = []
+    
+    // MARK: - Methods
+    public override init() {
         super.init()
         backgroundColor = .clear
+        configureLayer()
     }
     
-    override func draw(_ rect: CGRect) {
-        downsampledPoints = convertToPoints(waveform: waveform, width: rect.width)
+    private func configureLayer() {
+        shapeLayer.strokeColor = UIColor.theme.accent.cgColor
+        shapeLayer.fillColor = UIColor.clear.cgColor
+        shapeLayer.lineWidth = 1.0
+    }
+    
+    private func updateWaveformPath(animated: Bool = false) {
+        let path = createWaveformPath(points: downsampledPoints, in: bounds).cgPath
         
-        let midY = rect.height / 2
-        let spacing: CGFloat = 2.0
+        if animated {
+            let animation = CABasicAnimation(keyPath: "path")
+            animation.fromValue = shapeLayer.path ?? path
+            animation.toValue = path
+            animation.duration = 0.2
+            animation.timingFunction = CAMediaTimingFunction(name: .linear)
+            shapeLayer.add(animation, forKey: "path")
+        }
         
+        shapeLayer.path = path
+    }
+    
+    private func createWaveformPath(points: [CGFloat], in rect: CGRect) -> UIBezierPath {
         let path = UIBezierPath()
-        path.lineWidth = 1.0
-        
+        let midY = rect.height / 2
+        let spacing = rect.width / CGFloat(max(points.count - 1, 1))
         var x: CGFloat = 0
         
-        for point in downsampledPoints {
+        for point in points {
             let height = point * rect.height
             let yTop = midY - height / 2
             let yBottom = midY + height / 2
@@ -49,8 +77,7 @@ final class RingtoneWaveformView: NiblessView {
             x += spacing
         }
         
-        UIColor.theme.accent.setStroke()
-        path.stroke()
+        return path
     }
     
     private func convertToPoints(waveform: RingtoneAudioWaveform, width: CGFloat) -> [CGFloat] {
