@@ -1,3 +1,12 @@
+//
+//  RingtoneGradientView.swift
+//  RingtoneUIKit
+//
+//  Created by Sargis Khachatryan on 19.04.25.
+//
+
+import UIKit
+
 final class RingtoneGradientView: NiblessView {
     // MARK: - Properties
     override class var layerClass: AnyClass {
