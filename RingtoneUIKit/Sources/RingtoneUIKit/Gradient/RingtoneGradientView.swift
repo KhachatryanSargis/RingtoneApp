@@ -1,0 +1,45 @@
+final class RingtoneGradientView: NiblessView {
+    // MARK: - Properties
+    override class var layerClass: AnyClass {
+        return CAGradientLayer.self
+    }
+    
+    private var gradientLayer: CAGradientLayer {
+        return self.layer as! CAGradientLayer
+    }
+    
+    private let color: UIColor
+    
+    // MARK: - Methods
+    init(color: UIColor) {
+        self.color = color
+        super.init()
+        isUserInteractionEnabled = false
+        setGradientColors()
+    }
+    
+    // MARK: - Color Theme Change
+    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        super.traitCollectionDidChange(previousTraitCollection)
+        
+        guard traitCollection.hasDifferentColorAppearance(comparedTo: previousTraitCollection)
+        else { return }
+        
+        setGradientColors()
+    }
+    
+    private func setGradientColors() {
+        let transparentColor = color.withAlphaComponent(0).cgColor
+        
+        gradientLayer.colors = [
+            transparentColor,
+            color.cgColor,
+            color.cgColor,
+            transparentColor
+        ]
+        
+        gradientLayer.locations = [0.0, 0.1, 0.9, 1.0]
+        gradientLayer.startPoint = CGPoint(x: 0.5, y: 0.0)
+        gradientLayer.endPoint = CGPoint(x: 0.5, y: 1.0)
+    }
+}

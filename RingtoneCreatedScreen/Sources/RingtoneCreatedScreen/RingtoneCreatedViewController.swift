@@ -304,6 +304,7 @@ extension RingtoneCreatedViewController {
     private func observeViewModelLoading(_ viewModel: RingtoneCreatedViewModel) {
         viewModel.$isLoading
             .receive(on: DispatchQueue.main)
+            .dropFirst()
             .removeDuplicates()
             .sink { [weak self] isLoading in
                 guard let self = self else { return }
