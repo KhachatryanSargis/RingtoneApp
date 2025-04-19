@@ -27,7 +27,6 @@ final class ConvertCompatibleItemOperation: AsyncOperation, @unchecked Sendable 
     private var channelCount: Int = 2
     private var sampleRate: Double = 44100
     private var waveformSamples: [Float] = []
-    private var totalProcessedSamples = 0
     private var didFinishProcessing = false
     
     private let item: IRingtoneDataConverterCompatibleItem
@@ -244,8 +243,6 @@ final class ConvertCompatibleItemOperation: AsyncOperation, @unchecked Sendable 
         )
         
         waveformSamples.append(contentsOf: downsampled)
-        
-        totalProcessedSamples += frameCount
     }
     
     private func finishWriting(duration: TimeInterval) {
@@ -273,8 +270,8 @@ final class ConvertCompatibleItemOperation: AsyncOperation, @unchecked Sendable 
                 
                 let waveform = RingtoneAudioWaveform(
                     samples: waveformSamples,
-                    sampleRate: sampleRate,
-                    originalSampleCount: totalProcessedSamples
+                    startTimeInOriginal: 0,
+                    endTimeInOriginal: duration
                 )
                 
                 let waveformURL = Self.rootDirectoryURL.appendingPathComponent("\(item.id.uuidString).json")
@@ -285,11 +282,19 @@ final class ConvertCompatibleItemOperation: AsyncOperation, @unchecked Sendable 
                     
                     self.finish(with: (url: self.writer.outputURL, waveformURL: waveformURL, duration: duration))
                 } catch {
-                    self.finish(with: .exportSessionError(error))
+                    do {
+                        try FileManager.default.removeItem(at: self.writer.outputURL)
+                    } catch {
+                        print("ConvertCompatibleItemOperation failed to clean up with error: \(error)")
+                    }
+                    
+                    self.finish(with: .failedToSaveWaveform(error))
                 }
             default:
-                if let error = self.reader.error ?? self.writer.error {
-                    self.finish(with: .exportSessionError(error))
+                if let error = self.reader.error {
+                    self.finish(with: .reader(error))
+                } else if let error = self.writer.error {
+                    self.finish(with: .writer(error))
                 } else {
                     self.finish(with: .unexpected)
                 }
