@@ -8,45 +8,46 @@
 import Foundation
 
 public struct RingtoneAudioWaveform: Sendable, Codable {
-    public let samples: [Float]
-    public let sampleRate: Double
-    public let originalSampleCount: Int
-    
-    public init(
-        samples: [Float],
-        sampleRate: Double,
-        originalSampleCount: Int
-    ) {
-        self.samples = samples
-        self.sampleRate = sampleRate
-        self.originalSampleCount = originalSampleCount
-    }
-    
+    // MARK: - Properties
     public var count: Int {
         samples.count
     }
     
-    public var effectiveSampleRate: Double {
-        return sampleRate * (Double(samples.count) / Double(originalSampleCount))
+    public var duration: TimeInterval {
+        endTimeInOriginal - startTimeInOriginal
+    }
+    
+    public let samples: [Float]
+    public let startTimeInOriginal: TimeInterval
+    public let endTimeInOriginal: TimeInterval
+    
+    // MARK: - Methods
+    public init(
+        samples: [Float],
+        startTimeInOriginal: TimeInterval,
+        endTimeInOriginal: TimeInterval
+    ) {
+        self.samples = samples
+        self.startTimeInOriginal = startTimeInOriginal
+        self.endTimeInOriginal = endTimeInOriginal
     }
     
     public func time(at offset: Int) -> TimeInterval {
-        return TimeInterval(offset) / effectiveSampleRate
+        let clampedOffset = max(0, min(offset, samples.count))
+        return startTimeInOriginal + (TimeInterval(clampedOffset) / TimeInterval(samples.count)) * duration
     }
     
     public func offset(at time: TimeInterval) -> Int {
-        return Int(time * effectiveSampleRate)
+        guard duration > 0 else { return 0 }
+        let normalizedTime = (time - startTimeInOriginal) / duration
+        return Int((normalizedTime * Double(samples.count)).rounded())
     }
     
     public func duration(from startIndex: Int, to endIndex: Int) -> TimeInterval {
         let clampedStart = max(0, min(startIndex, samples.count))
         let clampedEnd = max(0, min(endIndex, samples.count))
         let delta = max(0, clampedEnd - clampedStart)
-        return TimeInterval(delta) / effectiveSampleRate
-    }
-    
-    public var duration: TimeInterval {
-        return time(at: count)
+        return (TimeInterval(delta) / TimeInterval(samples.count)) * duration
     }
 }
 
@@ -54,8 +55,8 @@ extension RingtoneAudioWaveform {
     public static var empty: RingtoneAudioWaveform {
         return .init(
             samples: [],
-            sampleRate: 0,
-            originalSampleCount: 0
+            startTimeInOriginal: 0,
+            endTimeInOriginal: 0
         )
     }
 }
