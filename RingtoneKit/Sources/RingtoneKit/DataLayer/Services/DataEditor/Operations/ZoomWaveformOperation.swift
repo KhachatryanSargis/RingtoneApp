@@ -1,5 +1,5 @@
 //
-//  TrimRingtoneAudioOperation.swift
+//  File.swift
 //  RingtoneKit
 //
 //  Created by Sargis Khachatryan on 16.04.25.
@@ -8,28 +8,25 @@
 import AVFoundation
 import Accelerate
 
-final class TrimAudioOperation: AsyncOperation, @unchecked Sendable {
+final class ZoomWaveformOperation: AsyncOperation, @unchecked Sendable {
     // MARK: - Properties
     private var channelCount: Int = 2
     private var sampleRate: Double = 44100
     private var waveformSamples: [Float] = []
-    private var totalProcessedSamples = 0
-    private var didFinishProcessing = false
     
     private var reader: AVAssetReader!
-    private var writer: AVAssetWriter!
     
     private let audio: RingtoneAudio
     private let start: TimeInterval
     private let end: TimeInterval
-    private let completion: ((Result<RingtoneAudio, RingtoneDataTrimmerError>) -> Void)?
+    private let completion: ((Result<RingtoneAudioWaveform, RingtoneDataTrimmerError>) -> Void)?
     
     // MARK: - Init
     init(
         audio: RingtoneAudio,
         start: TimeInterval,
         end: TimeInterval,
-        completion: ((Result<RingtoneAudio, RingtoneDataTrimmerError>) -> Void)?
+        completion: ((Result<RingtoneAudioWaveform, RingtoneDataTrimmerError>) -> Void)?
     ) {
         self.audio = audio
         self.start = start
@@ -54,15 +51,6 @@ final class TrimAudioOperation: AsyncOperation, @unchecked Sendable {
             return
         }
         
-        let outputURL = audio.url
-        
-        do {
-            writer = try AVAssetWriter(outputURL: outputURL, fileType: .aiff)
-        } catch {
-            finish(with: .failedToCreateWriter(error))
-            return
-        }
-        
         asset.loadTracks(withMediaType: .audio) { [weak self] tracks, error in
             guard let self else { return }
             
@@ -76,11 +64,11 @@ final class TrimAudioOperation: AsyncOperation, @unchecked Sendable {
                 return
             }
             
-            self.setupReaderWriter(for: track, asset: asset)
+            self.setupReader(for: track, asset: asset)
         }
     }
     
-    private func setupReaderWriter(for track: AVAssetTrack, asset: AVAsset) {
+    private func setupReader(for track: AVAssetTrack, asset: AVAsset) {
         let formatDescriptions = track.formatDescriptions as! [CMAudioFormatDescription]
         for item in formatDescriptions {
             guard let fmtDesc = CMAudioFormatDescriptionGetStreamBasicDescription(item)
@@ -103,16 +91,6 @@ final class TrimAudioOperation: AsyncOperation, @unchecked Sendable {
             AVLinearPCMIsBigEndianKey: false
         ]
         
-        let writerSettings: [String: Any] = [
-            AVFormatIDKey: kAudioFormatLinearPCM,
-            AVSampleRateKey: sampleRate,
-            AVNumberOfChannelsKey: channelCount,
-            AVLinearPCMBitDepthKey: 16,
-            AVLinearPCMIsNonInterleaved: false,
-            AVLinearPCMIsFloatKey: false,
-            AVLinearPCMIsBigEndianKey: true
-        ]
-        
         let readerOutput = AVAssetReaderTrackOutput(track: track, outputSettings: readerSettings)
         readerOutput.alwaysCopiesSampleData = false
         
@@ -123,72 +101,49 @@ final class TrimAudioOperation: AsyncOperation, @unchecked Sendable {
         }
         reader.add(readerOutput)
         
-        let writerInput = AVAssetWriterInput(mediaType: .audio, outputSettings: writerSettings)
-        
-        guard writer.canAdd(writerInput)
-        else {
-            finish(with: .failedToAddWriterInput)
-            return
-        }
-        writer.add(writerInput)
-        
         processSamples(
             track: track,
-            writerInput: writerInput,
             readerOutput: readerOutput,
             channelCount: channelCount
         )
     }
     
-    private func processSamples(
-        track: AVAssetTrack,
-        writerInput: AVAssetWriterInput,
-        readerOutput: AVAssetReaderTrackOutput,
-        channelCount: Int
-    ) {
+    private func processSamples(track: AVAssetTrack, readerOutput: AVAssetReaderTrackOutput, channelCount: Int) {
         let duration = end - start
         let totalFramesEstimate = Int(sampleRate * duration)
         let targetWaveformLength = 10_000
         let downsampleFactor = max(1, totalFramesEstimate / targetWaveformLength)
         
         reader.startReading()
-        writer.startWriting()
-        writer.startSession(atSourceTime: .zero)
         
-        writerInput.requestMediaDataWhenReady(on: .global(qos: .utility)) { [weak self] in
-            guard let self else { return }
-            
-            let writerInput = self.writer.inputs[0]
-            let readerOutput = self.reader.outputs[0]
-            
-            while writerInput.isReadyForMoreMediaData {
-                guard !self.didFinishProcessing else { return }
-                
-                guard let sampleBuffer = readerOutput.copyNextSampleBuffer(),
-                      let blockBuffer = CMSampleBufferGetDataBuffer(sampleBuffer)
-                else {
-                    guard !self.didFinishProcessing else { break }
-                    self.didFinishProcessing = true
-                    
-                    writerInput.markAsFinished()
-                    self.finishWriting(duration: duration)
-                    
-                    break
+        let readerOutput = self.reader.outputs[0]
+        
+        var readerOutputHasData: Bool = true
+        
+        while readerOutputHasData {
+            guard let sampleBuffer = readerOutput.copyNextSampleBuffer(),
+                  let blockBuffer = CMSampleBufferGetDataBuffer(sampleBuffer)
+            else {
+                switch reader.status {
+                case .completed:
+                    finish()
+                default:
+                    if let error = reader.error {
+                        finish(with: .reader(error))
+                    } else {
+                        finish(with: .unexpected)
+                    }
                 }
                 
-                self.processBlockBuffer(blockBuffer, channelCount: channelCount, downsampleFactor: downsampleFactor)
-                
-                while !writerInput.isReadyForMoreMediaData {
-                    usleep(1000)
-                }
-                
-                if !writerInput.append(sampleBuffer) {
-                    self.reader.cancelReading()
-                    self.writer.cancelWriting()
-                    self.finish(with: .unexpected)
-                    break
-                }
+                readerOutputHasData = false
+                break
             }
+            
+            self.processBlockBuffer(
+                blockBuffer,
+                channelCount: channelCount,
+                downsampleFactor: downsampleFactor
+            )
         }
     }
     
@@ -244,61 +199,33 @@ final class TrimAudioOperation: AsyncOperation, @unchecked Sendable {
         )
         
         waveformSamples.append(contentsOf: downsampled)
-        
-        totalProcessedSamples += frameCount
     }
     
-    private func finishWriting(duration: TimeInterval) {
-        writer.finishWriting { [weak self] in
-            guard let self else { return }
+    private func finish() {
+        // Normalizing
+        if let maxSample = waveformSamples.max(), maxSample > 0 {
+            var maxValue = maxSample
+            var normalizedSamples = [Float](repeating: 0, count: waveformSamples.count)
             
-            switch self.writer.status {
-            case .completed:
-                // Normalizing
-                if let maxSample = waveformSamples.max(), maxSample > 0 {
-                    var maxValue = maxSample
-                    var normalizedSamples = [Float](repeating: 0, count: waveformSamples.count)
-                    
-                    vDSP_vsdiv(
-                        waveformSamples,
-                        1,
-                        &maxValue,
-                        &normalizedSamples,
-                        1,
-                        vDSP_Length(waveformSamples.count)
-                    )
-                    
-                    waveformSamples = normalizedSamples
-                }
-                
-                let waveform = RingtoneAudioWaveform(
-                    samples: waveformSamples,
-                    sampleRate: sampleRate,
-                    originalSampleCount: totalProcessedSamples
-                )
-                
-                let waveformURL = audio.waveformURL
-                
-                do {
-                    let waveformData = try JSONEncoder().encode(waveform)
-                    try waveformData.write(to: waveformURL)
-                    
-                    self.finish(with: audio)
-                } catch {
-                    self.finish(with: .exportSessionError(error))
-                }
-            default:
-                if let error = self.reader.error ?? self.writer.error {
-                    self.finish(with: .exportSessionError(error))
-                } else {
-                    self.finish(with: .unexpected)
-                }
-            }
+            vDSP_vsdiv(
+                waveformSamples,
+                1,
+                &maxValue,
+                &normalizedSamples,
+                1,
+                vDSP_Length(waveformSamples.count)
+            )
+            
+            waveformSamples = normalizedSamples
         }
-    }
-    
-    private func finish(with audio: RingtoneAudio) {
-        self.completion?(.success(audio))
+        
+        let waveform = RingtoneAudioWaveform(
+            samples: waveformSamples,
+            startTimeInOriginal: start,
+            endTimeInOriginal: end
+        )
+        
+        self.completion?(.success(waveform))
         self.state = .finished
     }
     
