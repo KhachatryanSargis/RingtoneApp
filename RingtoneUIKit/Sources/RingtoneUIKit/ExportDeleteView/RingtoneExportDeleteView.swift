@@ -32,15 +32,13 @@ public final class RingtoneExportDeleteView: NiblessView {
     private let exportButton: UIButton = {
         var configuration = UIButton.Configuration.bordered()
         configuration.imagePlacement = .top
-        configuration.image = .theme.use
-        configuration.title = "Export"
+        configuration.title = "Export .aiff"
         return UIButton(configuration: configuration)
     }()
     
     private let deleteButton: UIButton = {
         var configuration = UIButton.Configuration.bordered()
         configuration.imagePlacement = .top
-        configuration.image = .theme.delete
         configuration.title = "Delete"
         let button = UIButton(configuration: configuration)
         return button
