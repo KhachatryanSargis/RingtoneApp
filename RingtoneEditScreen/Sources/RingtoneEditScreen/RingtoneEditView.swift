@@ -12,8 +12,8 @@ import RingtoneKit
 
 final class RingtoneEditView: NiblessView {
     private enum ActiveEdgeView {
-        case left(xPosition: CGFloat)
-        case right(xPosition: CGFloat)
+        case left
+        case right
     }
     
     // MARK: - Properties
@@ -37,13 +37,13 @@ final class RingtoneEditView: NiblessView {
         return waveFormView
     }()
     
-    private let overlayView: UIView = {
-        let view = UIView()
-        view.backgroundColor = .theme.accent.withAlphaComponent(0.5)
-        return view
+    // MARK: - Edge Views
+    private let leftOverlayView: RingtoneGradientView = {
+        let color: UIColor = .theme.secondaryBackground.withAlphaComponent(0.5)
+        let gradientView = RingtoneGradientView(color: color)
+        return gradientView
     }()
     
-    // MARK: - Handles
     private let leftEdgeView: UIView = {
         let view = UIView()
         view.backgroundColor = .theme.red
@@ -56,6 +56,12 @@ final class RingtoneEditView: NiblessView {
             leftEdgeViewConstraint?.isActive = true
         }
     }
+    
+    private let rightOverlayView: UIView = {
+        let color: UIColor = .theme.secondaryBackground.withAlphaComponent(0.5)
+        let gradientView = RingtoneGradientView(color: color)
+        return gradientView
+    }()
     
     private let rightEdgeView: UIView = {
         let view = UIView()
@@ -71,6 +77,14 @@ final class RingtoneEditView: NiblessView {
     }
     
     // MARK: - Time Lables
+    private let timeLabelsStackView: UIStackView = {
+        let stackView = UIStackView()
+        stackView.axis = .horizontal
+        stackView.spacing = 8
+        stackView.distribution = .fillEqually
+        return stackView
+    }()
+    
     private let leftTimeLabel: UILabel = {
         let label = UILabel()
         label.font = .theme.headline
@@ -119,6 +133,13 @@ final class RingtoneEditView: NiblessView {
         return button
     }()
     
+    private let zoomButtonsStackView: UIStackView = {
+        let stackView = UIStackView()
+        stackView.axis = .horizontal
+        stackView.spacing = 8
+        return stackView
+    }()
+    
     private let zoomInButton: UIButton = {
         var configuration = UIButton.Configuration.tinted()
         configuration.image = .theme.zoomIn
@@ -129,6 +150,13 @@ final class RingtoneEditView: NiblessView {
     private let zoomOutButton: UIButton = {
         var configuration = UIButton.Configuration.tinted()
         configuration.image = .theme.zoomOut
+        let button = UIButton(configuration: configuration)
+        return button
+    }()
+    
+    private let resetButton: UIButton = {
+        var configuration = UIButton.Configuration.tinted()
+        configuration.image = .theme.reset
         let button = UIButton(configuration: configuration)
         return button
     }()
@@ -208,67 +236,73 @@ extension RingtoneEditView {
             saveButton.widthAnchor.constraint(equalTo: cancelButton.widthAnchor),
         ])
         
-        zoomOutButton.translatesAutoresizingMaskIntoConstraints = false
-        addSubview(zoomOutButton)
+        zoomButtonsStackView.translatesAutoresizingMaskIntoConstraints = false
+        addSubview(zoomButtonsStackView)
         NSLayoutConstraint.activate([
-            zoomOutButton.leftAnchor.constraint(equalTo: waveformView.leftAnchor, constant: 8),
-            zoomOutButton.topAnchor.constraint(equalTo: waveformView.topAnchor)
+            zoomButtonsStackView.rightAnchor.constraint(equalTo: waveformView.rightAnchor, constant: -8),
+            zoomButtonsStackView.topAnchor.constraint(equalTo: waveformView.topAnchor)
+        ])
+        zoomButtonsStackView.addArrangedSubview(zoomOutButton)
+        zoomButtonsStackView.addArrangedSubview(zoomInButton)
+        
+        resetButton.translatesAutoresizingMaskIntoConstraints = false
+        addSubview(resetButton)
+        NSLayoutConstraint.activate([
+            resetButton.leftAnchor.constraint(equalTo: waveformView.leftAnchor, constant: 8),
+            resetButton.topAnchor.constraint(equalTo: waveformView.topAnchor)
         ])
         
-        zoomInButton.translatesAutoresizingMaskIntoConstraints = false
-        addSubview(zoomInButton)
-        NSLayoutConstraint.activate([
-            zoomInButton.rightAnchor.constraint(equalTo: waveformView.rightAnchor, constant: -8),
-            zoomInButton.topAnchor.constraint(equalTo: waveformView.topAnchor)
-        ])
-        
-        // Hanldes
+        // Edge Views
         leftEdgeView.translatesAutoresizingMaskIntoConstraints = false
-        insertSubview(leftEdgeView, at: 1)
-        let leftEdgeViewConstraint = leftEdgeView.rightAnchor.constraint(equalTo: stackView.leftAnchor)
+        addSubview(leftEdgeView)
+        let leftEdgeViewConstraint = leftEdgeView.rightAnchor.constraint(equalTo: waveformView.leftAnchor)
         self.leftEdgeViewConstraint = leftEdgeViewConstraint
         NSLayoutConstraint.activate([
             leftEdgeViewConstraint,
-            leftEdgeView.heightAnchor.constraint(equalTo: waveformView.heightAnchor),
+            leftEdgeView.heightAnchor.constraint(equalTo: waveformView.heightAnchor, multiplier: 0.8),
             leftEdgeView.centerYAnchor.constraint(equalTo: waveformView.centerYAnchor),
             leftEdgeView.widthAnchor.constraint(equalToConstant: 1)
         ])
         
+        leftOverlayView.translatesAutoresizingMaskIntoConstraints = false
+        addSubview(leftOverlayView)
+        NSLayoutConstraint.activate([
+            leftOverlayView.leftAnchor.constraint(equalTo: leftAnchor),
+            leftOverlayView.rightAnchor.constraint(equalTo: leftEdgeView.leftAnchor),
+            leftOverlayView.heightAnchor.constraint(equalTo: waveformView.heightAnchor, multiplier: 0.8),
+            leftOverlayView.centerYAnchor.constraint(equalTo: waveformView.centerYAnchor)
+        ])
+        
         rightEdgeView.translatesAutoresizingMaskIntoConstraints = false
-        insertSubview(rightEdgeView, at: 1)
-        let rightEdgeViewConstraint = rightEdgeView.leftAnchor.constraint(equalTo: stackView.rightAnchor)
+        addSubview(rightEdgeView)
+        let rightEdgeViewConstraint = rightEdgeView.leftAnchor.constraint(equalTo: waveformView.rightAnchor)
         self.rightEdgeViewConstraint = rightEdgeViewConstraint
         NSLayoutConstraint.activate([
             rightEdgeViewConstraint,
-            rightEdgeView.heightAnchor.constraint(equalTo: waveformView.heightAnchor),
+            rightEdgeView.heightAnchor.constraint(equalTo: waveformView.heightAnchor, multiplier: 0.8),
             rightEdgeView.centerYAnchor.constraint(equalTo: waveformView.centerYAnchor),
             rightEdgeView.widthAnchor.constraint(equalToConstant: 1)
         ])
         
-        // Overlay
-        overlayView.translatesAutoresizingMaskIntoConstraints = false
-        insertSubview(overlayView, at: 0)
+        rightOverlayView.translatesAutoresizingMaskIntoConstraints = false
+        addSubview(rightOverlayView)
         NSLayoutConstraint.activate([
-            overlayView.leftAnchor.constraint(equalTo: leftEdgeView.rightAnchor),
-            overlayView.rightAnchor.constraint(equalTo: rightEdgeView.leftAnchor),
-            overlayView.heightAnchor.constraint(equalTo: waveformView.heightAnchor),
-            overlayView.centerYAnchor.constraint(equalTo: waveformView.centerYAnchor)
+            rightOverlayView.rightAnchor.constraint(equalTo: rightAnchor),
+            rightOverlayView.leftAnchor.constraint(equalTo: rightEdgeView.rightAnchor),
+            rightOverlayView.heightAnchor.constraint(equalTo: waveformView.heightAnchor, multiplier: 0.8),
+            rightOverlayView.centerYAnchor.constraint(equalTo: waveformView.centerYAnchor)
         ])
         
         // Timing Labels
-        leftTimeLabel.translatesAutoresizingMaskIntoConstraints = false
-        addSubview(leftTimeLabel)
+        timeLabelsStackView.translatesAutoresizingMaskIntoConstraints = false
+        addSubview(timeLabelsStackView)
         NSLayoutConstraint.activate([
-            leftTimeLabel.leftAnchor.constraint(equalTo: waveformView.leftAnchor, constant: 8),
-            leftTimeLabel.bottomAnchor.constraint(equalTo: waveformView.bottomAnchor)
+            timeLabelsStackView.leftAnchor.constraint(equalTo: waveformView.leftAnchor, constant: 8),
+            timeLabelsStackView.rightAnchor.constraint(equalTo: waveformView.rightAnchor, constant: 8),
+            timeLabelsStackView.bottomAnchor.constraint(equalTo: waveformView.bottomAnchor)
         ])
-        
-        rightTimeLabel.translatesAutoresizingMaskIntoConstraints = false
-        addSubview(rightTimeLabel)
-        NSLayoutConstraint.activate([
-            rightTimeLabel.rightAnchor.constraint(equalTo: waveformView.rightAnchor, constant: -8),
-            rightTimeLabel.bottomAnchor.constraint(equalTo: waveformView.bottomAnchor)
-        ])
+        timeLabelsStackView.addArrangedSubview(leftTimeLabel)
+        timeLabelsStackView.addArrangedSubview(rightTimeLabel)
     }
 }
 
@@ -279,6 +313,8 @@ extension RingtoneEditView {
         cancelButton.addTarget(self, action: #selector(onCancel), for: .touchUpInside)
         zoomInButton.addTarget(self, action: #selector(onZoomIn), for: .touchUpInside)
         zoomOutButton.addTarget(self, action: #selector(onZoomOut), for: .touchUpInside)
+        resetButton.addTarget(self, action: #selector(onReset), for: .touchUpInside)
+        playPauseButton.addTarget(self, action: #selector(onPlayOrPause), for: .touchUpInside)
     }
     
     @objc private func onSave() {
@@ -290,11 +326,19 @@ extension RingtoneEditView {
     }
     
     @objc private func onZoomIn() {
-        
+        viewModel.zoomIn()
     }
     
     @objc private func onZoomOut() {
-        
+        viewModel.zoomOut()
+    }
+    
+    @objc private func onReset() {
+        viewModel.reset()
+    }
+    
+    @objc private func onPlayOrPause() {
+        viewModel.togglePlayback()
     }
 }
 
@@ -307,9 +351,7 @@ extension RingtoneEditView {
         
         let touchLocation = touch.location(in: self)
         
-        if previousTouchLocation == nil {
-            previousTouchLocation = touchLocation
-        }
+        previousTouchLocation = touchLocation
         
         let leftEdgeX = leftEdgeView.frame.midX
         let rightEdgeX = rightEdgeView.frame.midX
@@ -318,9 +360,9 @@ extension RingtoneEditView {
         let distanceToRightEdge = abs(touchLocation.x - rightEdgeX)
         
         if distanceToLeftEdge < distanceToRightEdge {
-            activeEdgeView = .left(xPosition: leftEdgeViewConstraint?.constant ?? 0)
+            activeEdgeView = .left
         } else {
-            activeEdgeView = .right(xPosition: rightEdgeViewConstraint?.constant ?? 0)
+            activeEdgeView = .right
         }
     }
     
@@ -335,71 +377,16 @@ extension RingtoneEditView {
         guard let previousTouchLocation = previousTouchLocation
         else { return }
         
-        //        let locationInWaveformView = touch.location(in: waveformView)
-        //        let centerY = waveformView.bounds.height / 2
-        //        let fractionFromCenter = 1 - abs(locationInWaveformView.y - centerY) / (centerY)
-        //        let scrabbingFactor = max(0.2, fractionFromCenter)
-        //
-        //        let translation = (touchLocation.x - previousTouchLocation.x) * scrabbingFactor
-        
-        let translation = touchLocation.x - previousTouchLocation.x
+        let translation = (touchLocation.x - previousTouchLocation.x) / waveformView.bounds.width
         
         switch edgeView {
-        case .left(let xPosition):
-            let newConstant = xPosition + translation
-            
-            let (start, end) = calculateStartAndEndPositions(
-                leftConstant: newConstant,
-                rightConstant: rightEdgeViewConstraint?.constant
-            )
-            
-            guard viewModel.selectTrimmingPositions(startPosition: start, endPosition: end)
-            else {
-                self.previousTouchLocation = touchLocation
-                return
-            }
-            
-            if newConstant >= 0 {
-                leftEdgeViewConstraint?.constant = newConstant
-                activeEdgeView = .left(xPosition: newConstant)
-            } else {
-                leftEdgeViewConstraint?.constant = 0
-                activeEdgeView = .left(xPosition: 0)
-                
-                viewModel.resetStartTrimmingPosition()
-            }
-            
-            layoutIfNeeded()
-            
-            self.previousTouchLocation = touchLocation
-        case .right(let xPosition):
-            let newConstant = xPosition + translation
-            
-            let (start, end) = calculateStartAndEndPositions(
-                leftConstant: leftEdgeViewConstraint?.constant,
-                rightConstant: newConstant
-            )
-            
-            guard viewModel.selectTrimmingPositions(startPosition: start, endPosition: end)
-            else {
-                self.previousTouchLocation = touchLocation
-                return
-            }
-            
-            if newConstant <= 0 {
-                rightEdgeViewConstraint?.constant = newConstant
-                activeEdgeView = .right(xPosition: newConstant)
-            } else {
-                rightEdgeViewConstraint?.constant = 0
-                activeEdgeView = .right(xPosition: 0)
-                
-                viewModel.resetEndTrimmingPosition()
-            }
-            
-            layoutIfNeeded()
-            
-            self.previousTouchLocation = touchLocation
+        case .left:
+            viewModel.adjustStartTime(by: translation)
+        case .right:
+            viewModel.adjustEndTime(by: translation)
         }
+        
+        self.previousTouchLocation = touchLocation
     }
     
     override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
@@ -414,24 +401,6 @@ extension RingtoneEditView {
         
         activeEdgeView = nil
         previousTouchLocation = nil
-    }
-}
-
-// MARK: - Start and End Positions
-extension RingtoneEditView {
-    private func calculateStartAndEndPositions(leftConstant: CGFloat?, rightConstant: CGFloat?) -> (start: Double, end: Double) {
-        let waveformWidth = waveformView.bounds.width
-        
-        let overlayViewOriginX = leftConstant ?? 0
-        let overlayViewEndX = waveformWidth + (rightConstant ?? 0)
-        
-        let start = Double(overlayViewOriginX / waveformWidth)
-        let end = Double(overlayViewEndX / waveformWidth)
-        
-        let validStart = max(0, start)
-        let validEnd = min(1, end)
-        
-        return (validStart, validEnd)
     }
 }
 
@@ -460,6 +429,7 @@ extension RingtoneEditView {
     private func observeViewModel() {
         viewModel.$startTime
             .removeDuplicates()
+            .receive(on: DispatchQueue.main)
             .sink { [weak self] startTime in
                 guard let self = self else { return }
                 
@@ -469,6 +439,7 @@ extension RingtoneEditView {
         
         viewModel.$endTime
             .removeDuplicates()
+            .receive(on: DispatchQueue.main)
             .sink { [weak self] endTime in
                 guard let self = self else { return }
                 
@@ -476,11 +447,97 @@ extension RingtoneEditView {
             }
             .store(in: &cancellables)
         
-        viewModel.$waveform
-            .sink { [weak self] waveform in
+        viewModel.$update
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] update in
                 guard let self = self else { return }
                 
-                self.waveformView.setWaveform(waveform)
+                self.waveformView.setWaveform(update.waveform, animated: true)
+                
+                UIView.animate(withDuration: 0.2) {
+                    let waveformWidth = self.waveformView.bounds.width
+                    let leftConstant = waveformWidth * CGFloat(update.startPosition)
+                    let rightConstant = -waveformWidth * CGFloat(1 - update.endPosition)
+                    
+                    self.leftEdgeViewConstraint?.constant = leftConstant
+                    self.rightEdgeViewConstraint?.constant = rightConstant
+                    
+                    self.layoutIfNeeded()
+                }
+            }
+            .store(in: &cancellables)
+        
+        viewModel.$canZoomIn
+            .removeDuplicates()
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] canZoomIn in
+                guard let self = self else { return }
+                
+                self.zoomInButton.isEnabled = canZoomIn
+            }
+            .store(in: &cancellables)
+        
+        viewModel.$canZoomOut
+            .removeDuplicates()
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] canZoomOut in
+                guard let self = self else { return }
+                
+                self.zoomOutButton.isEnabled = canZoomOut
+                self.resetButton.isEnabled = canZoomOut
+            }
+            .store(in: &cancellables)
+        
+        viewModel.$startPosition
+            .removeDuplicates()
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] startPosition in
+                guard let self = self else { return }
+                
+                let waveformWidth = self.waveformView.bounds.width
+                let constant = waveformWidth * CGFloat(startPosition)
+                
+                self.leftEdgeViewConstraint?.constant = constant
+            }
+            .store(in: &cancellables)
+        
+        viewModel.$endPosition
+            .removeDuplicates()
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] endPosition in
+                guard let self = self else { return }
+                
+                let waveformWidth = self.waveformView.bounds.width
+                let constant = -waveformWidth * CGFloat(1 - endPosition)
+                
+                self.rightEdgeViewConstraint?.constant = constant
+            }
+            .store(in: &cancellables)
+        
+        viewModel.$progress
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] progress in
+                guard let self = self else { return }
+                
+                self.waveformView.updatePlaybackProgress(
+                    from: CGFloat(self.viewModel.startPosition),
+                    to: CGFloat(self.viewModel.endPosition),
+                    current: CGFloat(progress)
+                )
+            }
+            .store(in: &cancellables)
+        
+        viewModel.$isPlaying
+            .removeDuplicates()
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] isPlaying in
+                guard let self = self else { return }
+                
+                if isPlaying {
+                    self.playPauseButton.setImage(.theme.pause, for: .normal)
+                } else {
+                    self.playPauseButton.setImage(.theme.play, for: .normal)
+                }
             }
             .store(in: &cancellables)
     }

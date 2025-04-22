@@ -28,53 +28,80 @@ public final class RingtoneAudioPlayer: NSObject, IRingtoneAudioPlayer {
     private var player: AVAudioPlayer?
     private var displayLink: CADisplayLink?
     
-    // MARK: - Methods
-    public override init() {
-        super.init()
-    }
+    private var timeRange: (start: TimeInterval, end: TimeInterval)?
 }
 
-// MARK: - Play, Pause
+// MARK: - Play
 extension RingtoneAudioPlayer {
     public func play(_ audio: RingtoneAudio) {
-        if audio.id == currentAudioID {
-            if player?.play() == true {
-                currentAudioID = audio.id
-                statusSubject.send(.startedPlaying(audioID: audio.id))
-                
-                startDisplayLink()
-            } else {
-                currentAudioID = nil
-                statusSubject.send(.failedToPlay(audioID: audio.id))
-                
-                stopDisplayLink()
-            }
-            return
-        }
+        timeRange = nil
         
-        do {
-            player = try AVAudioPlayer(contentsOf: audio.url)
-            player?.delegate = self
-            
-            if player?.play() == true {
-                currentAudioID = audio.id
-                statusSubject.send(.startedPlaying(audioID: audio.id))
+        if audio.id == currentAudioID {
+            play(with: audio.id)
+        } else {
+            do {
+                player = try AVAudioPlayer(contentsOf: audio.url)
+                player?.delegate = self
                 
-                startDisplayLink()
-            } else {
-                currentAudioID = nil
-                statusSubject.send(.failedToPlay(audioID: audio.id))
-                
-                stopDisplayLink()
+                play(with: audio.id)
+            } catch {
+                fail(with: error)
             }
-        } catch {
+        }
+    }
+    
+    private func play(with audioID: String) {
+        if player?.play() == true {
+            currentAudioID = audioID
+            statusSubject.send(.startedPlaying(audioID: audioID))
+            
+            startDisplayLink()
+        } else {
             currentAudioID = nil
-            statusSubject.send(.failedToInitialize(error))
+            statusSubject.send(.failedToPlay(audioID: audioID))
             
             stopDisplayLink()
         }
     }
     
+    private func fail(with error: Error) {
+        currentAudioID = nil
+        statusSubject.send(.failedToInitialize(error))
+        
+        stopDisplayLink()
+    }
+}
+
+// MARK: - Play Time Range
+extension RingtoneAudioPlayer {
+    public func play(_ audio: RingtoneAudio, range: (start: TimeInterval, end: TimeInterval)) {
+        if audio.id == currentAudioID {
+            if let timeRange = timeRange, timeRange == range {
+                play(with: audio.id)
+            } else {
+                self.timeRange = range
+                player?.currentTime = range.start
+                
+                play(with: audio.id)
+            }
+        } else {
+            do {
+                self.timeRange = range
+                
+                player = try AVAudioPlayer(contentsOf: audio.url)
+                player?.delegate = self
+                player?.currentTime = range.start
+                
+                play(with: audio.id)
+            } catch {
+                fail(with: error)
+            }
+        }
+    }
+}
+
+// MARK: - Pause, Stop, Reset
+extension RingtoneAudioPlayer {
     public func pause() {
         guard let currentAudioID = self.currentAudioID
         else { return }
@@ -85,26 +112,44 @@ extension RingtoneAudioPlayer {
         
         pauseDisplayLink()
     }
-}
-
-// MARK: - AVAudioPlayerDelegate
-extension RingtoneAudioPlayer: AVAudioPlayerDelegate {
-    public func audioPlayerDidFinishPlaying(_ player: AVAudioPlayer, successfully flag: Bool) {
+    
+    public func stop() {
         guard let currentAudioID = self.currentAudioID
         else { return }
         
         self.currentAudioID = nil
         
+        player?.stop()
+        
         statusSubject.send(.finishedPlaying(audioID: currentAudioID))
         
         stopDisplayLink()
+    }
+    
+    public func reset() {
+        self.timeRange = nil
+        
+        guard let currentAudioID = self.currentAudioID
+        else { return }
+        
+        player?.pause()
+        
+        statusSubject.send(.pausedPlaying(audioID: currentAudioID))
+        
+        stopDisplayLink()
+    }
+}
+
+// MARK: - AVAudioPlayerDelegate
+extension RingtoneAudioPlayer: AVAudioPlayerDelegate {
+    public func audioPlayerDidFinishPlaying(_ player: AVAudioPlayer, successfully flag: Bool) {
+        stop()
     }
 }
 
 // MARK: - Progress
 extension RingtoneAudioPlayer {
     private func startDisplayLink() {
-        // Create the display link to update the progress bar every frame
         displayLink = CADisplayLink(target: self, selector: #selector(updateProgress))
         displayLink?.add(to: .current, forMode: .common)
     }
@@ -123,16 +168,28 @@ extension RingtoneAudioPlayer {
     @objc func updateProgress() {
         guard let player = player else { return }
         
-        let currentTime = player.currentTime
-        let duration = player.duration
-        
-        let progress = Float(currentTime / duration)
-        
-        // If the audio is finished, stop the timer
-        if currentTime >= duration {
-            stopDisplayLink()
+        if let range = timeRange {
+            let currentTime = player.currentTime - range.start
+            let duration = range.end - range.start
+            
+            if currentTime >= duration {
+                stop()
+            } else {
+                let progress = Float(currentTime / duration)
+                
+                progressSubject.send(progress)
+            }
+        } else {
+            let currentTime = player.currentTime
+            let duration = player.duration
+            
+            if currentTime >= duration {
+                stopDisplayLink()
+            } else {
+                let progress = Float(currentTime / duration)
+                
+                progressSubject.send(progress)
+            }
         }
-        
-        progressSubject.send(progress)
     }
 }

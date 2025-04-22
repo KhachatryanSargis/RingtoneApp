@@ -19,11 +19,11 @@ public final class AppDependencyContainer {
         return audioPlayer
     }
     
+    private let audioPlayer: RingtoneAudioPlayer
     private let discoverViewModel: RingtoneDiscoverViewModel
     private let favoritesViewModel: RingtoneFavoritesViewModel
     private let createdViewModel: RingtoneCreatedViewModel
     private let importViewModel: RingtoneImportViewModel
-    private let audioPlayer: RingtoneAudioPlayer
     
     // MARK: - Methods
     public init () {
@@ -145,9 +145,12 @@ extension AppDependencyContainer: RingtoneImportViewModelFactory {
 extension AppDependencyContainer {
     @MainActor
     internal func makeRingtoneEditViewController(audio: RingtoneAudio) -> RingtoneEditViewController {
+        audioPlayer.stop()
+        
         let viewModel = RingtoneEditViewModel(
             audio: audio,
-            audioPlayer: audioPlayer
+            audioPlayer: RingtoneAudioPlayer(),
+            dataEditor: RingtoneDataEditor()
         )
         
         return RingtoneEditViewController(viewModel: viewModel)

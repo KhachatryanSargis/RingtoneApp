@@ -23,7 +23,7 @@ public struct ImageTheme {
     public let pause = UIImage(systemName: "pause.circle")!.withConfiguration(configuration)
     public let like = UIImage(systemName: "heart")!.withConfiguration(configuration)
     public let liked = UIImage(systemName: "heart.fill")!.withConfiguration(configuration)
-    public let edit = UIImage(systemName: "gearshape")!.withConfiguration(configuration)
+    public let edit = UIImage(systemName: "scissors")!.withConfiguration(configuration)
     public let use = UIImage(systemName: "square.and.arrow.up")!.withConfiguration(configuration)
     
     // MARK: - RingtoneDiscoverViewContrller
@@ -60,4 +60,5 @@ public struct ImageTheme {
     // MARK: - RingtoneEditViewController
     public let zoomIn = UIImage(systemName: "plus.magnifyingglass")!.withConfiguration(configuration)
     public let zoomOut = UIImage(systemName: "minus.magnifyingglass")!.withConfiguration(configuration)
+    public let reset = UIImage(systemName: "1.magnifyingglass")!.withConfiguration(configuration)
 }

@@ -16,17 +16,33 @@ extension RingtoneWaveformView {
         downsampledPoints = convertToPoints(waveform: waveform, width: bounds.width)
         updateWaveformPath(animated: animated)
     }
+    
+    public func updatePlaybackProgress(from start: CGFloat, to end: CGFloat, current: CGFloat) {
+        guard start < end, current >= 0, current <= 1 else { return }
+        
+        let playbackStartX = start * bounds.width
+        let playbackEndX = end * bounds.width
+        let playbackRangeWidth = playbackEndX - playbackStartX
+        let playedWidth = playbackRangeWidth * current
+        
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        
+        playbackMaskLayer.frame = CGRect(
+            x: playbackStartX,
+            y: 0,
+            width: playedWidth,
+            height: bounds.height
+        )
+        
+        CATransaction.commit()
+    }
 }
 
 public final class RingtoneWaveformView: NiblessView {
-    // MARK: - Properties
-    public override class var layerClass: AnyClass {
-        return CAShapeLayer.self
-    }
-    
-    private var shapeLayer: CAShapeLayer {
-        return self.layer as! CAShapeLayer
-    }
+    private let waveformShapeLayer = CAShapeLayer()
+    private let playbackShapeLayer = CAShapeLayer()
+    private let playbackMaskLayer = CALayer()
     
     private var waveform: RingtoneAudioWaveform = .empty
     
@@ -36,13 +52,39 @@ public final class RingtoneWaveformView: NiblessView {
     public override init() {
         super.init()
         backgroundColor = .clear
-        configureLayer()
+        configureLayers()
     }
     
-    private func configureLayer() {
-        shapeLayer.strokeColor = UIColor.theme.accent.cgColor
-        shapeLayer.fillColor = UIColor.clear.cgColor
-        shapeLayer.lineWidth = 1.0
+    public override func layoutSubviews() {
+        super.layoutSubviews()
+        resizeLayers()
+    }
+    
+    private func resizeLayers() {
+        waveformShapeLayer.frame = bounds
+        playbackShapeLayer.frame = bounds
+        playbackMaskLayer.frame = CGRect(
+            x: 0,
+            y: 0,
+            width: playbackMaskLayer.bounds.width,
+            height: bounds.height
+        )
+    }
+    
+    private func configureLayers() {
+        waveformShapeLayer.strokeColor = UIColor.theme.accent.cgColor
+        waveformShapeLayer.fillColor = UIColor.clear.cgColor
+        waveformShapeLayer.lineWidth = 1.0
+        layer.addSublayer(waveformShapeLayer)
+        
+        playbackShapeLayer.strokeColor = UIColor.theme.red.cgColor
+        playbackShapeLayer.fillColor = UIColor.clear.cgColor
+        playbackShapeLayer.lineWidth = 1.0
+        
+        playbackMaskLayer.backgroundColor = UIColor.black.cgColor
+        playbackShapeLayer.mask = playbackMaskLayer
+        
+        layer.addSublayer(playbackShapeLayer)
     }
     
     private func updateWaveformPath(animated: Bool = false) {
@@ -50,14 +92,17 @@ public final class RingtoneWaveformView: NiblessView {
         
         if animated {
             let animation = CABasicAnimation(keyPath: "path")
-            animation.fromValue = shapeLayer.path ?? path
+            animation.fromValue = waveformShapeLayer.path ?? path
             animation.toValue = path
             animation.duration = 0.2
             animation.timingFunction = CAMediaTimingFunction(name: .linear)
-            shapeLayer.add(animation, forKey: "path")
+            
+            waveformShapeLayer.add(animation, forKey: "path")
+            playbackShapeLayer.add(animation, forKey: "path")
         }
         
-        shapeLayer.path = path
+        waveformShapeLayer.path = path
+        playbackShapeLayer.path = path
     }
     
     private func createWaveformPath(points: [CGFloat], in rect: CGRect) -> UIBezierPath {
