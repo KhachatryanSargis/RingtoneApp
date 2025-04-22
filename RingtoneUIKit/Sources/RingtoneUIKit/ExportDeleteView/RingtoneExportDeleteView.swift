@@ -32,16 +32,27 @@ public final class RingtoneExportDeleteView: NiblessView {
     private let exportButton: UIButton = {
         var configuration = UIButton.Configuration.bordered()
         configuration.imagePlacement = .top
-        configuration.title = "Export .aiff"
+        let attributedTitle = AttributedString(
+            "Export (aiff)",
+            attributes: AttributeContainer([
+                .font: UIFont.theme.headline.bold()
+            ])
+        )
+        configuration.attributedTitle = attributedTitle
         return UIButton(configuration: configuration)
     }()
     
     private let deleteButton: UIButton = {
         var configuration = UIButton.Configuration.bordered()
         configuration.imagePlacement = .top
-        configuration.title = "Delete"
-        let button = UIButton(configuration: configuration)
-        return button
+        let attributedTitle = AttributedString(
+            "Delete",
+            attributes: AttributeContainer([
+                .font: UIFont.theme.headline.bold()
+            ])
+        )
+        configuration.attributedTitle = attributedTitle
+        return UIButton(configuration: configuration)
     }()
     
     private var blurView: UIVisualEffectView?
