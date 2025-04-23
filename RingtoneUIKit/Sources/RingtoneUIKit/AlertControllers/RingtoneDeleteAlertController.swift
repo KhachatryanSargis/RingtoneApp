@@ -15,8 +15,15 @@ extension UIAlertController {
             preferredStyle: .alert
         )
         
-        let cancelAction = UIAlertAction(title: "Cancel", style: .cancel)
-        let deleteAction = UIAlertAction(title: "Delete", style: .destructive) { _ in
+        let cancelAction = RingtoneAlertAction(
+            title: "Cancel",
+            style: .cancel
+        )
+        
+        let deleteAction = UIAlertAction(
+            title: "Delete",
+            style: .destructive
+        ) { _ in
             onDelete()
         }
         

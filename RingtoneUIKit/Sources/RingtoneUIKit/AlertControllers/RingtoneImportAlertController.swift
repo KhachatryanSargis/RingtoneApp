@@ -42,8 +42,7 @@ extension UIAlertController {
         
         let cancelAction = RingtoneAlertAction(
             title: "Cancel",
-            style: .cancel,
-            handler: nil
+            style: .cancel
         )
         
         alertController.addAction(importFromGalleryAction)

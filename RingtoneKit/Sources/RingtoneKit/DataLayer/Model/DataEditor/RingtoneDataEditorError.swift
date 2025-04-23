@@ -5,7 +5,7 @@
 //  Created by Sargis Khachatryan on 16.04.25.
 //
 
-public enum RingtoneDataTrimmerError: Error {
+public enum RingtoneDataEditorError: Error {
     case failedToCreateReader(Error)
     case failedToAddReaderOutput
     case failedToCreateWriter(Error)
@@ -13,6 +13,7 @@ public enum RingtoneDataTrimmerError: Error {
     case loadAudioTrackError(Error)
     case reader(Error)
     case writer(Error)
+    case failedToSaveAudio(Error)
     case failedToSaveWaveform(Error)
     case unexpected
 }
