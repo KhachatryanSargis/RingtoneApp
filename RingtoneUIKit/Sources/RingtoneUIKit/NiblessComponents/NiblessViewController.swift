@@ -102,7 +102,10 @@ extension NiblessViewController {
             preferredStyle: .alert
         )
         
-        let okAction = UIAlertAction.init(title: "Ok", style: .cancel)
+        let okAction = RingtoneAlertAction(
+            title: "Ok",
+            style: .cancel
+        )
         
         alertViewContrller.addAction(okAction)
         
