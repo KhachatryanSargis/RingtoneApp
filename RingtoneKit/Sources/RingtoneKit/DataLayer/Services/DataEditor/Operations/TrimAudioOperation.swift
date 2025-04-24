@@ -308,12 +308,20 @@ final class TrimAudioOperation: AsyncOperation, @unchecked Sendable {
     }
     
     private func replaceOriginal() {
-        // Creating a backup of the original audio file.
         let backupURL = FileManager.default.temporaryDirectory.appendingPathComponent(
             "\(audio.id).aiff"
         )
         
+        // Deleting backup and trimmed audio files.
+        defer {
+            cleanup(urls: [backupURL, writer.outputURL])
+        }
+        
+        // Creating a backup of the original audio file.
         do {
+            if FileManager.default.fileExists(atPath: backupURL.path) {
+                try FileManager.default.removeItem(at: backupURL)
+            }
             try FileManager.default.copyItem(at: audio.url, to: backupURL)
         } catch {
             finish(with: .failedToSaveAudio(error))
@@ -354,19 +362,12 @@ final class TrimAudioOperation: AsyncOperation, @unchecked Sendable {
                     restoredURL == audio.url,
                     "TrimAudioOperation changed original audio file URL after restoring it."
                 )
-                
-                // Deleting the backup and temporary trimmed audio files.
-                do {
-                    try FileManager.default.removeItem(at: backupURL)
-                    try FileManager.default.removeItem(at: writer.outputURL)
-                } catch {
-                    print("TrimAudioOperation failed to clean up with error: \(error)")
-                }
             } catch {
                 print("TrimAudioOperation failed to restore original audio file with error: \(error)")
             }
             
             finish(with: .failedToSaveWaveform(error))
+            return
         }
         
         let formattedDuration = (end - start).shortFormatted()
@@ -408,14 +409,11 @@ final class TrimAudioOperation: AsyncOperation, @unchecked Sendable {
             let waveformData = try encoder.encode(waveform)
             try waveformData.write(to: waveformURL)
         } catch {
-            do {
-                // Deleting the audio file.
-                try FileManager.default.removeItem(at: audioURL)
-            } catch {
-                print("TrimAudioOperation failed to cleanup audio file with error: \(error)")
-            }
+            // Deleting the audio file.
+            cleanup(urls: [audioURL])
             
             finish(with: .failedToSaveWaveform(error))
+            return
         }
         
         let formattedDuration = (end - start).shortFormatted()
@@ -440,5 +438,17 @@ final class TrimAudioOperation: AsyncOperation, @unchecked Sendable {
     private func finish(with error: RingtoneDataEditorError) {
         self.completion?(.failure(error))
         self.state = .finished
+    }
+    
+    private func cleanup(urls: [URL]) {
+        for url in urls {
+            do {
+                if FileManager.default.fileExists(atPath: url.path) {
+                    try FileManager.default.removeItem(at: url)
+                }
+            } catch {
+                print("TrimAudioOperation failed to clean up with error: \(error)")
+            }
+        }
     }
 }
