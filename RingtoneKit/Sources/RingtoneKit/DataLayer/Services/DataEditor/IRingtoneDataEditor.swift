@@ -9,6 +9,16 @@ import Foundation
 import Combine
 
 public protocol IRingtoneDataEditor {
-    func trimAudio(_ audio: RingtoneAudio, start: TimeInterval, end: TimeInterval) -> AnyPublisher<RingtoneAudio, RingtoneDataTrimmerError>
-    func zoomWaveform(_ audio: RingtoneAudio, start: TimeInterval, end: TimeInterval) -> AnyPublisher<RingtoneAudioWaveform, RingtoneDataTrimmerError>
+    func trimAudio(
+        _ audio: RingtoneAudio,
+        start: TimeInterval,
+        end: TimeInterval,
+        mode: RingtoneDataEditorMode
+    ) -> AnyPublisher<RingtoneAudio, RingtoneDataEditorError>
+    
+    func zoomWaveform(
+        _ audio: RingtoneAudio,
+        start: TimeInterval,
+        end: TimeInterval
+    ) -> AnyPublisher<RingtoneAudioWaveform, RingtoneDataEditorError>
 }
