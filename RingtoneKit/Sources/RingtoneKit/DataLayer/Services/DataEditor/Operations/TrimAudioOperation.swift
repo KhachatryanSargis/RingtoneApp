@@ -17,26 +17,30 @@ final class TrimAudioOperation: AsyncOperation, @unchecked Sendable {
     
     private var reader: AVAssetReader!
     private var writer: AVAssetWriter!
+    private var encoder = JSONEncoder()
+    private let temporaryID = UUID()
     
     private let audio: RingtoneAudio
     private let start: TimeInterval
     private let end: TimeInterval
-    private let completion: ((Result<RingtoneAudio, RingtoneDataTrimmerError>) -> Void)?
+    private let mode: RingtoneDataEditorMode
+    private let completion: ((Result<RingtoneAudio, RingtoneDataEditorError>) -> Void)?
     
-    // MARK: - Init
+    // MARK: - Methods
     init(
         audio: RingtoneAudio,
         start: TimeInterval,
         end: TimeInterval,
-        completion: ((Result<RingtoneAudio, RingtoneDataTrimmerError>) -> Void)?
+        mode: RingtoneDataEditorMode,
+        completion: ((Result<RingtoneAudio, RingtoneDataEditorError>) -> Void)?
     ) {
         self.audio = audio
         self.start = start
         self.end = end
+        self.mode = mode
         self.completion = completion
     }
     
-    // MARK: - Execution
     override func main() {
         let asset = AVURLAsset(url: audio.url)
         
@@ -53,7 +57,9 @@ final class TrimAudioOperation: AsyncOperation, @unchecked Sendable {
             return
         }
         
-        let outputURL = audio.url
+        let outputURL = FileManager.default.temporaryDirectory.appendingPathComponent(
+            "\(temporaryID.uuidString).aiff"
+        )
         
         do {
             writer = try AVAssetWriter(outputURL: outputURL, fileType: .aiff)
@@ -71,7 +77,7 @@ final class TrimAudioOperation: AsyncOperation, @unchecked Sendable {
             }
             
             guard let track = tracks?.first else {
-                self.finish(with: .unexpected)
+                self.finish(with: .missingAudioTrack)
                 return
             }
             
@@ -170,7 +176,7 @@ final class TrimAudioOperation: AsyncOperation, @unchecked Sendable {
                     self.didFinishProcessing = true
                     
                     writerInput.markAsFinished()
-                    self.finishWriting(duration: duration)
+                    self.finishWriting()
                     
                     break
                 }
@@ -184,7 +190,15 @@ final class TrimAudioOperation: AsyncOperation, @unchecked Sendable {
                 if !writerInput.append(sampleBuffer) {
                     self.reader.cancelReading()
                     self.writer.cancelWriting()
-                    self.finish(with: .unexpected)
+                    
+                    if let error = writer.error {
+                        self.finish(with: .writer(error))
+                    } else if let error = reader.error {
+                        self.finish(with: .reader(error))
+                    } else {
+                        self.finish(with: .unexpected)
+                    }
+                    
                     break
                 }
             }
@@ -245,50 +259,41 @@ final class TrimAudioOperation: AsyncOperation, @unchecked Sendable {
         waveformSamples.append(contentsOf: downsampled)
     }
     
-    private func finishWriting(duration: TimeInterval) {
+    private func normalizeWaveformSamples() -> RingtoneAudioWaveform {
+        if let maxSample = waveformSamples.max(), maxSample > 0 {
+            var maxValue = maxSample
+            var normalizedSamples = [Float](repeating: 0, count: waveformSamples.count)
+            
+            vDSP_vsdiv(
+                waveformSamples,
+                1,
+                &maxValue,
+                &normalizedSamples,
+                1,
+                vDSP_Length(waveformSamples.count)
+            )
+            
+            waveformSamples = normalizedSamples
+        }
+        
+        return RingtoneAudioWaveform(
+            samples: waveformSamples,
+            startTimeInOriginal: 0,
+            endTimeInOriginal: end - start
+        )
+    }
+    
+    private func finishWriting() {
         writer.finishWriting { [weak self] in
             guard let self else { return }
             
             switch self.writer.status {
             case .completed:
-                // Normalizing
-                if let maxSample = waveformSamples.max(), maxSample > 0 {
-                    var maxValue = maxSample
-                    var normalizedSamples = [Float](repeating: 0, count: waveformSamples.count)
-                    
-                    vDSP_vsdiv(
-                        waveformSamples,
-                        1,
-                        &maxValue,
-                        &normalizedSamples,
-                        1,
-                        vDSP_Length(waveformSamples.count)
-                    )
-                    
-                    waveformSamples = normalizedSamples
-                }
-                
-                let waveform = RingtoneAudioWaveform(
-                    samples: waveformSamples,
-                    startTimeInOriginal: 0,
-                    endTimeInOriginal: duration
-                )
-                
-                let waveformURL = audio.waveformURL
-                
-                do {
-                    let waveformData = try JSONEncoder().encode(waveform)
-                    try waveformData.write(to: waveformURL)
-                    
-                    self.finish(with: audio)
-                } catch {
-                    do {
-                        try FileManager.default.removeItem(at: self.writer.outputURL)
-                    } catch {
-                        print("TrimAudioOperation failed to clean up with error: \(error)")
-                    }
-                    
-                    self.finish(with: .failedToSaveWaveform(error))
+                switch self.mode {
+                case .replaceOriginal:
+                    self.replaceOriginal()
+                case .saveAsCopy:
+                    self.saveAsCopy()
                 }
             default:
                 if let error = self.reader.error {
@@ -302,13 +307,172 @@ final class TrimAudioOperation: AsyncOperation, @unchecked Sendable {
         }
     }
     
+    private func replaceOriginal() {
+        // Creating a backup of the original audio file.
+        let backupURL = FileManager.default.temporaryDirectory.appendingPathComponent(
+            "\(audio.id).aiff"
+        )
+        
+        do {
+            try FileManager.default.copyItem(at: audio.url, to: backupURL)
+        } catch {
+            finish(with: .failedToSaveAudio(error))
+            return
+        }
+        
+        // Saving changed audio file.
+        let audioURL: URL
+        
+        do {
+            guard let url = try FileManager.default.replaceItemAt(
+                audio.url,
+                withItemAt: writer.outputURL
+            ) else {
+                finish(with: .unexpected)
+                return
+            }
+            
+            audioURL = url
+        } catch {
+            finish(with: .failedToSaveAudio(error))
+            return
+        }
+        
+        // Saving changed waveform.
+        let waveform = normalizeWaveformSamples()
+        let waveformURL = audio.waveformURL
+        
+        do {
+            let waveformData = try encoder.encode(waveform)
+            try waveformData.write(to: waveformURL, options: .atomic)
+        } catch {
+            // Restoring the original audio file.
+            do {
+                let restoredURL = try FileManager.default.replaceItemAt(audio.url, withItemAt: backupURL)
+                
+                precondition(
+                    restoredURL == audio.url,
+                    "TrimAudioOperation changed original audio file URL after restoring it."
+                )
+                
+                // Deleting the backup and temporary trimmed audio files.
+                do {
+                    try FileManager.default.removeItem(at: backupURL)
+                    try FileManager.default.removeItem(at: writer.outputURL)
+                } catch {
+                    print("TrimAudioOperation failed to clean up with error: \(error)")
+                }
+            } catch {
+                print("TrimAudioOperation failed to restore original audio file with error: \(error)")
+            }
+            
+            finish(with: .failedToSaveWaveform(error))
+        }
+        
+        let formattedDuration = (end - start).shortFormatted()
+        let formattedSize = audioURL.getFormattedFileSize()
+        let description = "\(formattedDuration) • \(formattedSize)"
+        
+        let trimmedAudio = audio
+            .changeDescription(description)
+            .changeURL(audioURL)
+            .changeWaveformURL(waveformURL)
+            .paused()
+        
+        self.finish(with: trimmedAudio)
+    }
+    
+    private func saveAsCopy() {
+        // Saving changed audio file.
+        let audioURL = FileManager.default.ringtonesDirectory.appendingPathComponent(
+            "\(temporaryID.uuidString).aiff"
+        )
+        
+        do {
+            try FileManager.default.copyItem(at: writer.outputURL, to: audioURL)
+            
+            // Deleting the duplicate audio file (temporary directory).
+            try? FileManager.default.removeItem(at: writer.outputURL)
+        } catch {
+            finish(with: .failedToSaveAudio(error))
+            return
+        }
+        
+        // Saving changed waveform.
+        let waveform = normalizeWaveformSamples()
+        let waveformURL = FileManager.default.ringtonesDirectory.appendingPathComponent(
+            "\(temporaryID.uuidString).json"
+        )
+        
+        do {
+            let waveformData = try encoder.encode(waveform)
+            try waveformData.write(to: waveformURL)
+        } catch {
+            do {
+                // Deleting the audio file.
+                try FileManager.default.removeItem(at: audioURL)
+            } catch {
+                print("TrimAudioOperation failed to cleanup audio file with error: \(error)")
+            }
+            
+            finish(with: .failedToSaveWaveform(error))
+        }
+        
+        let formattedDuration = (end - start).shortFormatted()
+        let formattedSize = audioURL.getFormattedFileSize()
+        let description = "\(formattedDuration) • \(formattedSize)"
+        
+        let trimmedAudio = audio
+            .changeID(temporaryID.uuidString)
+            .changeDescription(description)
+            .changeURL(audioURL)
+            .changeWaveformURL(waveformURL)
+            .paused()
+        
+        self.finish(with: trimmedAudio)
+    }
+    
     private func finish(with audio: RingtoneAudio) {
         self.completion?(.success(audio))
         self.state = .finished
     }
     
-    private func finish(with error: RingtoneDataTrimmerError) {
+    private func finish(with error: RingtoneDataEditorError) {
         self.completion?(.failure(error))
         self.state = .finished
+    }
+}
+
+// MARK: - File Size / Formatted File Size
+extension URL {
+    func getFileSize() -> Double? {
+        do {
+            let fileAttributes = try FileManager.default.attributesOfItem(atPath: path)
+            if let fileSize = fileAttributes[.size] as? NSNumber {
+                return fileSize.doubleValue
+            } else {
+                return nil
+            }
+        } catch {
+            return nil
+        }
+    }
+    
+    func getFormattedFileSize() -> String {
+        guard let fileSize = getFileSize()
+        else { return "Unknown Size" }
+        
+        let fileSizeInMB = fileSize / (1024 * 1024)
+        
+        let formattedFileSize: String
+        
+        if fileSizeInMB < 1 {
+            let fileSizeInKB = fileSize / 1024
+            formattedFileSize = String(format: "%.0f KB", fileSizeInKB)
+        } else {
+            formattedFileSize = String(format: "%.1f MB", fileSizeInMB)
+        }
+        
+        return formattedFileSize
     }
 }

@@ -195,6 +195,94 @@ extension RingtoneAudio {
     }
 }
 
+// MARK: - Edit
+extension RingtoneAudio {
+    public func changeID(_ id: String) -> RingtoneAudio {
+        RingtoneAudio(
+            id: id,
+            title: self.title,
+            desciption: self.desciption,
+            categoryID: self.categoryID,
+            isCreated: self.isCreated,
+            isPlaying: self.isPlaying,
+            isLiked: self.isFavorite,
+            failedToImport: self.failedToImport,
+            failedToConvert: self.failedToConvert,
+            isSelected: self.isSelected,
+            url: self.url,
+            waveformURL: self.waveformURL
+        )
+    }
+    
+    public func changeTitle(_ title: String) -> RingtoneAudio {
+        RingtoneAudio(
+            id: self.id,
+            title: title,
+            desciption: self.desciption,
+            categoryID: self.categoryID,
+            isCreated: self.isCreated,
+            isPlaying: self.isPlaying,
+            isLiked: self.isFavorite,
+            failedToImport: self.failedToImport,
+            failedToConvert: self.failedToConvert,
+            isSelected: self.isSelected,
+            url: self.url,
+            waveformURL: self.waveformURL
+        )
+    }
+    
+    public func changeDescription(_ desciption: String) -> RingtoneAudio {
+        RingtoneAudio(
+            id: self.id,
+            title: self.title,
+            desciption: desciption,
+            categoryID: self.categoryID,
+            isCreated: self.isCreated,
+            isPlaying: self.isPlaying,
+            isLiked: self.isFavorite,
+            failedToImport: self.failedToImport,
+            failedToConvert: self.failedToConvert,
+            isSelected: self.isSelected,
+            url: self.url,
+            waveformURL: self.waveformURL
+        )
+    }
+    
+    public func changeURL(_ url: URL) -> RingtoneAudio {
+        RingtoneAudio(
+            id: self.id,
+            title: self.title,
+            desciption: self.desciption,
+            categoryID: self.categoryID,
+            isCreated: self.isCreated,
+            isPlaying: self.isPlaying,
+            isLiked: self.isFavorite,
+            failedToImport: self.failedToImport,
+            failedToConvert: self.failedToConvert,
+            isSelected: self.isSelected,
+            url: url,
+            waveformURL: self.waveformURL
+        )
+    }
+    
+    public func changeWaveformURL(_ waveformURL: URL) -> RingtoneAudio {
+        RingtoneAudio(
+            id: self.id,
+            title: self.title,
+            desciption: desciption,
+            categoryID: self.categoryID,
+            isCreated: self.isCreated,
+            isPlaying: self.isPlaying,
+            isLiked: self.isFavorite,
+            failedToImport: self.failedToImport,
+            failedToConvert: self.failedToConvert,
+            isSelected: self.isSelected,
+            url: self.url,
+            waveformURL: waveformURL
+        )
+    }
+}
+
 // MARK: - Empty
 extension RingtoneAudio {
     public static var empty: RingtoneAudio {
