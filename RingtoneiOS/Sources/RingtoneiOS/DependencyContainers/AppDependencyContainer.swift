@@ -150,7 +150,8 @@ extension AppDependencyContainer {
         let viewModel = RingtoneEditViewModel(
             audio: audio,
             audioPlayer: RingtoneAudioPlayer(),
-            dataEditor: RingtoneDataEditor()
+            dataEditor: RingtoneDataEditor(),
+            audioDataChangeResponder: createdViewModel
         )
         
         return RingtoneEditViewController(viewModel: viewModel)

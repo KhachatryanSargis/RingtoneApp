@@ -28,7 +28,7 @@ public final class RingtoneEditViewController: NiblessViewController {
     public override func viewDidLoad() {
         super.viewDidLoad()
         configureViewActions()
-        observeViewModelLoading()
+        observeViewModelState()
     }
 }
 
@@ -40,41 +40,51 @@ extension RingtoneEditViewController {
         view.onCancelButtonTapped = { [weak self] in
             guard let self = self else { return }
             
-            guard let presentingViewController = self.presentingViewController
-            else { return }
-            
-            viewModel.stopPlayback()
-            
-            presentingViewController.dismiss(animated: true)
+            self.viewModel.cancel()
         }
         
         view.onSaveButtonTapped = { [weak self] in
             guard let self = self else { return }
             
-            guard let presentingViewController = self.presentingViewController
-            else { return }
-            
-            viewModel.stopPlayback()
-            
-            presentingViewController.dismiss(animated: true)
+            if self.viewModel.hasChanges {
+                let alertController = UIAlertController.saveAlertController {
+                    self.viewModel.save(mode: .saveAsCopy)
+                } onReplaceOriginal: {
+                    self.viewModel.save(mode: .replaceOriginal)
+                }
+                
+                self.present(alertController, animated: true)
+            } else {
+                self.viewModel.cancel()
+            }
         }
     }
 }
 
 // MARK: - View Model Loading
 extension RingtoneEditViewController {
-    private func observeViewModelLoading() {
-        viewModel.$isLoading
+    private func observeViewModelState() {
+        viewModel.$state
             .receive(on: DispatchQueue.main)
-            .dropFirst()
-            .removeDuplicates()
-            .sink { [weak self] isLoading in
+            .sink { [weak self] state in
                 guard let self = self else { return }
                 
-                if isLoading {
-                    self.startLoading()
-                } else {
+                switch state {
+                case .isEditing:
                     self.stopLoading()
+                case .isLoading:
+                    self.startLoading()
+                case .failed(let error):
+                    self.stopLoading()
+                    
+                    self.showAlert(title: "Error", message: "\(error)")
+                case .finished:
+                    self.stopLoading()
+                    
+                    guard let presentingViewController = self.presentingViewController
+                    else { return }
+                    
+                    presentingViewController.dismiss(animated: true)
                 }
             }
             .store(in: &cancellables)

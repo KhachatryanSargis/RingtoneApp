@@ -19,17 +19,31 @@ final public class RingtoneEditViewModel {
         return update.waveform
     }
     
+    @Published private(set) public var state: RingtoneEditViewModelState = .isEditing
     @Published private(set) public var startTime: String
     @Published private(set) public var endTime: String
     @Published private(set) public var canZoomOut: Bool = false
     @Published private(set) public var canZoomIn: Bool = false
     @Published private(set) public var startPosition: Double = 0.0
     @Published private(set) public var endPosition: Double = 1.0
-    @Published private(set) public var isLoading: Bool = false
     @Published private(set) public var progress: Float = 0
     @Published private(set) public var isPlaying: Bool = false
     
     public var title: String
+    
+    public var hasChanges: Bool {
+        shouldUpdateTitle || shouldUpdateAudioData
+    }
+    
+    private var shouldUpdateTitle: Bool {
+        audio.title != title
+    }
+    
+    private var shouldUpdateAudioData: Bool {
+        zoomRanges.isEmpty == false ||
+        startPosition != 0 ||
+        endPosition != 1
+    }
     
     private var start: TimeInterval
     private var end: TimeInterval
@@ -39,16 +53,19 @@ final public class RingtoneEditViewModel {
     private var audio: RingtoneAudio
     private let audioPlayer: IRingtoneAudioPlayer
     private let dataEditor: IRingtoneDataEditor
+    private let audioDataChangeResponder: RingtoneAudioDataChangeResponder
     
     // MARK: - Methods
     public init(
         audio: RingtoneAudio,
         audioPlayer: IRingtoneAudioPlayer,
-        dataEditor: IRingtoneDataEditor
+        dataEditor: IRingtoneDataEditor,
+        audioDataChangeResponder: RingtoneAudioDataChangeResponder
     ) {
         self.audio = audio
         self.audioPlayer = audioPlayer
         self.dataEditor = dataEditor
+        self.audioDataChangeResponder = audioDataChangeResponder
         
         title = audio.title
         
@@ -67,19 +84,63 @@ final public class RingtoneEditViewModel {
     }
 }
 
+// MARK: - Save
+extension RingtoneEditViewModel {
+    public func save(mode: RingtoneDataEditorMode) {
+        audioPlayer.stop()
+        
+        guard hasChanges else {
+            state = .finished
+            return
+        }
+        
+        guard shouldUpdateAudioData else {
+            audio = audio.changeTitle(title)
+            audioDataChangeResponder.saveRingtoneAudio(audio)
+            state = .finished
+            return
+        }
+        
+        state = .isLoading
+        
+        dataEditor.trimAudio(audio, start: start, end: end, mode: mode)
+            .sink { [weak self] completion in
+                guard let self = self else { return }
+                
+                guard case .failure(let error) = completion else { return }
+                
+                self.state = .failed(.dataEditor(error))
+            } receiveValue: { [weak self] audio in
+                guard let self = self else { return }
+                
+                self.audio = audio.changeTitle(title)
+                
+                self.audioDataChangeResponder.saveRingtoneAudio(self.audio)
+                
+                self.state = .finished
+            }
+            .store(in: &cancellables)
+    }
+}
+
+// MARK: - Cancel
+extension RingtoneEditViewModel {
+    public func cancel() {
+        audioPlayer.stop()
+        
+        state = .finished
+    }
+}
+
 // MARK: - Playback
 extension RingtoneEditViewModel {
     public func togglePlayback() {
-        if audioPlayer.isPlaying {
+        if isPlaying {
             audioPlayer.pause()
         } else {
             let range = (start, end)
             audioPlayer.play(audio, range: range)
         }
-    }
-    
-    public func stopPlayback() {
-        audioPlayer.stop()
     }
     
     private func observeAudioPlayerStatus() {
@@ -183,7 +244,7 @@ extension RingtoneEditViewModel {
         // Resetting playback when zoom is changing.
         audioPlayer.reset()
         
-        isLoading = true
+        state = .isLoading
         canZoomIn = false
         canZoomOut = false
         
@@ -191,9 +252,13 @@ extension RingtoneEditViewModel {
             .sink { [weak self] completion in
                 guard let self = self else { return }
                 
-                print(completion)
+                guard case .failure(let error) = completion
+                else {
+                    self.state = .isEditing
+                    return
+                }
                 
-                self.isLoading = false
+                self.state = .failed(.dataEditor(error))
             } receiveValue: { [weak self] waveform in
                 guard let self = self else { return }
                 
@@ -225,7 +290,7 @@ extension RingtoneEditViewModel {
         if zoomRanges.count == 1 {
             reset()
         } else {
-            isLoading = true
+            state = .isLoading
             
             let zoom = zoomRanges[zoomRanges.count - 2]
             
@@ -233,9 +298,13 @@ extension RingtoneEditViewModel {
                 .sink { [weak self] completion in
                     guard let self = self else { return }
                     
-                    print(completion)
+                    guard case .failure(let error) = completion
+                    else {
+                        self.state = .isEditing
+                        return
+                    }
                     
-                    self.isLoading = false
+                    self.state = .failed(.dataEditor(error))
                 } receiveValue: { [weak self] waveform in
                     guard let self = self else { return }
                     
@@ -288,23 +357,5 @@ extension RingtoneEditViewModel {
         
         self.startPosition = startPosition
         self.endPosition = endPosition
-    }
-}
-
-// MARK: - Format Time Interval
-extension TimeInterval {
-    func formatted() -> String {
-        let totalSeconds = Int(self)
-        let hours = totalSeconds / 3600
-        let minutes = (totalSeconds % 3600) / 60
-        let seconds = totalSeconds % 60
-        
-        let milliseconds = Int((self - floor(self)) * 1000)
-        
-        if hours > 0 {
-            return String(format: "%02d:%02d:%02d.%03d", hours, minutes, seconds, milliseconds)
-        } else {
-            return String(format: "%02d:%02d.%03d", minutes, seconds, milliseconds)
-        }
     }
 }
