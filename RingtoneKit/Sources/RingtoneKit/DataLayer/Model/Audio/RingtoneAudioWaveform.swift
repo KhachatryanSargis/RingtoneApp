@@ -31,24 +31,6 @@ public struct RingtoneAudioWaveform: Sendable, Codable {
         self.startTimeInOriginal = startTimeInOriginal
         self.endTimeInOriginal = endTimeInOriginal
     }
-    
-    public func time(at offset: Int) -> TimeInterval {
-        let clampedOffset = max(0, min(offset, samples.count))
-        return startTimeInOriginal + (TimeInterval(clampedOffset) / TimeInterval(samples.count)) * duration
-    }
-    
-    public func offset(at time: TimeInterval) -> Int {
-        guard duration > 0 else { return 0 }
-        let normalizedTime = (time - startTimeInOriginal) / duration
-        return Int((normalizedTime * Double(samples.count)).rounded())
-    }
-    
-    public func duration(from startIndex: Int, to endIndex: Int) -> TimeInterval {
-        let clampedStart = max(0, min(startIndex, samples.count))
-        let clampedEnd = max(0, min(endIndex, samples.count))
-        let delta = max(0, clampedEnd - clampedStart)
-        return (TimeInterval(delta) / TimeInterval(samples.count)) * duration
-    }
 }
 
 extension RingtoneAudioWaveform {
