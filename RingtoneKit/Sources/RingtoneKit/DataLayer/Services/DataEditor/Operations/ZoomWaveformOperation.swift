@@ -221,8 +221,8 @@ final class ZoomWaveformOperation: AsyncOperation, @unchecked Sendable {
         
         return RingtoneAudioWaveform(
             samples: waveformSamples,
-            startTimeInOriginal: 0,
-            endTimeInOriginal: end - start
+            startTimeInOriginal: start,
+            endTimeInOriginal: end
         )
     }
     
