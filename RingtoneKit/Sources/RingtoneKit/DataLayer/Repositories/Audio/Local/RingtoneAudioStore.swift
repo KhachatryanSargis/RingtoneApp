@@ -36,6 +36,18 @@ public final class RingtoneAudioStore: IRingtoneAudioStore {
             .eraseToAnyPublisher()
     }
     
+    public func saveRingtoneAudio(_ audio: RingtoneAudio) -> AnyPublisher<RingtoneAudio, RingtoneAudioStoreError> {
+        if let index = items.firstIndex(where: { audio.id == $0.id }) {
+            items[index] = .constrcutFromAudio(audio)
+        } else {
+            items.append(.constrcutFromAudio(audio))
+        }
+        
+        return Just(audio)
+            .setFailureType(to: RingtoneAudioStoreError.self)
+            .eraseToAnyPublisher()
+    }
+    
     public func getRingtoneAudiosInCategory(_ category: RingtoneCategory) -> AnyPublisher<[RingtoneAudio], RingtoneAudioStoreError> {
         let filteredAudios = items.filter { $0.categoryID == category.displayName }.map { $0.convertToAudio() }
         return Just(filteredAudios)

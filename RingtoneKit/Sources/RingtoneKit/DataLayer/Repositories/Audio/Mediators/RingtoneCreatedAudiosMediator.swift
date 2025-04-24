@@ -24,4 +24,6 @@ public protocol RingtoneCreatedAudiosMediator {
     func deleteRingtoneAudios(_ audios: [RingtoneAudio])
     // Favorite
     func changeAudioFavoriteStatus(_ audio: RingtoneAudio)
+    // Save
+    func saveRingtoneAudio(_ audio: RingtoneAudio)
 }

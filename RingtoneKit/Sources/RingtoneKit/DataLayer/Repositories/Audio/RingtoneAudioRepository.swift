@@ -87,6 +87,31 @@ public final class RingtoneAudioRepository: IRingtoneAudioRepository {
             .eraseToAnyPublisher()
     }
     
+    public func saveRingtoneAudio(_ audio: RingtoneAudio) -> AnyPublisher<RingtoneAudio, RingtoneAudioRepositoryError> {
+        store.saveRingtoneAudio(audio)
+            .map { [weak self] savedAudio in
+                guard let self = self else { return savedAudio }
+                
+                if let index = self.discoverAudios.firstIndex(where: { savedAudio.id == $0.id }) {
+                    self.discoverAudios[index] = savedAudio
+                }
+                
+                if let index = self.favoriteAudios.firstIndex(where: { savedAudio.id == $0.id }) {
+                    self.favoriteAudios[index] = savedAudio
+                }
+                
+                if let index = self.createdAudios.firstIndex(where: { savedAudio.id == $0.id }) {
+                    self.createdAudios[index] = savedAudio
+                } else {
+                    self.createdAudios.append(savedAudio)
+                }
+                
+                return savedAudio
+            }
+            .mapError { .storeError($0) }
+            .eraseToAnyPublisher()
+    }
+    
     public func getRingtoneAudiosInCategory(_ category: RingtoneCategory) -> AnyPublisher<[RingtoneAudio], RingtoneAudioRepositoryError> {
         store.getRingtoneAudiosInCategory(category)
             .map { [weak self] discoverAudios in
@@ -283,6 +308,21 @@ extension RingtoneAudioRepository: RingtoneCreatedAudiosMediator {
 extension RingtoneAudioRepository: RingtoneAudioFavoriteStatusChangeResponder {
     public func changeAudioFavoriteStatus(_ audio: RingtoneAudio) {
         toggleRingtoneAudioFavoriteStatus(audio)
+            .subscribe(on: DispatchQueue.global(qos: .userInitiated))
+            .sink { completion in
+                guard case .failure(let error) = completion else { return }
+                
+                print(error)
+            } receiveValue: { _ in }
+            .store(in: &cancellables)
+    }
+}
+
+// MARK: - Data Change
+// This function is present in all mediators.
+extension RingtoneAudioRepository: RingtoneAudioDataChangeResponder {
+    public func saveRingtoneAudio(_ audio: RingtoneAudio) {
+        saveRingtoneAudio(audio)
             .subscribe(on: DispatchQueue.global(qos: .userInitiated))
             .sink { completion in
                 guard case .failure(let error) = completion else { return }
