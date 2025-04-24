@@ -125,7 +125,9 @@ extension RingtoneDataConverter {
 // MARK: - Create Complete Item
 extension RingtoneDataConverter {
     private func createCompleteItem(item: RingtoneDataImporterCompleteItem, url: URL, waveformURL: URL, duration: TimeInterval) {
-        let description = getFormattedDurationAndSize(duration: duration, url: url)
+        let formattedDuration = duration.shortFormatted()
+        let formattedSize = url.getFormattedFileSize()
+        let description = "\(formattedDuration) • \(formattedSize)"
         
         let completeItem = RingtoneDataConverterCompleteItem(
             description: description,
@@ -140,7 +142,9 @@ extension RingtoneDataConverter {
     }
     
     private func createCompleteItem(item: RingtoneDataDownloaderCompleteItem, url: URL, waveformURL: URL, duration: TimeInterval) {
-        let description = getFormattedDurationAndSize(duration: duration, url: url)
+        let formattedDuration = duration.shortFormatted()
+        let formattedSize = url.getFormattedFileSize()
+        let description = "\(formattedDuration) • \(formattedSize)"
         
         let completeItem = RingtoneDataConverterCompleteItem(
             description: description,
@@ -192,35 +196,5 @@ extension RingtoneDataConverter {
         )
         
         promise(.success(result))
-    }
-}
-
-// MARK: - Asset Duration and Size
-extension RingtoneDataConverter {
-    func getFormattedDurationAndSize(duration: TimeInterval, url: URL) -> String {
-        let minutes = Int(duration) / 60
-        let seconds = Int(duration) % 60
-        let durationFormatted = String(format: "%02d:%02d", minutes, seconds)
-        
-        do {
-            let fileAttributes = try FileManager.default.attributesOfItem(atPath: url.path)
-            if let fileSize = fileAttributes[.size] as? NSNumber {
-                let fileSizeInMB = fileSize.doubleValue / (1024 * 1024)
-                
-                let sizeFormatted: String
-                if fileSizeInMB < 1 {
-                    let fileSizeInKB = fileSize.doubleValue / 1024
-                    sizeFormatted = String(format: "%.0f KB", fileSizeInKB)
-                } else {
-                    sizeFormatted = String(format: "%.1f MB", fileSizeInMB)
-                }
-                
-                return "\(durationFormatted) • \(sizeFormatted)"
-            } else {
-                return "\(durationFormatted) • Unknown Size"
-            }
-        } catch {
-            return "\(durationFormatted) • Unknown Size"
-        }
     }
 }
