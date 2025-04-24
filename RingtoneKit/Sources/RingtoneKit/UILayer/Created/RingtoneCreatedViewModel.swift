@@ -105,6 +105,13 @@ extension RingtoneCreatedViewModel: RingtoneAudioEditResponder {
     }
 }
 
+// MARK: - Save
+extension RingtoneCreatedViewModel: RingtoneAudioDataChangeResponder {
+    public func saveRingtoneAudio(_ audio: RingtoneAudio) {
+        createdAudiosMediator.saveRingtoneAudio(audio)
+    }
+}
+
 // MARK: - Delete
 extension RingtoneCreatedViewModel: RingtoneAudioDeleteResponder {
     public func deleteRingtoneAudios(_ audios: [RingtoneAudio]) {
