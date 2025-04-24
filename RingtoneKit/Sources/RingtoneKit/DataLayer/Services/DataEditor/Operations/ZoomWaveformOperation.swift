@@ -19,14 +19,14 @@ final class ZoomWaveformOperation: AsyncOperation, @unchecked Sendable {
     private let audio: RingtoneAudio
     private let start: TimeInterval
     private let end: TimeInterval
-    private let completion: ((Result<RingtoneAudioWaveform, RingtoneDataTrimmerError>) -> Void)?
+    private let completion: ((Result<RingtoneAudioWaveform, RingtoneDataEditorError>) -> Void)?
     
     // MARK: - Init
     init(
         audio: RingtoneAudio,
         start: TimeInterval,
         end: TimeInterval,
-        completion: ((Result<RingtoneAudioWaveform, RingtoneDataTrimmerError>) -> Void)?
+        completion: ((Result<RingtoneAudioWaveform, RingtoneDataEditorError>) -> Void)?
     ) {
         self.audio = audio
         self.start = start
@@ -60,7 +60,7 @@ final class ZoomWaveformOperation: AsyncOperation, @unchecked Sendable {
             }
             
             guard let track = tracks?.first else {
-                self.finish(with: .unexpected)
+                self.finish(with: .missingAudioTrack)
                 return
             }
             
@@ -126,7 +126,8 @@ final class ZoomWaveformOperation: AsyncOperation, @unchecked Sendable {
             else {
                 switch reader.status {
                 case .completed:
-                    finish()
+                    let waveform = normalizeWaveformSamples()
+                    finish(with: waveform)
                 default:
                     if let error = reader.error {
                         finish(with: .reader(error))
@@ -201,8 +202,7 @@ final class ZoomWaveformOperation: AsyncOperation, @unchecked Sendable {
         waveformSamples.append(contentsOf: downsampled)
     }
     
-    private func finish() {
-        // Normalizing
+    private func normalizeWaveformSamples() -> RingtoneAudioWaveform {
         if let maxSample = waveformSamples.max(), maxSample > 0 {
             var maxValue = maxSample
             var normalizedSamples = [Float](repeating: 0, count: waveformSamples.count)
@@ -219,17 +219,19 @@ final class ZoomWaveformOperation: AsyncOperation, @unchecked Sendable {
             waveformSamples = normalizedSamples
         }
         
-        let waveform = RingtoneAudioWaveform(
+        return RingtoneAudioWaveform(
             samples: waveformSamples,
-            startTimeInOriginal: start,
-            endTimeInOriginal: end
+            startTimeInOriginal: 0,
+            endTimeInOriginal: end - start
         )
-        
+    }
+    
+    private func finish(with waveform: RingtoneAudioWaveform) {
         self.completion?(.success(waveform))
         self.state = .finished
     }
     
-    private func finish(with error: RingtoneDataTrimmerError) {
+    private func finish(with error: RingtoneDataEditorError) {
         self.completion?(.failure(error))
         self.state = .finished
     }
