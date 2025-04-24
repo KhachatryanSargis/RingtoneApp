@@ -8,4 +8,5 @@
 public enum RingtoneAppError: Error {
     case categoriesRepository(RingtoneCategoriesRepositoryError)
     case audioRepository(RingtoneAudioRepositoryError)
+    case dataEditor(RingtoneDataEditorError)
 }
