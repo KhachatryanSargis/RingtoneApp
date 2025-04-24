@@ -9,20 +9,6 @@ import AVFoundation
 import Accelerate
 
 final class ConvertCompatibleItemOperation: AsyncOperation, @unchecked Sendable {
-    // MARK: - Static
-    private static let rootDirectoryURL: URL = {
-        guard let documentDirectoryURL = FileManager.default.urls(
-            for: .documentDirectory,
-            in: .userDomainMask
-        ).first else {
-            fatalError("Documents directory not found")
-        }
-        
-        let ringtonesDirectoryURL = documentDirectoryURL.appendingPathComponent("Ringtones", isDirectory: true)
-        try? FileManager.default.createDirectory(at: ringtonesDirectoryURL, withIntermediateDirectories: true)
-        return ringtonesDirectoryURL
-    }()
-    
     // MARK: - Properties
     private var channelCount: Int = 2
     private var sampleRate: Double = 44100
@@ -53,7 +39,9 @@ final class ConvertCompatibleItemOperation: AsyncOperation, @unchecked Sendable 
             return
         }
         
-        let outputURL = Self.rootDirectoryURL.appendingPathComponent("\(item.id.uuidString).aiff")
+        let outputURL = FileManager.default.ringtonesDirectory.appendingPathComponent(
+            "\(item.id.uuidString).aiff"
+        )
         
         do {
             writer = try AVAssetWriter(outputURL: outputURL, fileType: .aiff)
@@ -245,36 +233,40 @@ final class ConvertCompatibleItemOperation: AsyncOperation, @unchecked Sendable 
         waveformSamples.append(contentsOf: downsampled)
     }
     
+    private func normalizeWaveformSamples(duration: TimeInterval) -> RingtoneAudioWaveform {
+        if let maxSample = waveformSamples.max(), maxSample > 0 {
+            var maxValue = maxSample
+            var normalizedSamples = [Float](repeating: 0, count: waveformSamples.count)
+            
+            vDSP_vsdiv(
+                waveformSamples,
+                1,
+                &maxValue,
+                &normalizedSamples,
+                1,
+                vDSP_Length(waveformSamples.count)
+            )
+            
+            waveformSamples = normalizedSamples
+        }
+        
+        return RingtoneAudioWaveform(
+            samples: waveformSamples,
+            startTimeInOriginal: 0,
+            endTimeInOriginal: duration
+        )
+    }
+    
     private func finishWriting(duration: TimeInterval) {
         writer.finishWriting { [weak self] in
             guard let self else { return }
             
             switch self.writer.status {
             case .completed:
-                // Normalizing
-                if let maxSample = waveformSamples.max(), maxSample > 0 {
-                    var maxValue = maxSample
-                    var normalizedSamples = [Float](repeating: 0, count: waveformSamples.count)
-                    
-                    vDSP_vsdiv(
-                        waveformSamples,
-                        1,
-                        &maxValue,
-                        &normalizedSamples,
-                        1,
-                        vDSP_Length(waveformSamples.count)
-                    )
-                    
-                    waveformSamples = normalizedSamples
-                }
-                
-                let waveform = RingtoneAudioWaveform(
-                    samples: waveformSamples,
-                    startTimeInOriginal: 0,
-                    endTimeInOriginal: duration
+                let waveform = normalizeWaveformSamples(duration: duration)
+                let waveformURL = FileManager.default.ringtonesDirectory.appendingPathComponent(
+                    "\(item.id.uuidString).json"
                 )
-                
-                let waveformURL = Self.rootDirectoryURL.appendingPathComponent("\(item.id.uuidString).json")
                 
                 do {
                     let waveformData = try JSONEncoder().encode(waveform)
