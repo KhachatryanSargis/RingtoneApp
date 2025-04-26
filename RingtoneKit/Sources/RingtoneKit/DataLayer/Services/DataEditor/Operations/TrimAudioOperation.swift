@@ -378,6 +378,7 @@ final class TrimAudioOperation: AsyncOperation, @unchecked Sendable {
             .changeDescription(description)
             .changeURL(audioURL)
             .changeWaveformURL(waveformURL)
+            .unliked()
             .paused()
         
         self.finish(with: trimmedAudio)
@@ -425,6 +426,7 @@ final class TrimAudioOperation: AsyncOperation, @unchecked Sendable {
             .changeDescription(description)
             .changeURL(audioURL)
             .changeWaveformURL(waveformURL)
+            .unliked()
             .paused()
         
         self.finish(with: trimmedAudio)
