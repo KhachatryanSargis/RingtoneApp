@@ -28,4 +28,11 @@ extension UIFont {
         }
         return self
     }
+    
+    public func monospace() -> UIFont {
+        if let descriptor = self.fontDescriptor.withSymbolicTraits(.traitMonoSpace) {
+            return UIFont(descriptor: descriptor, size: self.pointSize)
+        }
+        return self
+    }
 }

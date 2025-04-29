@@ -16,11 +16,15 @@ final class RingtoneEditView: NiblessView {
         case right
     }
     
+    // MARK: - Callbacks
+    var onSaveButtonTapped: (() -> Void)? = nil
+    var onCancelButtonTapped: (() -> Void)? = nil
+    
     // MARK: - Properties
     private let stackView: UIStackView = {
         let stackView = UIStackView()
         stackView.axis = .vertical
-        stackView.spacing = 32
+        stackView.spacing = 24
         return stackView
     }()
     
@@ -87,7 +91,7 @@ final class RingtoneEditView: NiblessView {
     
     private let leftTimeLabel: UILabel = {
         let label = UILabel()
-        label.font = .theme.headline
+        label.font = .theme.headline.monospace()
         label.textColor = .theme.secondaryLabel
         label.textAlignment = .left
         return label
@@ -95,9 +99,17 @@ final class RingtoneEditView: NiblessView {
     
     private let rightTimeLabel: UILabel = {
         let label = UILabel()
-        label.font = .theme.headline
+        label.font = .theme.headline.monospace()
         label.textColor = .theme.secondaryLabel
         label.textAlignment = .right
+        return label
+    }()
+    
+    private let durationLabel: UILabel = {
+        let label = UILabel()
+        label.font = .theme.headline.monospace()
+        label.textColor = .theme.secondaryLabel
+        label.textAlignment = .center
         return label
     }()
     
@@ -133,6 +145,15 @@ final class RingtoneEditView: NiblessView {
         return button
     }()
     
+    private let deleteButton: UIButton = {
+        let button = UIButton(type: .system)
+        button.contentVerticalAlignment = .fill
+        button.contentHorizontalAlignment = .fill
+        button.setImage(.theme.delete, for: .normal)
+        button.tintColor = .theme.red
+        return button
+    }()
+    
     private let zoomButtonsStackView: UIStackView = {
         let stackView = UIStackView()
         stackView.axis = .horizontal
@@ -161,9 +182,10 @@ final class RingtoneEditView: NiblessView {
         return button
     }()
     
-    // MARK: - Callbacks
-    var onSaveButtonTapped: (() -> Void)? = nil
-    var onCancelButtonTapped: (() -> Void)? = nil
+    private let fadeSteppersView: RingtoneFadeSteppersView = {
+        let fadeSteppersView = RingtoneFadeSteppersView()
+        return fadeSteppersView
+    }()
     
     private var previousTouchLocation: CGPoint?
     private var activeEdgeView: ActiveEdgeView?
@@ -174,11 +196,13 @@ final class RingtoneEditView: NiblessView {
     init(viewModel: RingtoneEditViewModel) {
         self.viewModel = viewModel
         super.init()
+        isUserInteractionEnabled = true
         setBackgroundColorAndView()
         constructHierarchy()
         configureButtonTargets()
         configureTextField()
         observeViewModel()
+        bindFadeStepperValues()
     }
 }
 
@@ -216,6 +240,9 @@ extension RingtoneEditView {
         // Textfield
         stackView.addArrangedSubview(textField)
         
+        // Fade Steppers
+        stackView.addArrangedSubview(fadeSteppersView)
+        
         // Waveform
         stackView.addArrangedSubview(waveformView)
         
@@ -223,6 +250,10 @@ extension RingtoneEditView {
         stackView.addArrangedSubview(controlsStackView)
         let leftSpacer = UIView()
         controlsStackView.addArrangedSubview(leftSpacer)
+        controlsStackView.addArrangedSubview(deleteButton)
+        NSLayoutConstraint.activate([
+            deleteButton.widthAnchor.constraint(equalTo: deleteButton.heightAnchor)
+        ])
         controlsStackView.addArrangedSubview(saveButton)
         controlsStackView.addArrangedSubview(cancelButton)
         controlsStackView.addArrangedSubview(playPauseButton)
@@ -298,10 +329,11 @@ extension RingtoneEditView {
         addSubview(timeLabelsStackView)
         NSLayoutConstraint.activate([
             timeLabelsStackView.leftAnchor.constraint(equalTo: waveformView.leftAnchor, constant: 8),
-            timeLabelsStackView.rightAnchor.constraint(equalTo: waveformView.rightAnchor, constant: 8),
+            timeLabelsStackView.rightAnchor.constraint(equalTo: waveformView.rightAnchor, constant: -8),
             timeLabelsStackView.bottomAnchor.constraint(equalTo: waveformView.bottomAnchor)
         ])
         timeLabelsStackView.addArrangedSubview(leftTimeLabel)
+        timeLabelsStackView.addArrangedSubview(durationLabel)
         timeLabelsStackView.addArrangedSubview(rightTimeLabel)
     }
 }
@@ -334,7 +366,7 @@ extension RingtoneEditView {
     }
     
     @objc private func onReset() {
-        viewModel.reset()
+        viewModel.resetZoom()
     }
     
     @objc private func onPlayOrPause() {
@@ -348,6 +380,10 @@ extension RingtoneEditView {
         super.touchesBegan(touches, with: event)
         
         guard let touch = touches.first else { return }
+        
+        guard waveformView.bounds.contains(
+            touch.location(in: waveformView)
+        ) else { return }
         
         let touchLocation = touch.location(in: self)
         
@@ -424,10 +460,10 @@ extension RingtoneEditView: UITextFieldDelegate {
     }
 }
 
-// MARK: - View Model
+// MARK: - Observe View Model
 extension RingtoneEditView {
     private func observeViewModel() {
-        viewModel.$startTime
+        viewModel.$startTimeFormatted
             .removeDuplicates()
             .receive(on: DispatchQueue.main)
             .sink { [weak self] startTime in
@@ -437,13 +473,23 @@ extension RingtoneEditView {
             }
             .store(in: &cancellables)
         
-        viewModel.$endTime
+        viewModel.$endTimeFormatted
             .removeDuplicates()
             .receive(on: DispatchQueue.main)
             .sink { [weak self] endTime in
                 guard let self = self else { return }
                 
                 self.rightTimeLabel.text = endTime
+            }
+            .store(in: &cancellables)
+        
+        viewModel.$durationFormatted
+            .removeDuplicates()
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] duration in
+                guard let self = self else { return }
+                
+                self.durationLabel.text = duration
             }
             .store(in: &cancellables)
         
@@ -540,9 +586,62 @@ extension RingtoneEditView {
                 }
             }
             .store(in: &cancellables)
+        
+        viewModel.$maximumFadeDuration
+            .removeDuplicates()
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] duration in
+                guard let self = self else { return }
+                
+                self.fadeSteppersView.setMaximumValue(duration)
+            }
+            .store(in: &cancellables)
+        
+        viewModel.$fadeInDuration
+            .removeDuplicates()
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] value in
+                guard let self = self else { return }
+                
+                self.fadeSteppersView.setFadeInValue(value)
+            }
+            .store(in: &cancellables)
+        
+        viewModel.$fadeOutDuration
+            .removeDuplicates()
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] value in
+                guard let self = self else { return }
+                
+                self.fadeSteppersView.setFadeOutValue(value)
+            }
+            .store(in: &cancellables)
     }
-    
+}
+
+// MARK: - Bind View Model
+extension RingtoneEditView {
     private func setViewModelTitle(_ title: String) {
         viewModel.title = title
+    }
+    
+    private func bindFadeStepperValues() {
+        fadeSteppersView.$fadeInValue
+            .removeDuplicates()
+            .sink { [weak self] value in
+                guard let self = self else { return }
+                
+                self.viewModel.fadeIn(duration: value)
+            }
+            .store(in: &cancellables)
+        
+        fadeSteppersView.$fadeOutValue
+            .removeDuplicates()
+            .sink { [weak self] value in
+                guard let self = self else { return }
+                
+                self.viewModel.fadeOut(duration: value)
+            }
+            .store(in: &cancellables)
     }
 }

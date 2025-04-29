@@ -15,19 +15,21 @@ final public class RingtoneEditViewModel {
         startPosition: Double,
         endPosition: Double
     )
-    private var waveform: RingtoneAudioWaveform {
-        return update.waveform
-    }
+    private var waveform: RingtoneAudioWaveform
     
     @Published private(set) public var state: RingtoneEditViewModelState = .isEditing
-    @Published private(set) public var startTime: String
-    @Published private(set) public var endTime: String
+    @Published private(set) public var startTimeFormatted: String
+    @Published private(set) public var endTimeFormatted: String
+    @Published private(set) public var durationFormatted: String
     @Published private(set) public var canZoomOut: Bool = false
     @Published private(set) public var canZoomIn: Bool = false
     @Published private(set) public var startPosition: Double = 0.0
     @Published private(set) public var endPosition: Double = 1.0
     @Published private(set) public var progress: Float = 0
     @Published private(set) public var isPlaying: Bool = false
+    @Published private(set) public var maximumFadeDuration: TimeInterval
+    @Published private(set) public var fadeInDuration: TimeInterval = 0
+    @Published private(set) public var fadeOutDuration: TimeInterval = 0
     
     public var title: String
     
@@ -70,14 +72,19 @@ final public class RingtoneEditViewModel {
         title = audio.title
         
         let waveform = audio.decodeWaveform()
+        self.waveform = waveform
         
         start = 0
         end = waveform.duration
         
-        startTime = TimeInterval(0).formatted()
-        endTime = waveform.duration.formatted()
+        startTimeFormatted = TimeInterval(0).formatted()
+        endTimeFormatted = waveform.duration.formatted()
+        
+        durationFormatted = waveform.duration.shortFormatted()
         
         update = (waveform, 0, 1)
+        
+        maximumFadeDuration = min(3, Double(end - start) / 2)
         
         observeAudioPlayerStatus()
         observeAudioPlayerProgress()
@@ -186,11 +193,15 @@ extension RingtoneEditViewModel {
         
         guard end - newStart >= 1 else {
             start = end - 1
-            startTime = start.formatted()
+            startTimeFormatted = start.formatted()
+            
+            durationFormatted = 1.shortFormatted()
             
             startPosition = (start - waveform.startTimeInOriginal) / waveform.duration
             
             canZoomIn = (start != waveform.startTimeInOriginal || end != waveform.endTimeInOriginal)
+            
+            maximumFadeDuration = 0.5
             
             return
         }
@@ -198,12 +209,18 @@ extension RingtoneEditViewModel {
         // Resetting playback when selection changes.
         audioPlayer.reset()
         
+        resetFade()
+        
         start = newStart
-        startTime = start.formatted()
+        startTimeFormatted = start.formatted()
+        
+        durationFormatted = (end - start).shortFormatted()
         
         startPosition = (start - waveform.startTimeInOriginal) / waveform.duration
         
         canZoomIn = (start != waveform.startTimeInOriginal || end != waveform.endTimeInOriginal)
+        
+        maximumFadeDuration = min(3, Double(end - start) / 2)
     }
     
     public func adjustEndTime(by translation: CGFloat) {
@@ -215,11 +232,15 @@ extension RingtoneEditViewModel {
         
         guard newEnd - start >= 1 else {
             end = start + 1
-            endTime = end.formatted()
+            endTimeFormatted = end.formatted()
+            
+            durationFormatted = 1.shortFormatted()
             
             endPosition = (end - waveform.startTimeInOriginal) / waveform.duration
             
             canZoomIn = (end != waveform.endTimeInOriginal || start != waveform.startTimeInOriginal)
+            
+            maximumFadeDuration = 0.5
             
             return
         }
@@ -227,12 +248,18 @@ extension RingtoneEditViewModel {
         // Resetting playback when selection changes.
         audioPlayer.reset()
         
+        resetFade()
+        
         end = newEnd
-        endTime = end.formatted()
+        endTimeFormatted = end.formatted()
+        
+        durationFormatted = (end - start).shortFormatted()
         
         endPosition = (end - waveform.startTimeInOriginal) / waveform.duration
         
         canZoomIn = (end != waveform.endTimeInOriginal || start != waveform.startTimeInOriginal)
+        
+        maximumFadeDuration = min(3, Double(end - start) / 2)
     }
 }
 
@@ -243,6 +270,8 @@ extension RingtoneEditViewModel {
         
         // Resetting playback when zoom is changing.
         audioPlayer.reset()
+        
+        resetFade(sendUpdate: false)
         
         state = .isLoading
         canZoomIn = false
@@ -271,6 +300,7 @@ extension RingtoneEditViewModel {
                 let endPosition: Double = 1
                 
                 self.update = (waveform, startPosition, endPosition)
+                self.waveform = waveform
                 
                 self.startPosition = startPosition
                 self.endPosition = endPosition
@@ -288,8 +318,10 @@ extension RingtoneEditViewModel {
         canZoomOut = false
         
         if zoomRanges.count == 1 {
-            reset()
+            resetZoom()
         } else {
+            resetFade(sendUpdate: false)
+            
             state = .isLoading
             
             let zoom = zoomRanges[zoomRanges.count - 2]
@@ -316,13 +348,16 @@ extension RingtoneEditViewModel {
                     self.start = zoom.start
                     self.end = zoom.end
                     
-                    self.startTime = zoom.start.formatted()
-                    self.endTime = zoom.end.formatted()
+                    self.startTimeFormatted = zoom.start.formatted()
+                    self.endTimeFormatted = zoom.end.formatted()
+                    
+                    self.durationFormatted = (end - start).shortFormatted()
                     
                     let startPosition = (zoom.start - waveform.startTimeInOriginal) / waveform.duration
                     let endPosition = (zoom.end - waveform.startTimeInOriginal) / waveform.duration
                     
                     self.update = (waveform, startPosition, endPosition)
+                    self.waveform = waveform
                     
                     self.startPosition = startPosition
                     self.endPosition = endPosition
@@ -331,13 +366,15 @@ extension RingtoneEditViewModel {
         }
     }
     
-    public func reset() {
+    public func resetZoom() {
         guard let zoom = zoomRanges.first else { return }
+        
+        zoomRanges.removeAll()
         
         // Resetting playback when zoom is changing.
         audioPlayer.reset()
         
-        zoomRanges.removeAll()
+        resetFade(sendUpdate: false)
         
         canZoomOut = false
         canZoomIn = true
@@ -345,17 +382,61 @@ extension RingtoneEditViewModel {
         start = zoom.start
         end = zoom.end
         
-        startTime = zoom.start.formatted()
-        endTime = zoom.end.formatted()
+        startTimeFormatted = zoom.start.formatted()
+        endTimeFormatted = zoom.end.formatted()
+        
+        durationFormatted = (end - start).shortFormatted()
         
         let waveform = audio.decodeWaveform()
         
         let startPosition = (zoom.start - waveform.startTimeInOriginal) / waveform.duration
         let endPosition = (zoom.end - waveform.startTimeInOriginal) / waveform.duration
         
-        update = (waveform, startPosition, endPosition)
+        self.update = (waveform, startPosition, endPosition)
+        self.waveform = waveform
         
         self.startPosition = startPosition
         self.endPosition = endPosition
+    }
+}
+
+// MARK: - Fade
+extension RingtoneEditViewModel {
+    public func fadeIn(duration: TimeInterval) {
+        fadeInDuration = duration
+        
+        let fadeInPosition = fadeInDuration / (end - start)
+        let fadeOutPosition = fadeOutDuration / (end - start)
+        
+        let waveform = waveform
+            .fadeIn(range: (startPosition, endPosition), position: fadeInPosition)
+            .fadeOut(range: (startPosition, endPosition), position: fadeOutPosition)
+        
+        update = (waveform, startPosition, endPosition)
+    }
+    
+    public func fadeOut(duration: TimeInterval) {
+        fadeOutDuration = duration
+        
+        let fadeOutPosition = fadeOutDuration / (end - start)
+        let fadeInPosition = fadeInDuration / (end - start)
+        
+        let waveform = waveform
+            .fadeOut(range: (startPosition, endPosition), position: fadeOutPosition)
+            .fadeIn(range: (startPosition, endPosition), position: fadeInPosition)
+        
+        update = (waveform, startPosition, endPosition)
+    }
+    
+    private func resetFade(sendUpdate: Bool = true) {
+        guard fadeInDuration != 0 || fadeOutDuration != 0
+        else { return }
+        
+        fadeInDuration = 0
+        fadeOutDuration = 0
+        
+        guard sendUpdate else { return }
+        
+        update = (waveform, startPosition, endPosition)
     }
 }

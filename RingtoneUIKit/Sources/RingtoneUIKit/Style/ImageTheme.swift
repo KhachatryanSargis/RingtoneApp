@@ -20,7 +20,7 @@ public struct ImageTheme {
     
     // MARK: - RingtoneDiscoverAudioCell
     public let play = UIImage(systemName: "play.circle.fill")!.withConfiguration(configuration)
-    public let pause = UIImage(systemName: "pause.circle")!.withConfiguration(configuration)
+    public let pause = UIImage(systemName: "pause.circle.fill")!.withConfiguration(configuration)
     public let like = UIImage(systemName: "heart")!.withConfiguration(configuration)
     public let liked = UIImage(systemName: "heart.fill")!.withConfiguration(configuration)
     public let edit = UIImage(systemName: "scissors")!.withConfiguration(configuration)
@@ -51,7 +51,7 @@ public struct ImageTheme {
     public let clear = UIImage(systemName: "minus.circle")!.withConfiguration(configuration)
     
     // MARK: - RingtoneCreatedActionHeader
-    public let delete = UIImage(systemName: "trash")!.withConfiguration(configuration)
+    public let delete = UIImage(systemName: "trash.circle")!.withConfiguration(configuration)
     
     // MARK: - RingtoneImportFromURLViewController
     public let download = UIImage(systemName: "arrow.down.circle")!.withConfiguration(configuration)
@@ -61,4 +61,12 @@ public struct ImageTheme {
     public let zoomIn = UIImage(systemName: "plus.magnifyingglass")!.withConfiguration(configuration)
     public let zoomOut = UIImage(systemName: "minus.magnifyingglass")!.withConfiguration(configuration)
     public let reset = UIImage(systemName: "1.magnifyingglass")!.withConfiguration(configuration)
+    
+    // MARK: - RingtoneSlider
+    public let fadeIn = UIImage(systemName: "arrowtriangle.backward.fill")!.withConfiguration(configuration)
+    public let fadeOut = UIImage(systemName: "arrowtriangle.forward.fill")!.withConfiguration(configuration)
+    
+    // MARK: - RingtoneStepper
+    public let plus = UIImage(systemName: "plus.circle")!.withConfiguration(configuration)
+    public let minus = UIImage(systemName: "minus.circle")!.withConfiguration(configuration)
 }
