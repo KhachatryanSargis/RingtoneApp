@@ -19,7 +19,7 @@ public final class AppDependencyContainer {
         return audioPlayer
     }
     
-    private let audioPlayer: RingtoneAudioPlayer
+    private let audioPlayer: IRingtoneAudioPlayer
     private let discoverViewModel: RingtoneDiscoverViewModel
     private let favoritesViewModel: RingtoneFavoritesViewModel
     private let createdViewModel: RingtoneCreatedViewModel
