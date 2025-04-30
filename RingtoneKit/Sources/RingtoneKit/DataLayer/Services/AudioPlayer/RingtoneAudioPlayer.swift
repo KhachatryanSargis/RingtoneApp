@@ -8,188 +8,196 @@
 import Combine
 import AVFoundation
 
-public final class RingtoneAudioPlayer: NSObject, IRingtoneAudioPlayer {
+public final class RingtoneAudioPlayer: NSObject, IRingtoneAudioPlayer, @unchecked Sendable {
     // MARK: - Properties
     public var currentAudioID: String?
-    public var isPlaying: Bool {
-        return player?.isPlaying ?? false
-    }
-    
-    public var statusPublisher: AnyPublisher<RingtoneAudioPlayerStatus, Never> {
-        return statusSubject.eraseToAnyPublisher()
-    }
-    private let statusSubject = PassthroughSubject<RingtoneAudioPlayerStatus, Never>()
     
     public var progressPublisher: AnyPublisher<Float, Never> {
-        return progressSubject.eraseToAnyPublisher()
+        progressSubject.eraseToAnyPublisher()
     }
     private let progressSubject = PassthroughSubject<Float, Never>()
     
-    private var player: AVAudioPlayer?
-    private var displayLink: CADisplayLink?
+    public var statusPublisher: AnyPublisher<RingtoneAudioPlayerStatus, Never> {
+        statusSubject.eraseToAnyPublisher()
+    }
+    private let statusSubject = PassthroughSubject<RingtoneAudioPlayerStatus, Never>()
     
-    private var timeRange: (start: TimeInterval, end: TimeInterval)?
+    private let player = AVPlayer()
+    private var boundaryObserver: Any?
+    private var timeObserverToken: Any?
+    
+    // MARK: - Methods
+    public override init() {
+        super.init()
+    }
+    
+    public func play(_ audio: RingtoneAudio) {
+        if currentAudioID == audio.id {
+            play(audioID: audio.id)
+            return
+        }
+        
+        let asset = AVURLAsset(url: audio.url)
+        let item = AVPlayerItem(asset: asset)
+        
+        player.replaceCurrentItem(with: item)
+        
+        let duration = CMTimeGetSeconds(asset.duration)
+        let timescale = asset.duration.timescale
+        
+        startProgressTracking(duration: duration, timescale: timescale, range: nil)
+        
+        let endTime = asset.duration
+        
+        startEndTracking(endTime)
+        
+        play(audioID: audio.id)
+    }
+    
+    public func play(_ audio: RingtoneAudio, range: (start: TimeInterval, end: TimeInterval)) {
+        if currentAudioID == audio.id {
+            play(audioID: audio.id)
+            return
+        }
+        
+        let asset = AVURLAsset(url: audio.url)
+        let item = AVPlayerItem(asset: asset)
+        
+        player.replaceCurrentItem(with: item)
+        
+        let timescale = asset.duration.timescale
+        let startTime = CMTime(seconds: range.start, preferredTimescale: timescale)
+        
+        player.seek(to: startTime, toleranceBefore: .zero, toleranceAfter: .zero)
+        
+        let duration = range.end - range.start
+        
+        startProgressTracking(duration: duration, timescale: timescale, range: range)
+        
+        let endTime = CMTime(seconds: range.end, preferredTimescale: timescale)
+        
+        startEndTracking(endTime)
+        
+        play(audioID: audio.id)
+    }
+    
+    public func pause() {
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
+            
+            guard let currentAudioID = self.currentAudioID
+            else { return }
+            
+            self.player.pause()
+            
+            self.statusSubject.send(.pausedPlaying(audioID: currentAudioID))
+        }
+    }
+    
+    public func stop() {
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
+            
+            guard let currentAudioID = self.currentAudioID
+            else { return }
+            
+            self.stopEndTracking()
+            
+            self.stopProgressTracking()
+            
+            self.currentAudioID = nil
+            
+            self.player.replaceCurrentItem(with: nil)
+            
+            self.statusSubject.send(.finishedPlaying(audioID: currentAudioID))
+        }
+    }
 }
 
 // MARK: - Play
 extension RingtoneAudioPlayer {
-    public func play(_ audio: RingtoneAudio) {
-        timeRange = nil
-        
-        if audio.id == currentAudioID {
-            play(with: audio.id)
-        } else {
-            do {
-                player = try AVAudioPlayer(contentsOf: audio.url)
-                player?.delegate = self
-                
-                play(with: audio.id)
-            } catch {
-                fail(with: error)
-            }
-        }
-    }
-    
-    private func play(with audioID: String) {
-        if player?.play() == true {
-            currentAudioID = audioID
-            statusSubject.send(.startedPlaying(audioID: audioID))
+    private func play(audioID: String) {
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
             
-            startDisplayLink()
-        } else {
-            currentAudioID = nil
-            statusSubject.send(.failedToPlay(audioID: audioID))
+            self.currentAudioID = audioID
             
-            stopDisplayLink()
-        }
-    }
-    
-    private func fail(with error: Error) {
-        currentAudioID = nil
-        statusSubject.send(.failedToInitialize(error))
-        
-        stopDisplayLink()
-    }
-}
-
-// MARK: - Play Time Range
-extension RingtoneAudioPlayer {
-    public func play(_ audio: RingtoneAudio, range: (start: TimeInterval, end: TimeInterval)) {
-        if audio.id == currentAudioID {
-            if let timeRange = timeRange, timeRange == range {
-                play(with: audio.id)
-            } else {
-                self.timeRange = range
-                player?.currentTime = range.start
-                
-                play(with: audio.id)
-            }
-        } else {
-            do {
-                self.timeRange = range
-                
-                player = try AVAudioPlayer(contentsOf: audio.url)
-                player?.delegate = self
-                player?.currentTime = range.start
-                
-                play(with: audio.id)
-            } catch {
-                fail(with: error)
-            }
+            self.player.play()
+            
+            self.statusSubject.send(.startedPlaying(audioID: audioID))
         }
     }
 }
 
-// MARK: - Pause, Stop, Reset
+// MARK: - End
 extension RingtoneAudioPlayer {
-    public func pause() {
-        guard let currentAudioID = self.currentAudioID
-        else { return }
+    private func startEndTracking(_ endTime: CMTime) {
+        stopEndTracking()
         
-        player?.pause()
-        
-        statusSubject.send(.pausedPlaying(audioID: currentAudioID))
-        
-        pauseDisplayLink()
+        boundaryObserver = player.addBoundaryTimeObserver(
+            forTimes: [NSValue(time: endTime)],
+            queue: .main
+        ) {
+            DispatchQueue.main.async { [weak self] in
+                guard let self = self else { return }
+                
+                self.stop()
+            }
+        }
     }
     
-    public func stop() {
-        guard let currentAudioID = self.currentAudioID
-        else { return }
+    private func stopEndTracking() {
+        guard let boundaryObserver = boundaryObserver else { return }
         
-        self.currentAudioID = nil
+        self.boundaryObserver = nil
         
-        player?.stop()
-        
-        statusSubject.send(.finishedPlaying(audioID: currentAudioID))
-        
-        stopDisplayLink()
-    }
-    
-    public func reset() {
-        self.timeRange = nil
-        
-        guard let currentAudioID = self.currentAudioID
-        else { return }
-        
-        player?.pause()
-        
-        statusSubject.send(.pausedPlaying(audioID: currentAudioID))
-        
-        stopDisplayLink()
-    }
-}
-
-// MARK: - AVAudioPlayerDelegate
-extension RingtoneAudioPlayer: AVAudioPlayerDelegate {
-    public func audioPlayerDidFinishPlaying(_ player: AVAudioPlayer, successfully flag: Bool) {
-        stop()
+        player.removeTimeObserver(boundaryObserver)
     }
 }
 
 // MARK: - Progress
 extension RingtoneAudioPlayer {
-    private func startDisplayLink() {
-        displayLink = CADisplayLink(target: self, selector: #selector(updateProgress))
-        displayLink?.add(to: .current, forMode: .common)
-    }
-    
-    private func stopDisplayLink() {
-        displayLink?.invalidate()
-        displayLink = nil
-        progressSubject.send(0.0)
-    }
-    
-    private func pauseDisplayLink() {
-        displayLink?.invalidate()
-        displayLink = nil
-    }
-    
-    @objc func updateProgress() {
-        guard let player = player else { return }
+    private func startProgressTracking(
+        duration: TimeInterval,
+        timescale: CMTimeScale,
+        range: (start: TimeInterval, end: TimeInterval)?
+    ) {
+        stopProgressTracking()
         
-        if let range = timeRange {
-            let currentTime = player.currentTime - range.start
-            let duration = range.end - range.start
+        timeObserverToken = player.addPeriodicTimeObserver(
+            forInterval: CMTime(seconds: 0.1, preferredTimescale: timescale),
+            queue: .main
+        ) { time in
             
-            if currentTime >= duration {
-                stop()
-            } else {
-                let progress = Float(currentTime / duration)
+            DispatchQueue.main.async { [weak self] in
+                guard let self = self else { return }
                 
-                progressSubject.send(progress)
-            }
-        } else {
-            let currentTime = player.currentTime
-            let duration = player.duration
-            
-            if currentTime >= duration {
-                stopDisplayLink()
-            } else {
-                let progress = Float(currentTime / duration)
-                
-                progressSubject.send(progress)
+                if let range = range {
+                    let currentTime = CMTimeGetSeconds(time) - range.start
+                    
+                    let progress = Float(currentTime / duration)
+                    
+                    self.progressSubject.send(progress)
+                } else {
+                    let currentTime = CMTimeGetSeconds(time)
+                    
+                    let progress = Float(currentTime / duration)
+                    
+                    print(progress)
+                    
+                    self.progressSubject.send(progress)
+                }
             }
         }
+    }
+    
+    private func stopProgressTracking() {
+        guard let timeObserverToken = timeObserverToken else { return }
+        
+        self.timeObserverToken = nil
+        
+        player.removeTimeObserver(timeObserverToken)
+        
+        progressSubject.send(0)
     }
 }

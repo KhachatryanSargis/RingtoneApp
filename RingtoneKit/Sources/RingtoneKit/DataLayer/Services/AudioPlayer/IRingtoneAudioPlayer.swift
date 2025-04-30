@@ -11,12 +11,10 @@ import Combine
 public protocol IRingtoneAudioPlayer: IRingtoneAudioPlayerProgressPublisher, IRingtoneAudioPlayerStatusPublisher {
     // MARK: - Properties
     var currentAudioID: String? { get }
-    var isPlaying: Bool { get }
     
     // MARK: - Methods
     func play(_ audio: RingtoneAudio)
     func play(_ audio: RingtoneAudio, range: (start: TimeInterval, end: TimeInterval))
     func pause()
     func stop()
-    func reset()
 }

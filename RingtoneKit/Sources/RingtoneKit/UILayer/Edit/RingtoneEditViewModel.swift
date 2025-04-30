@@ -206,8 +206,8 @@ extension RingtoneEditViewModel {
             return
         }
         
-        // Resetting playback when selection changes.
-        audioPlayer.reset()
+        // Stop playback when selection changes.
+        audioPlayer.stop()
         
         resetFade()
         
@@ -245,8 +245,8 @@ extension RingtoneEditViewModel {
             return
         }
         
-        // Resetting playback when selection changes.
-        audioPlayer.reset()
+        // Stop playback when selection changes.
+        audioPlayer.stop()
         
         resetFade()
         
@@ -268,8 +268,8 @@ extension RingtoneEditViewModel {
     public func zoomIn() {
         guard canZoomIn else { return }
         
-        // Resetting playback when zoom is changing.
-        audioPlayer.reset()
+        // Stop playback when selection changes.
+        audioPlayer.stop()
         
         resetFade(sendUpdate: false)
         
@@ -311,8 +311,8 @@ extension RingtoneEditViewModel {
     public func zoomOut() {
         guard canZoomOut else { return }
         
-        // Resetting playback when zoom is changing.
-        audioPlayer.reset()
+        // Stop playback when selection changes.
+        audioPlayer.stop()
         
         canZoomIn = false
         canZoomOut = false
@@ -371,8 +371,8 @@ extension RingtoneEditViewModel {
         
         zoomRanges.removeAll()
         
-        // Resetting playback when zoom is changing.
-        audioPlayer.reset()
+        // Stop playback when selection changes.
+        audioPlayer.stop()
         
         resetFade(sendUpdate: false)
         
