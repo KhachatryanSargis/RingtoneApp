@@ -25,17 +25,29 @@ extension RingtoneWaveformView {
         let playbackRangeWidth = playbackEndX - playbackStartX
         let playedWidth = playbackRangeWidth * current
         
-        CATransaction.begin()
-        CATransaction.setDisableActions(true)
+        // When the offset changes or playback progress is 0, animated is false.
+        let originXFormatted = String(format: "%.2f", playbackMaskLayer.frame.origin.x)
+        let newOriginXFormatted = String(format: "%.2f", playbackStartX)
+        let animated = current != 0 && originXFormatted == newOriginXFormatted
         
-        playbackMaskLayer.frame = CGRect(
-            x: playbackStartX,
-            y: 0,
+        setPlaybackMaskLayerFrame(
+            offset: playbackStartX,
             width: playedWidth,
-            height: bounds.height
+            animated: animated
         )
         
-        CATransaction.commit()
+        // Removing playback mask layer when playback finishes.
+        if current == 1 {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) { [weak self] in
+                guard let self = self else { return }
+                
+                self.setPlaybackMaskLayerFrame(
+                    offset: nil,
+                    width: nil,
+                    animated: false
+                )
+            }
+        }
     }
 }
 
@@ -153,5 +165,36 @@ public final class RingtoneWaveformView: NiblessView {
         )
         
         return downsampled.map { CGFloat($0) }
+    }
+    
+    private func setPlaybackMaskLayerFrame(offset: CGFloat?, width: CGFloat?, animated: Bool) {
+        let change = { [weak self] in
+            guard let self = self else { return }
+            
+            let offset = offset ?? self.playbackMaskLayer.frame.origin.x
+            let width = width ?? 0
+            
+            self.playbackMaskLayer.frame = CGRect(
+                x: offset,
+                y: 0,
+                width: width,
+                height: self.bounds.height
+            )
+        }
+        
+        if animated {
+            let animator = UIViewPropertyAnimator(duration: 0.1, curve: .linear) {
+                change()
+            }
+            
+            animator.startAnimation()
+        } else {
+            CATransaction.begin()
+            CATransaction.setAnimationDuration(0)
+            
+            change()
+            
+            CATransaction.commit()
+        }
     }
 }
