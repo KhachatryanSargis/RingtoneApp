@@ -561,6 +561,7 @@ extension RingtoneEditView {
             .store(in: &cancellables)
         
         viewModel.$progress
+            .removeDuplicates()
             .receive(on: DispatchQueue.main)
             .sink { [weak self] progress in
                 guard let self = self else { return }
