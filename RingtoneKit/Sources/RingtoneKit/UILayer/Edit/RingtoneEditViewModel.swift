@@ -405,6 +405,8 @@ extension RingtoneEditViewModel {
     public func fadeIn(duration: TimeInterval) {
         fadeInDuration = duration
         
+        audioPlayer.fadeInDuration = duration
+        
         let fadeInPosition = fadeInDuration / (end - start)
         let fadeOutPosition = fadeOutDuration / (end - start)
         
@@ -417,6 +419,8 @@ extension RingtoneEditViewModel {
     
     public func fadeOut(duration: TimeInterval) {
         fadeOutDuration = duration
+        
+        audioPlayer.fadeOutDuration = duration
         
         let fadeOutPosition = fadeOutDuration / (end - start)
         let fadeInPosition = fadeInDuration / (end - start)
