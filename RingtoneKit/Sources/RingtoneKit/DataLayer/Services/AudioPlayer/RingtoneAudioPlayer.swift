@@ -95,6 +95,13 @@ public final class RingtoneAudioPlayer: NSObject, IRingtoneAudioPlayer, @uncheck
     }
     
     public func stop() {
+        stop(at: nil)
+    }
+}
+
+// MARK: - Stop
+extension RingtoneAudioPlayer {
+    private func stop(at progress: Float?) {
         DispatchQueue.main.async { [weak self] in
             guard let self = self else { return }
             
@@ -103,7 +110,7 @@ public final class RingtoneAudioPlayer: NSObject, IRingtoneAudioPlayer, @uncheck
             
             self.stopEndTracking()
             
-            self.stopProgressTracking()
+            self.stopProgressTracking(at: progress)
             
             self.currentAudioID = nil
             
@@ -141,7 +148,7 @@ extension RingtoneAudioPlayer {
             DispatchQueue.main.async { [weak self] in
                 guard let self = self else { return }
                 
-                self.stop()
+                self.stop(at: 1)
             }
         }
     }
@@ -191,13 +198,13 @@ extension RingtoneAudioPlayer {
         }
     }
     
-    private func stopProgressTracking() {
+    private func stopProgressTracking(at progress: Float? = nil) {
         guard let timeObserverToken = timeObserverToken else { return }
         
         self.timeObserverToken = nil
         
         player.removeTimeObserver(timeObserverToken)
         
-        progressSubject.send(0)
+        progressSubject.send(progress ?? 0)
     }
 }
