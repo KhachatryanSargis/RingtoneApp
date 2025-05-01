@@ -12,6 +12,9 @@ public final class RingtoneAudioPlayer: NSObject, IRingtoneAudioPlayer, @uncheck
     // MARK: - Properties
     public var currentAudioID: String?
     
+    public var fadeInDuration: TimeInterval = 0
+    public var fadeOutDuration: TimeInterval = 0
+    
     public var progressPublisher: AnyPublisher<Float, Never> {
         progressSubject.eraseToAnyPublisher()
     }
@@ -179,20 +182,24 @@ extension RingtoneAudioPlayer {
             DispatchQueue.main.async { [weak self] in
                 guard let self = self else { return }
                 
+                let currentTime: TimeInterval
+                
                 if let range = range {
-                    let currentTime = CMTimeGetSeconds(time) - range.start
-                    
-                    let progress = Float(currentTime / duration)
-                    
-                    self.progressSubject.send(progress)
+                    currentTime = CMTimeGetSeconds(time) - range.start
                 } else {
-                    let currentTime = CMTimeGetSeconds(time)
-                    
-                    let progress = Float(currentTime / duration)
-                    
-                    print(progress)
-                    
-                    self.progressSubject.send(progress)
+                    currentTime = CMTimeGetSeconds(time)
+                }
+                
+                let progress = Float(currentTime / duration)
+                self.progressSubject.send(progress)
+                
+                // Volume Fade In / Out
+                if currentTime < fadeInDuration {
+                    self.player.volume = Float(currentTime / fadeInDuration)
+                } else if currentTime > (duration - fadeOutDuration) {
+                    self.player.volume = Float((duration - currentTime) / fadeOutDuration)
+                } else {
+                    self.player.volume = 1.0
                 }
             }
         }

@@ -11,6 +11,8 @@ import Combine
 public protocol IRingtoneAudioPlayer: IRingtoneAudioPlayerProgressPublisher, IRingtoneAudioPlayerStatusPublisher {
     // MARK: - Properties
     var currentAudioID: String? { get }
+    var fadeInDuration: TimeInterval { get set }
+    var fadeOutDuration: TimeInterval { get set }
     
     // MARK: - Methods
     func play(_ audio: RingtoneAudio)
