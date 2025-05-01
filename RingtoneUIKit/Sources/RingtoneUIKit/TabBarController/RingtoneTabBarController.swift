@@ -21,6 +21,7 @@ public final class RingtoneTabBarController: NiblessTabBarController {
     
     private var cancellables: Set<AnyCancellable> = []
     private let audioPlayerProgressPublisher: IRingtoneAudioPlayerProgressPublisher
+    private var hideProgresstimer: Timer?
     
     // MARK: - Methods
     public init(audioPlayerProgressPublisher: IRingtoneAudioPlayerProgressPublisher) {
@@ -55,6 +56,88 @@ extension RingtoneTabBarController {
     }
 }
 
+// MARK: - Hide / Show Progress, Set Progress
+extension RingtoneTabBarController {
+    private func hideProgress() {
+        guard !progressView.isHidden else { return }
+        
+        let animator = UIViewPropertyAnimator(duration: 0.5, curve: .linear) { [weak self] in
+            guard let self = self else { return }
+            
+            self.progressView.alpha = 0
+        }
+        
+        animator.addCompletion { [weak self] _ in
+            guard let self = self else { return }
+            
+            self.progressView.isHidden = true
+        }
+        
+        animator.startAnimation()
+    }
+    
+    private func setProgress(_ progress: Float) {
+        let animated = progress != 0
+        
+        let changes = { [weak self] in
+            guard let self = self else { return }
+            
+            if progress != 0 && self.progressView.isHidden {
+                self.progressView.alpha = 1
+                self.progressView.isHidden = false
+            }
+            
+            if progress == 1 && !self.progressView.isHidden {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                    self.hideProgress()
+                }
+            }
+            
+            self.progressView.setProgress(Float(progress), animated: animated)
+        }
+        
+        if animated {
+            let animator = UIViewPropertyAnimator(duration: 0.1, curve: .linear) {
+                changes()
+            }
+            
+            animator.startAnimation()
+        } else {
+            changes()
+        }
+    }
+}
+
+// MARK: - Hide Progress Timer
+extension RingtoneTabBarController {
+    private func startHideProgressTimer() {
+        hideProgresstimer?.invalidate()
+        
+        let timer = Timer.scheduledTimer(
+            timeInterval: 3,
+            target: self,
+            selector: #selector(onHideProgress),
+            userInfo: nil,
+            repeats: false
+        )
+        
+        RunLoop.main.add(timer, forMode: .common)
+        
+        self.hideProgresstimer = timer
+    }
+    
+    @objc private func onHideProgress() {
+        stopHideProgressTimer()
+        
+        hideProgress()
+    }
+    
+    private func stopHideProgressTimer() {
+        hideProgresstimer?.invalidate()
+        hideProgresstimer = nil
+    }
+}
+
 // MARK: - Progress
 extension RingtoneTabBarController {
     private func setProgressBar() {
@@ -72,11 +155,15 @@ extension RingtoneTabBarController {
             .sink(receiveCompletion: { [weak self] _ in
                 guard let self = self else { return }
                 
-                self.progressView.progress = 0
+                self.stopHideProgressTimer()
+                
+                self.setProgress(0)
             }, receiveValue: { [weak self] progress in
                 guard let self = self else { return }
                 
-                self.progressView.progress = Float(progress)
+                self.startHideProgressTimer()
+                
+                self.setProgress(progress)
             })
             .store(in: &cancellables)
     }
