@@ -25,6 +25,8 @@ extension RingtoneDataEditor {
         _ audio: RingtoneAudio,
         start: TimeInterval,
         end: TimeInterval,
+        fadeIn: TimeInterval,
+        fadeOut: TimeInterval,
         mode: RingtoneDataEditorMode
     ) -> AnyPublisher<RingtoneAudio, RingtoneDataEditorError> {
         
@@ -35,6 +37,8 @@ extension RingtoneDataEditor {
                 audio: audio,
                 start: start,
                 end: end,
+                fadeIn: fadeIn,
+                fadeOut: fadeOut,
                 mode: mode
             ) { result in
                 switch result {

@@ -13,6 +13,8 @@ public protocol IRingtoneDataEditor {
         _ audio: RingtoneAudio,
         start: TimeInterval,
         end: TimeInterval,
+        fadeIn: TimeInterval,
+        fadeOut: TimeInterval,
         mode: RingtoneDataEditorMode
     ) -> AnyPublisher<RingtoneAudio, RingtoneDataEditorError>
     

@@ -44,7 +44,9 @@ final public class RingtoneEditViewModel {
     private var shouldUpdateAudioData: Bool {
         zoomRanges.isEmpty == false ||
         startPosition != 0 ||
-        endPosition != 1
+        endPosition != 1 ||
+        fadeInDuration != 0 ||
+        fadeOutDuration != 0
     }
     
     private var start: TimeInterval
@@ -110,23 +112,30 @@ extension RingtoneEditViewModel {
         
         state = .isLoading
         
-        dataEditor.trimAudio(audio, start: start, end: end, mode: mode)
-            .sink { [weak self] completion in
-                guard let self = self else { return }
-                
-                guard case .failure(let error) = completion else { return }
-                
-                self.state = .failed(.dataEditor(error))
-            } receiveValue: { [weak self] audio in
-                guard let self = self else { return }
-                
-                self.audio = audio.changeTitle(title)
-                
-                self.audioDataChangeResponder.saveRingtoneAudio(self.audio)
-                
-                self.state = .finished
-            }
-            .store(in: &cancellables)
+        dataEditor.trimAudio(
+            audio,
+            start: start,
+            end: end,
+            fadeIn: fadeInDuration,
+            fadeOut: fadeOutDuration,
+            mode: mode
+        )
+        .sink { [weak self] completion in
+            guard let self = self else { return }
+            
+            guard case .failure(let error) = completion else { return }
+            
+            self.state = .failed(.dataEditor(error))
+        } receiveValue: { [weak self] audio in
+            guard let self = self else { return }
+            
+            self.audio = audio.changeTitle(title)
+            
+            self.audioDataChangeResponder.saveRingtoneAudio(self.audio)
+            
+            self.state = .finished
+        }
+        .store(in: &cancellables)
     }
 }
 
