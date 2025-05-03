@@ -13,6 +13,7 @@ final class TrimAudioOperation: AsyncOperation, @unchecked Sendable {
     private var channelCount: Int = 2
     private var sampleRate: Double = 44100
     private var waveformSamples: [Float] = []
+    private var processedFrameCount = 0
     private var didFinishProcessing = false
     
     private var reader: AVAssetReader!
@@ -23,6 +24,8 @@ final class TrimAudioOperation: AsyncOperation, @unchecked Sendable {
     private let audio: RingtoneAudio
     private let start: TimeInterval
     private let end: TimeInterval
+    private let fadeIn: TimeInterval
+    private let fadeOut: TimeInterval
     private let mode: RingtoneDataEditorMode
     private let completion: ((Result<RingtoneAudio, RingtoneDataEditorError>) -> Void)?
     
@@ -31,12 +34,16 @@ final class TrimAudioOperation: AsyncOperation, @unchecked Sendable {
         audio: RingtoneAudio,
         start: TimeInterval,
         end: TimeInterval,
+        fadeIn: TimeInterval,
+        fadeOut: TimeInterval,
         mode: RingtoneDataEditorMode,
         completion: ((Result<RingtoneAudio, RingtoneDataEditorError>) -> Void)?
     ) {
         self.audio = audio
         self.start = start
         self.end = end
+        self.fadeIn = fadeIn
+        self.fadeOut = fadeOut
         self.mode = mode
         self.completion = completion
     }
@@ -140,22 +147,15 @@ final class TrimAudioOperation: AsyncOperation, @unchecked Sendable {
         processSamples(
             track: track,
             writerInput: writerInput,
-            readerOutput: readerOutput,
-            channelCount: channelCount
+            readerOutput: readerOutput
         )
     }
     
     private func processSamples(
         track: AVAssetTrack,
         writerInput: AVAssetWriterInput,
-        readerOutput: AVAssetReaderTrackOutput,
-        channelCount: Int
+        readerOutput: AVAssetReaderTrackOutput
     ) {
-        let duration = end - start
-        let totalFramesEstimate = Int(sampleRate * duration)
-        let targetWaveformLength = 10_000
-        let downsampleFactor = max(1, totalFramesEstimate / targetWaveformLength)
-        
         reader.startReading()
         writer.startWriting()
         writer.startSession(atSourceTime: .zero)
@@ -181,7 +181,7 @@ final class TrimAudioOperation: AsyncOperation, @unchecked Sendable {
                     break
                 }
                 
-                self.processBlockBuffer(blockBuffer, channelCount: channelCount, downsampleFactor: downsampleFactor)
+                self.processBlockBuffer(blockBuffer)
                 
                 while !writerInput.isReadyForMoreMediaData {
                     usleep(1000)
@@ -205,7 +205,7 @@ final class TrimAudioOperation: AsyncOperation, @unchecked Sendable {
         }
     }
     
-    private func processBlockBuffer(_ blockBuffer: CMBlockBuffer, channelCount: Int, downsampleFactor: Int) {
+    private func processBlockBuffer(_ blockBuffer: CMBlockBuffer) {
         var length = 0
         var dataPointer: UnsafeMutablePointer<Int8>?
         
@@ -220,18 +220,119 @@ final class TrimAudioOperation: AsyncOperation, @unchecked Sendable {
         let sampleCount = length / MemoryLayout<Int16>.size
         let frameCount = sampleCount / channelCount
         
-        // Convert Int16 PCM to normalized float [-1, 1]
+        let int16Pointer = UnsafeMutableRawPointer(dataPointer).assumingMemoryBound(to: Int16.self)
+        
+        // Convert Int16 samples to Float [-1.0, 1.0]
         var floatSamples = [Float](repeating: 0, count: sampleCount)
-        dataPointer.withMemoryRebound(to: Int16.self, capacity: sampleCount) { int16Pointer in
-            vDSP_vflt16(int16Pointer, 1, &floatSamples, 1, vDSP_Length(sampleCount))
+        vDSP_vflt16(int16Pointer, 1, &floatSamples, 1, vDSP_Length(sampleCount))
+        var scale: Float = 1.0 / Float(Int16.max)
+        vDSP_vsmul(floatSamples, 1, &scale, &floatSamples, 1, vDSP_Length(sampleCount))
+        
+        // Applying Fade
+        applyFade(to: &floatSamples, frameCount: frameCount)
+        
+        // Convert Float samples back to Int16
+        var maxSample: Float = Float(Int16.max)
+        vDSP_vsmul(floatSamples, 1, &maxSample, &floatSamples, 1, vDSP_Length(sampleCount))
+        vDSP_vfix16(floatSamples, 1, int16Pointer, 1, vDSP_Length(sampleCount))
+        
+        // Generating Waveform
+        calculateWaveformSamples(from: &floatSamples, frameCount: frameCount)
+        
+        processedFrameCount += frameCount
+    }
+    
+    private func finishWriting() {
+        writer.finishWriting { [weak self] in
+            guard let self else { return }
+            
+            switch self.writer.status {
+            case .completed:
+                switch self.mode {
+                case .replaceOriginal:
+                    self.replaceOriginal()
+                case .saveAsCopy:
+                    self.saveAsCopy()
+                }
+            default:
+                if let error = self.reader.error {
+                    self.finish(with: .reader(error))
+                } else if let error = self.writer.error {
+                    self.finish(with: .writer(error))
+                } else {
+                    self.finish(with: .unexpected)
+                }
+            }
         }
-        var divisor = Float(Int16.max)
-        vDSP_vsdiv(floatSamples, 1, &divisor, &floatSamples, 1, vDSP_Length(sampleCount))
+    }
+}
+
+// MARK: - Apply Fade
+extension TrimAudioOperation {
+    private func applyFade(to samples: inout [Float], frameCount: Int) {
+        let totalFrameCount = Int(sampleRate * (end - start))
+        let fadeInFrameCount = Int(sampleRate * fadeIn)
+        let fadeOutFrameCount = Int(sampleRate * fadeOut)
+        
+        // Fade In
+        if processedFrameCount < fadeInFrameCount {
+            let fadeFrames = min(fadeInFrameCount - processedFrameCount, frameCount)
+            let rampLength = fadeFrames * channelCount
+            
+            var ramp = [Float](repeating: 0, count: rampLength)
+            for frame in 0..<fadeFrames {
+                let multiplier = Float(processedFrameCount + frame) / Float(fadeInFrameCount)
+                for channel in 0..<channelCount {
+                    ramp[frame * channelCount + channel] = multiplier
+                }
+            }
+            
+            vDSP_vmul(samples, 1, ramp, 1, &samples, 1, vDSP_Length(rampLength))
+        }
+        
+        // Fade Out
+        let fadeOutStart = totalFrameCount - fadeOutFrameCount
+        if processedFrameCount + frameCount > fadeOutStart {
+            let startFrame = max(0, fadeOutStart - processedFrameCount)
+            let fadeFrames = frameCount - startFrame
+            let rampLength = fadeFrames * channelCount
+            
+            var ramp = [Float](repeating: 1.0, count: rampLength)
+            for frame in 0..<fadeFrames {
+                let fadeOutPos = processedFrameCount + startFrame + frame - fadeOutStart
+                let multiplier = max(0, Float(fadeOutFrameCount - fadeOutPos)) / Float(fadeOutFrameCount)
+                for channel in 0..<channelCount {
+                    ramp[frame * channelCount + channel] = multiplier
+                }
+            }
+            
+            let startSample = startFrame * channelCount
+            // Use withUnsafePointers to pass to vDSP_vmul
+            ramp.withUnsafeBufferPointer { rampPtr in
+                samples.withUnsafeMutableBufferPointer { samplePtr in
+                    vDSP_vmul(
+                        samplePtr.baseAddress! + startSample, 1,
+                        rampPtr.baseAddress!, 1,
+                        samplePtr.baseAddress! + startSample, 1,
+                        vDSP_Length(rampLength)
+                    )
+                }
+            }
+        }
+    }
+}
+
+// MARK: - Generate Waveform
+extension TrimAudioOperation {
+    private func calculateWaveformSamples(from samples: inout [Float], frameCount: Int) {
+        let totalFrameCount = Int(sampleRate * (end - start))
+        let targetWaveformLength = 10_000
+        let downsampleFactor = max(1, totalFrameCount / targetWaveformLength)
         
         // Mix interleaved samples directly to mono by averaging frames
         var monoSamples = [Float](repeating: 0, count: frameCount)
         vDSP_desamp(
-            floatSamples,
+            samples,
             channelCount,
             [Float](repeating: 1 / Float(channelCount), count: channelCount),
             &monoSamples,
@@ -282,31 +383,10 @@ final class TrimAudioOperation: AsyncOperation, @unchecked Sendable {
             endTimeInOriginal: end - start
         )
     }
-    
-    private func finishWriting() {
-        writer.finishWriting { [weak self] in
-            guard let self else { return }
-            
-            switch self.writer.status {
-            case .completed:
-                switch self.mode {
-                case .replaceOriginal:
-                    self.replaceOriginal()
-                case .saveAsCopy:
-                    self.saveAsCopy()
-                }
-            default:
-                if let error = self.reader.error {
-                    self.finish(with: .reader(error))
-                } else if let error = self.writer.error {
-                    self.finish(with: .writer(error))
-                } else {
-                    self.finish(with: .unexpected)
-                }
-            }
-        }
-    }
-    
+}
+
+// MARK: - Replace Original
+extension TrimAudioOperation {
     private func replaceOriginal() {
         let backupURL = FileManager.default.temporaryDirectory.appendingPathComponent(
             "\(audio.id).aiff"
@@ -383,7 +463,10 @@ final class TrimAudioOperation: AsyncOperation, @unchecked Sendable {
         
         self.finish(with: trimmedAudio)
     }
-    
+}
+
+// MARK: - Save as Copy
+extension TrimAudioOperation {
     private func saveAsCopy() {
         // Saving changed audio file.
         let audioURL = FileManager.default.ringtonesDirectory.appendingPathComponent(
