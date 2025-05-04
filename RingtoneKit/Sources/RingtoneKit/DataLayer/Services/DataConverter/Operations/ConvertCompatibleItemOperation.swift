@@ -270,13 +270,11 @@ final class ConvertCompatibleItemOperation: AsyncOperation, @unchecked Sendable 
                     let waveformData = try JSONEncoder().encode(waveform)
                     try waveformData.write(to: waveformURL)
                     
+                    self.cleanup(urls: [item.url])
+                    
                     self.finish(with: (url: self.writer.outputURL, waveformURL: waveformURL, duration: duration))
                 } catch {
-                    do {
-                        try FileManager.default.removeItem(at: self.writer.outputURL)
-                    } catch {
-                        print("ConvertCompatibleItemOperation failed to clean up with error: \(error)")
-                    }
+                    self.cleanup(urls: [self.writer.outputURL, item.url])
                     
                     self.finish(with: .failedToSaveWaveform(error))
                 }
@@ -288,6 +286,18 @@ final class ConvertCompatibleItemOperation: AsyncOperation, @unchecked Sendable 
                 } else {
                     self.finish(with: .unexpected)
                 }
+            }
+        }
+    }
+    
+    private func cleanup(urls: [URL]) {
+        for url in urls {
+            do {
+                if FileManager.default.fileExists(atPath: url.path) {
+                    try FileManager.default.removeItem(at: url)
+                }
+            } catch {
+                print("TrimAudioOperation failed to clean up with error: \(error)")
             }
         }
     }
