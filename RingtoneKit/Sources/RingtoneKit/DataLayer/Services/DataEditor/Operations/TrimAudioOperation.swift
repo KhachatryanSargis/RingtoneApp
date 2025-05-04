@@ -504,17 +504,10 @@ extension TrimAudioOperation {
         
         self.finish(with: trimmedAudio)
     }
-    
-    private func finish(with audio: RingtoneAudio) {
-        self.completion?(.success(audio))
-        self.state = .finished
-    }
-    
-    private func finish(with error: RingtoneDataEditorError) {
-        self.completion?(.failure(error))
-        self.state = .finished
-    }
-    
+}
+
+// MARK: - Cleanup
+extension TrimAudioOperation {
     private func cleanup(urls: [URL]) {
         for url in urls {
             do {
@@ -525,5 +518,18 @@ extension TrimAudioOperation {
                 print("TrimAudioOperation failed to clean up with error: \(error)")
             }
         }
+    }
+}
+
+// MARK: - Finish
+extension TrimAudioOperation {
+    private func finish(with audio: RingtoneAudio) {
+        self.completion?(.success(audio))
+        self.state = .finished
+    }
+    
+    private func finish(with error: RingtoneDataEditorError) {
+        self.completion?(.failure(error))
+        self.state = .finished
     }
 }
