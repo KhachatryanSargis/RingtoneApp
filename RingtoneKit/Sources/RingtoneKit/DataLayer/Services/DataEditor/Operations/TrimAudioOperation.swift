@@ -105,25 +105,10 @@ final class TrimAudioOperation: AsyncOperation, @unchecked Sendable {
             sampleRate = fmtDesc.pointee.mSampleRate
         }
         
-        let readerSettings: [String: Any] = [
-            AVFormatIDKey: kAudioFormatLinearPCM,
-            AVSampleRateKey: sampleRate,
-            AVNumberOfChannelsKey: channelCount,
-            AVLinearPCMBitDepthKey: 16,
-            AVLinearPCMIsNonInterleaved: false,
-            AVLinearPCMIsFloatKey: false,
-            AVLinearPCMIsBigEndianKey: false
-        ]
-        
-        let writerSettings: [String: Any] = [
-            AVFormatIDKey: kAudioFormatLinearPCM,
-            AVSampleRateKey: sampleRate,
-            AVNumberOfChannelsKey: channelCount,
-            AVLinearPCMBitDepthKey: 16,
-            AVLinearPCMIsNonInterleaved: false,
-            AVLinearPCMIsFloatKey: false,
-            AVLinearPCMIsBigEndianKey: true
-        ]
+        let readerSettings = AVAssetReader.settings(
+            sampleRate: sampleRate,
+            channelCount: channelCount
+        )
         
         let readerOutput = AVAssetReaderTrackOutput(track: track, outputSettings: readerSettings)
         readerOutput.alwaysCopiesSampleData = false
@@ -134,6 +119,11 @@ final class TrimAudioOperation: AsyncOperation, @unchecked Sendable {
             return
         }
         reader.add(readerOutput)
+        
+        let writerSettings = AVAssetWriter.settings(
+            sampleRate: sampleRate,
+            channelCount: channelCount
+        )
         
         let writerInput = AVAssetWriterInput(mediaType: .audio, outputSettings: writerSettings)
         

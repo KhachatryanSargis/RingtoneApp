@@ -81,15 +81,10 @@ final class ZoomWaveformOperation: AsyncOperation, @unchecked Sendable {
             sampleRate = fmtDesc.pointee.mSampleRate
         }
         
-        let readerSettings: [String: Any] = [
-            AVFormatIDKey: kAudioFormatLinearPCM,
-            AVSampleRateKey: sampleRate,
-            AVNumberOfChannelsKey: channelCount,
-            AVLinearPCMBitDepthKey: 16,
-            AVLinearPCMIsNonInterleaved: false,
-            AVLinearPCMIsFloatKey: false,
-            AVLinearPCMIsBigEndianKey: false
-        ]
+        let readerSettings = AVAssetReader.settings(
+            sampleRate: sampleRate,
+            channelCount: channelCount
+        )
         
         let readerOutput = AVAssetReaderTrackOutput(track: track, outputSettings: readerSettings)
         readerOutput.alwaysCopiesSampleData = false

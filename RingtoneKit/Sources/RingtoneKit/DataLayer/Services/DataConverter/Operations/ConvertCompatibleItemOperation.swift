@@ -80,25 +80,10 @@ final class ConvertCompatibleItemOperation: AsyncOperation, @unchecked Sendable 
             sampleRate = fmtDesc.pointee.mSampleRate
         }
         
-        let readerSettings: [String: Any] = [
-            AVFormatIDKey: kAudioFormatLinearPCM,
-            AVSampleRateKey: sampleRate,
-            AVNumberOfChannelsKey: channelCount,
-            AVLinearPCMBitDepthKey: 16,
-            AVLinearPCMIsNonInterleaved: false,
-            AVLinearPCMIsFloatKey: false,
-            AVLinearPCMIsBigEndianKey: false
-        ]
-        
-        let writerSettings: [String: Any] = [
-            AVFormatIDKey: kAudioFormatLinearPCM,
-            AVSampleRateKey: sampleRate,
-            AVNumberOfChannelsKey: channelCount,
-            AVLinearPCMBitDepthKey: 16,
-            AVLinearPCMIsNonInterleaved: false,
-            AVLinearPCMIsFloatKey: false,
-            AVLinearPCMIsBigEndianKey: true
-        ]
+        let readerSettings = AVAssetReader.settings(
+            sampleRate: sampleRate,
+            channelCount: channelCount
+        )
         
         let readerOutput = AVAssetReaderTrackOutput(track: track, outputSettings: readerSettings)
         readerOutput.alwaysCopiesSampleData = false
@@ -109,6 +94,11 @@ final class ConvertCompatibleItemOperation: AsyncOperation, @unchecked Sendable 
             return
         }
         reader.add(readerOutput)
+        
+        let writerSettings = AVAssetWriter.settings(
+            sampleRate: sampleRate,
+            channelCount: channelCount
+        )
         
         let writerInput = AVAssetWriterInput(mediaType: .audio, outputSettings: writerSettings)
         
@@ -172,7 +162,15 @@ final class ConvertCompatibleItemOperation: AsyncOperation, @unchecked Sendable 
                 if !writerInput.append(sampleBuffer) {
                     self.reader.cancelReading()
                     self.writer.cancelWriting()
-                    self.finish(with: .unexpected)
+                    
+                    if let error = writer.error {
+                        self.finish(with: .writer(error))
+                    } else if let error = reader.error {
+                        self.finish(with: .reader(error))
+                    } else {
+                        self.finish(with: .unexpected)
+                    }
+                    
                     break
                 }
             }
