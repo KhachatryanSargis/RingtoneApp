@@ -187,7 +187,6 @@ final class RingtoneEditView: NiblessView {
         return fadeSteppersView
     }()
     
-    private var previousTouchLocation: CGPoint?
     private var activeEdgeView: ActiveEdgeView?
     private var cancellables = Set<AnyCancellable>()
     private let viewModel: RingtoneEditViewModel
@@ -203,6 +202,7 @@ final class RingtoneEditView: NiblessView {
         configureTextField()
         observeViewModel()
         bindFadeStepperValues()
+        addPanGestureRecognizer()
     }
 }
 
@@ -376,67 +376,53 @@ extension RingtoneEditView {
 
 // MARK: - Touches Handling
 extension RingtoneEditView {
-    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
-        super.touchesBegan(touches, with: event)
-        
-        guard let touch = touches.first else { return }
-        
-        guard waveformView.bounds.contains(
-            touch.location(in: waveformView)
-        ) else { return }
-        
-        let touchLocation = touch.location(in: self)
-        
-        previousTouchLocation = touchLocation
-        
-        let leftEdgeX = leftEdgeView.frame.midX
-        let rightEdgeX = rightEdgeView.frame.midX
-        
-        let distanceToLeftEdge = abs(touchLocation.x - leftEdgeX)
-        let distanceToRightEdge = abs(touchLocation.x - rightEdgeX)
-        
-        if distanceToLeftEdge < distanceToRightEdge {
-            activeEdgeView = .left
-        } else {
-            activeEdgeView = .right
-        }
+    private func addPanGestureRecognizer() {
+        let gestureRecognizer = UIPanGestureRecognizer(
+            target: self,
+            action: #selector(onPanGesture)
+        )
+        addGestureRecognizer(gestureRecognizer)
     }
     
-    override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
-        super.touchesMoved(touches, with: event)
+    @objc
+    private func onPanGesture(_ recognizer: UIPanGestureRecognizer) {
+        guard recognizer.state != .ended,
+              recognizer.state != .cancelled,
+              recognizer.state != .failed
+        else {
+            activeEdgeView = nil
+            return
+        }
         
-        guard let edgeView = activeEdgeView else { return }
-        guard let touch = touches.first else { return }
+        let translation = recognizer.translation(in: self)
+        recognizer.setTranslation(.zero, in: self)
         
-        let touchLocation = touch.location(in: self)
+        let normalizedTranslation = translation.x / bounds.width
         
-        guard let previousTouchLocation = previousTouchLocation
-        else { return }
-        
-        let translation = (touchLocation.x - previousTouchLocation.x) / waveformView.bounds.width
-        
-        switch edgeView {
+        switch activeEdgeView {
         case .left:
-            viewModel.adjustStartTime(by: translation)
+            viewModel.adjustStartTime(by: normalizedTranslation)
         case .right:
-            viewModel.adjustEndTime(by: translation)
+            viewModel.adjustEndTime(by: normalizedTranslation)
+        case nil:
+            let touchLocation = recognizer.location(in: self)
+            
+            let leftEdgeX = leftEdgeView.frame.midX
+            let rightEdgeX = rightEdgeView.frame.midX
+            
+            let distanceToLeftEdge = abs(touchLocation.x - leftEdgeX)
+            let distanceToRightEdge = abs(touchLocation.x - rightEdgeX)
+            
+            if distanceToLeftEdge < distanceToRightEdge {
+                activeEdgeView = .left
+                
+                viewModel.adjustStartTime(by: normalizedTranslation)
+            } else {
+                activeEdgeView = .right
+                
+                viewModel.adjustEndTime(by: normalizedTranslation)
+            }
         }
-        
-        self.previousTouchLocation = touchLocation
-    }
-    
-    override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
-        super.touchesEnded(touches, with: event)
-        
-        activeEdgeView = nil
-        previousTouchLocation = nil
-    }
-    
-    override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) {
-        super.touchesCancelled(touches, with: event)
-        
-        activeEdgeView = nil
-        previousTouchLocation = nil
     }
 }
 
