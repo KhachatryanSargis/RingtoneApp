@@ -12,6 +12,7 @@ public enum RingtoneCreatedAction {
     case importAudioFromGallery
     case importAudioFromFiles
     case importAudioFromURL
-    case exportGarageBandProjects(_ urls: [URL])
     case editAudio(_ audio: RingtoneAudio)
+    case exportGarageBandProject(_ url: URL)
+    case exportAudios(_ audios: [RingtoneAudio])
 }

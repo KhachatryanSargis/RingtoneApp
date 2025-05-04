@@ -275,7 +275,6 @@ extension RingtoneCreatedViewController {
 extension RingtoneCreatedViewController {
     private func observeViewModelAction(_ viewModel: RingtoneCreatedViewModel) {
         viewModel.$action
-            .receive(on: DispatchQueue.main)
             .compactMap { $0 }
             .sink { [weak self] action in
                 guard let self = self else { return }
@@ -289,8 +288,10 @@ extension RingtoneCreatedViewController {
                     self.actionSubject.send(.importAudioFromFiles)
                 case .importAudioFromURL:
                     self.actionSubject.send(.importAudioFromURL)
-                case .exportGarageBandProjects(let urls):
-                    self.actionSubject.send(.exportGarageBandProjects(urls))
+                case .exportGarageBandProject(let url):
+                    self.actionSubject.send(.exportGarageBandProject(url))
+                case .exportAudios(let audios):
+                    self.actionSubject.send(.exportAudios(audios))
                 case .editAudio(let audio):
                     self.actionSubject.send(.editAudio(audio))
                 }

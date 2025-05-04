@@ -45,8 +45,10 @@ extension CreatedCoordinator {
                     self.onImportFromFiles()
                 case .importAudioFromURL:
                     self.onImportFromURL()
-                case .exportGarageBandProjects(let urls):
-                    self.onExportGarageBandProjects(urls)
+                case .exportGarageBandProject(let url):
+                    self.onExportGarageBandProject(url)
+                case .exportAudios(let audios):
+                    self.onExportAudios(audios)
                 case .editAudio(let audio):
                     self.onEditAudio(audio)
                 }
@@ -130,7 +132,22 @@ extension CreatedCoordinator {
 
 // MARK: - Export
 extension CreatedCoordinator {
-    private func onExportGarageBandProjects(_ urls: [URL]) {
+    private func onExportGarageBandProject(_ url: URL) {
+        let activityViewController = UIActivityViewController(
+            activityItems: [url],
+            applicationActivities: nil
+        )
+        
+        presentable.toViewController().present(
+            activityViewController,
+            animated: true,
+            completion: nil
+        )
+    }
+    
+    private func onExportAudios(_ audios: [RingtoneAudio]) {
+        let urls = audios.map { $0.url }
+        
         guard !urls.isEmpty else { return }
         
         let activityViewController = UIActivityViewController(

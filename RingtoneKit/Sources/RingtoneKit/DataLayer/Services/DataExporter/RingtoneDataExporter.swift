@@ -25,6 +25,27 @@ final public class RingtoneDataExporter: IRingtoneDataExporter, @unchecked Senda
     }
 }
 
+// MARK: - Create Garage Band Project
+extension RingtoneDataExporter {
+    public func createGarageBandProject(from audio: RingtoneAudio) -> AnyPublisher<URL, RingtoneDataExporterError> {
+        Future { promise in
+            let createGarageBandProjectOperation = CreateGarageBandProjectOperation(
+                audio: audio
+            ) { result in
+                switch result {
+                case .success(let url):
+                    promise(.success(url))
+                case .failure(let error):
+                    promise(.failure(error))
+                }
+            }
+            
+            self.queue.addOperation(createGarageBandProjectOperation)
+        }
+        .eraseToAnyPublisher()
+    }
+}
+
 // MARK: - Export
 extension RingtoneDataExporter {
     public func exportRingtoneAudios(_ audios: [RingtoneAudio]) -> AnyPublisher<RingtoneDataExporterResult, Never> {

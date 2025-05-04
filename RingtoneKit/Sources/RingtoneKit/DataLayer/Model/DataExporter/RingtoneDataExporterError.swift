@@ -5,7 +5,7 @@
 //  Created by Sargis Khachatryan on 17.03.25.
 //
 
-enum RingtoneDataExporterError: Error {
+public enum RingtoneDataExporterError: Error {
     case failedToCreateProjectStructure(Error)
     case failedToCopyProjectDataFile(Error)
     case failedToCopyAudioFile(Error)
