@@ -24,7 +24,7 @@ public struct ImageTheme {
     public let like = UIImage(systemName: "heart")!.withConfiguration(configuration)
     public let liked = UIImage(systemName: "heart.fill")!.withConfiguration(configuration)
     public let edit = UIImage(systemName: "scissors")!.withConfiguration(configuration)
-    public let use = UIImage(systemName: "square.and.arrow.up")!.withConfiguration(configuration)
+    public let use = UIImage(systemName: "bell")!.withConfiguration(configuration)
     
     // MARK: - RingtoneDiscoverViewContrller
     public let discover = UIImage(systemName: "waveform.badge.magnifyingglass")!.withConfiguration(configuration)
