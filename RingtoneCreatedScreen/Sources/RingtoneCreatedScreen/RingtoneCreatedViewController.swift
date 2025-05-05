@@ -69,6 +69,20 @@ extension RingtoneCreatedViewController {
         addMenuBarButtonItem()
     }
     
+    private func createUsageTutorialButtonItem() -> UIBarButtonItem {
+        UIBarButtonItem(
+            image: .theme.usage,
+            style: .plain,
+            target: self,
+            action: #selector(onUsageTutorial)
+        )
+    }
+    
+    @objc
+    private func onUsageTutorial() {
+        actionSubject.send(.showUsageTutorial)
+    }
+    
     private func createSelectAllBarButtonItem() -> UIBarButtonItem {
         return UIBarButtonItem(
             title: "Select All",
@@ -294,6 +308,8 @@ extension RingtoneCreatedViewController {
                     self.actionSubject.send(.exportAudios(audios))
                 case .editAudio(let audio):
                     self.actionSubject.send(.editAudio(audio))
+                case .showUsageTutorial:
+                    self.actionSubject.send(.showUsageTutorial)
                 }
             }
             .store(in: &cancelables)
@@ -388,7 +404,7 @@ extension RingtoneCreatedViewController {
         )
         
         self.navigationItem.setLeftBarButton(
-            nil,
+            createUsageTutorialButtonItem(),
             animated: true
         )
     }

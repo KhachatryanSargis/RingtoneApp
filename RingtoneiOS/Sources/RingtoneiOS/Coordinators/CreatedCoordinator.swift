@@ -51,6 +51,8 @@ extension CreatedCoordinator {
                     self.onExportAudios(audios)
                 case .editAudio(let audio):
                     self.onEditAudio(audio)
+                case .showUsageTutorial:
+                    self.onShowUsageTutorial()
                 }
             }
         storeCancellable(cancellable)
@@ -157,6 +159,18 @@ extension CreatedCoordinator {
         
         presentable.toViewController().present(
             activityViewController,
+            animated: true,
+            completion: nil
+        )
+    }
+}
+
+// MARK: - Tutorial
+extension CreatedCoordinator {
+    private func onShowUsageTutorial() {
+        let ringtoneUsageTutorialViewController = container.makeRingtoneUsageTutorialViewController()
+        presentable.toViewController().present(
+            ringtoneUsageTutorialViewController,
             animated: true,
             completion: nil
         )

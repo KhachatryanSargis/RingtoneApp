@@ -15,4 +15,5 @@ public enum RingtoneCreatedAction {
     case editAudio(_ audio: RingtoneAudio)
     case exportGarageBandProject(_ url: URL)
     case exportAudios(_ audios: [RingtoneAudio])
+    case showUsageTutorial
 }

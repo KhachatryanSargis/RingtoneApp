@@ -1,5 +1,5 @@
 //
-//  File.swift
+//  ImageTheme.swift
 //  ChallengeUIKit
 //
 //  Created by Sargis Khachatryan on 10.02.25.
@@ -45,6 +45,7 @@ public struct ImageTheme {
     public let gallery = UIImage(systemName: "photo")!.withConfiguration(configuration)
     public let files = UIImage(systemName: "folder")!.withConfiguration(configuration)
     public let link = UIImage(systemName: "link")!.withConfiguration(configuration)
+    public let usage = UIImage(systemName: "questionmark.circle")!.withConfiguration(configuration)
     
     // MARK: - RingtoneCreatedFailedHeader
     public let retry = UIImage(systemName: "arrow.circlepath")!.withConfiguration(configuration)
