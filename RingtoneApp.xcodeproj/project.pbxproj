@@ -59,7 +59,6 @@
 		0FEBB7D92D6886F500BB0043 = {
 			isa = PBXGroup;
 			children = (
-				0FDD442D2DC8E7B900DE0257 /* RingtoneTutorialScreens */,
 				0FEBB7E42D6886F500BB0043 /* RingtoneApp */,
 				0FEBB80B2D6A00EF00BB0043 /* RingtoneiOS */,
 				0FEBB80F2D6A0F7F00BB0043 /* RingtoneDiscoverScreen */,
@@ -67,6 +66,7 @@
 				0FE4EDD52D6A1CD100BF3635 /* RingtoneCreatedScreen */,
 				0FE4EE2B2D70B1DA00BF3635 /* RingtoneImportScreens */,
 				0F0AD06F2DA405DA00E61047 /* RingtoneEditScreen */,
+				0FDD442D2DC8E7B900DE0257 /* RingtoneTutorialScreens */,
 				0FEBB7FF2D688B3100BB0043 /* RingtoneUIKit */,
 				0FEBB7FB2D68897600BB0043 /* RingtoneKit */,
 				0FEBB7E32D6886F500BB0043 /* Products */,
