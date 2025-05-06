@@ -169,8 +169,9 @@ extension CreatedCoordinator {
 extension CreatedCoordinator {
     private func onShowUsageTutorial() {
         let ringtoneUsageTutorialViewController = container.makeRingtoneUsageTutorialViewController()
+        let navigationController = NiblessNavigationController(rootViewController: ringtoneUsageTutorialViewController)
         presentable.toViewController().present(
-            ringtoneUsageTutorialViewController,
+            navigationController,
             animated: true,
             completion: nil
         )
