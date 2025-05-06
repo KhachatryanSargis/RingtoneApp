@@ -15,13 +15,13 @@ public final class RingtoneUsageTutorialViewModel {
     // MARK: - Properties
     @Published private(set) public var steps: [RingtoneUsageTutorialStep] = [
         .init(
-            title: "Open in Garageband",
-            description: "Share to Garageband. Can't find it? Select the last option (More) and find Garageband from Suggestions.",
+            title: "Open in GarageBand",
+            description: "Share to GarageBand. Can't find it? Select the last option (More) and find GarageBand from Suggestions.",
             imageName: "usage_tutorial_step_1"
         ),
         .init(
             title: "Share your File",
-            description: "When the file loads in Garageband, long press on it and choose Share. Continue the steps to set your ringtone.",
+            description: "When the file loads in GarageBand, long press on it and choose Share. Continue the steps to set your ringtone.",
             imageName: "usage_tutorial_step_2"
         )
     ]
