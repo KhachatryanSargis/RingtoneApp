@@ -20,14 +20,14 @@ extension UIAlertController {
         )
         
         let createCopyAction = RingtoneAlertAction(
-            title: "Copy",
+            title: "Save as a Copy",
             style: .default
         ) { _ in
             onCreateCopy()
         }
         
         let replaceOriginalAction = UIAlertAction(
-            title: "Replace",
+            title: "Replace Original",
             style: .destructive
         ) { _ in
             onReplaceOriginal()
