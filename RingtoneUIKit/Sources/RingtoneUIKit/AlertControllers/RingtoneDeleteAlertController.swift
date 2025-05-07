@@ -8,9 +8,13 @@
 import UIKit
 
 extension UIAlertController {
-    public static func deleteAlertController(_ onDelete: @escaping () -> Void) -> UIAlertController {
+    public static func deleteAlertController(isSingle: Bool, _ onDelete: @escaping () -> Void) -> UIAlertController {
+        let title = isSingle ?
+        "Are you sure you want to delete this ringtone?" :
+        "Are you sure you want to delete selected ringtones?"
+        
         let alertController = UIAlertController(
-            title: "Are you sure you want to delete selected ringtones?",
+            title: title,
             message: "You can't undo this action.",
             preferredStyle: .alert
         )

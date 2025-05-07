@@ -58,18 +58,21 @@ final public class RingtoneEditViewModel {
     private let audioPlayer: IRingtoneAudioPlayer
     private let dataEditor: IRingtoneDataEditor
     private let audioDataChangeResponder: RingtoneAudioDataChangeResponder
+    private let audioDeleteResponder: RingtoneAudioDeleteResponder
     
     // MARK: - Methods
     public init(
         audio: RingtoneAudio,
         audioPlayer: IRingtoneAudioPlayer,
         dataEditor: IRingtoneDataEditor,
-        audioDataChangeResponder: RingtoneAudioDataChangeResponder
+        audioDataChangeResponder: RingtoneAudioDataChangeResponder,
+        audioDeleteResponder: RingtoneAudioDeleteResponder
     ) {
         self.audio = audio
         self.audioPlayer = audioPlayer
         self.dataEditor = dataEditor
         self.audioDataChangeResponder = audioDataChangeResponder
+        self.audioDeleteResponder = audioDeleteResponder
         
         title = audio.title
         
@@ -145,6 +148,15 @@ extension RingtoneEditViewModel {
         audioPlayer.stop()
         
         state = .finished
+    }
+}
+
+// MARK: - Delete
+extension RingtoneEditViewModel {
+    public func delete() {
+        audioDeleteResponder.deleteRingtoneAudios([audio])
+        
+        cancel()
     }
 }
 

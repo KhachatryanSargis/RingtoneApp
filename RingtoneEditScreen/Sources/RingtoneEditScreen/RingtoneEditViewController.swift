@@ -58,6 +58,16 @@ extension RingtoneEditViewController {
                 self.viewModel.cancel()
             }
         }
+        
+        view.onDeleteButtonTapped = { [weak self] in
+            guard let self = self else { return }
+            
+            let alertController = UIAlertController.deleteAlertController(isSingle: true) {
+                self.viewModel.delete()
+            }
+            
+            self.present(alertController, animated: true)
+        }
     }
 }
 

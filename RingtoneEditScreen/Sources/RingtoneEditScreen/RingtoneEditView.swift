@@ -19,6 +19,7 @@ final class RingtoneEditView: NiblessView {
     // MARK: - Callbacks
     var onSaveButtonTapped: (() -> Void)? = nil
     var onCancelButtonTapped: (() -> Void)? = nil
+    var onDeleteButtonTapped: (() -> Void)? = nil
     
     // MARK: - Properties
     private let stackView: UIStackView = {
@@ -347,6 +348,7 @@ extension RingtoneEditView {
         zoomOutButton.addTarget(self, action: #selector(onZoomOut), for: .touchUpInside)
         resetButton.addTarget(self, action: #selector(onReset), for: .touchUpInside)
         playPauseButton.addTarget(self, action: #selector(onPlayOrPause), for: .touchUpInside)
+        deleteButton.addTarget(self, action: #selector(onDelete), for: .touchUpInside)
     }
     
     @objc private func onSave() {
@@ -371,6 +373,10 @@ extension RingtoneEditView {
     
     @objc private func onPlayOrPause() {
         viewModel.togglePlayback()
+    }
+    
+    @objc private func onDelete() {
+        onDeleteButtonTapped?()
     }
 }
 

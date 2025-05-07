@@ -264,11 +264,11 @@ extension RingtoneCreatedViewController {
     }
     
     private func onDeleteButtonTapped() {
-        let deleteAlertController = UIAlertController.deleteAlertController { [weak self] in
-            guard let self = self else { return }
-            let viewModel = self.viewModelFactory.makeRingtoneCreatedViewModel()
-            let audios = viewModel.audios.filter { $0.isSelected == true }
-            
+        let viewModel = viewModelFactory.makeRingtoneCreatedViewModel()
+        let audios = viewModel.audios.filter { $0.isSelected == true }
+        let isSingle = audios.count == 1
+        
+        let deleteAlertController = UIAlertController.deleteAlertController(isSingle: isSingle) {
             viewModel.deleteRingtoneAudios(audios)
         }
         
