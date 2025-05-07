@@ -302,8 +302,8 @@ extension RingtoneCreatedViewController {
                     self.actionSubject.send(.importAudioFromFiles)
                 case .importAudioFromURL:
                     self.actionSubject.send(.importAudioFromURL)
-                case .exportGarageBandProject(let url):
-                    self.actionSubject.send(.exportGarageBandProject(url))
+                case .exportGarageBandProject(let url, let audio):
+                    self.actionSubject.send(.exportGarageBandProject(url, audio))
                 case .exportAudios(let audios):
                     self.actionSubject.send(.exportAudios(audios))
                 case .editAudio(let audio):

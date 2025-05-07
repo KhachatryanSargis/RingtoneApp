@@ -45,8 +45,8 @@ extension CreatedCoordinator {
                     self.onImportFromFiles()
                 case .importAudioFromURL:
                     self.onImportFromURL()
-                case .exportGarageBandProject(let url):
-                    self.onExportGarageBandProject(url)
+                case .exportGarageBandProject(let url, let audio):
+                    self.onExportGarageBandProject(url, audio)
                 case .exportAudios(let audios):
                     self.onExportAudios(audios)
                 case .editAudio(let audio):
@@ -134,17 +134,28 @@ extension CreatedCoordinator {
 
 // MARK: - Export
 extension CreatedCoordinator {
-    private func onExportGarageBandProject(_ url: URL) {
-        let activityViewController = UIActivityViewController(
-            activityItems: [url],
-            applicationActivities: nil
-        )
+    private func onExportGarageBandProject(_ url: URL, _ audio: RingtoneAudio) {
+        let waveform = audio.decodeWaveform()
         
-        presentable.toViewController().present(
-            activityViewController,
-            animated: true,
-            completion: nil
-        )
+        if waveform.duration > 30 {
+            let warningAlertController = UIAlertController.warningAlertController { [weak self] in
+                guard let self = self else { return }
+                
+                self.onEditAudio(audio)
+            } onContinue: { [weak self] in
+                guard let self = self else { return }
+                
+                self.exportURLs([url])
+            }
+            
+            presentable.toViewController().present(
+                warningAlertController,
+                animated: true,
+                completion: nil
+            )
+        } else {
+            exportURLs([url])
+        }
     }
     
     private func onExportAudios(_ audios: [RingtoneAudio]) {
@@ -152,6 +163,10 @@ extension CreatedCoordinator {
         
         guard !urls.isEmpty else { return }
         
+        exportURLs(urls)
+    }
+    
+    private func exportURLs(_ urls: [URL]) {
         let activityViewController = UIActivityViewController(
             activityItems: urls,
             applicationActivities: nil

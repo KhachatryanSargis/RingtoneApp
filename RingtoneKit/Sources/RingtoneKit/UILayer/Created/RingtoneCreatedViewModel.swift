@@ -133,7 +133,7 @@ extension RingtoneCreatedViewModel: RingtoneAudioExportResponder {
             } receiveValue: { [weak self] url in
                 guard let self = self else { return }
                 
-                self.action = .exportGarageBandProject(url)
+                self.action = .exportGarageBandProject(url, audio)
             }
             .store(in: &cancellables)
     }
