@@ -34,7 +34,7 @@ final class RingtoneFavoritesEmptyCell: NiblessCollectionViewCell {
         let label = UILabel()
         label.font = .theme.headline
         label.textColor = .theme.secondaryLabel
-        label.text = "You will see those here once you start adding them."
+        label.text = "You will see those here once you like some ringtones."
         label.textAlignment = .center
         label.numberOfLines = 0
         return label
