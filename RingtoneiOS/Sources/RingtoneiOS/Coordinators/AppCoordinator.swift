@@ -28,13 +28,19 @@ public final class AppCoordinator: BaseCoordinator {
     public override func start() {
         super.start()
         
-        let discoverCoordinator = DiscoverCoordinator(container: container)
-        addChild(discoverCoordinator)
-        
-        let favoritesCoordinator = FavoritesCoordinator(container: container)
-        addChild(favoritesCoordinator)
+        //        let discoverCoordinator = DiscoverCoordinator(container: container)
+        //        addChild(discoverCoordinator)
+        //
+        //        let favoritesCoordinator = FavoritesCoordinator(container: container)
+        //        addChild(favoritesCoordinator)
+        //
+        //        let createdCoordinator = CreatedCoordinator(container: container)
+        //        addChild(createdCoordinator)
         
         let createdCoordinator = CreatedCoordinator(container: container)
         addChild(createdCoordinator)
+        
+        let favoritesCoordinator = FavoritesCoordinator(container: container)
+        addChild(favoritesCoordinator)
     }
 }
