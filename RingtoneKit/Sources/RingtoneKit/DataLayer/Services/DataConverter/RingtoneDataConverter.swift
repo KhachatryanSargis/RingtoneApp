@@ -78,7 +78,7 @@ extension RingtoneDataConverter {
         .eraseToAnyPublisher()
     }
     
-    public func convertDataDownloaderCompleteItem(_ item: RingtoneDataDownloaderCompleteItem) -> AnyPublisher<RingtoneDataConverterResult, Never> {
+    public func convertDataDownloaderCompleteItems(_ items: [RingtoneDataDownloaderCompleteItem]) -> AnyPublisher<RingtoneDataConverterResult, Never> {
         Future { [weak self] promise in
             guard let self = self else { return }
             
@@ -93,27 +93,29 @@ extension RingtoneDataConverter {
             
             operations.append(fulfillPromiseOperation)
             
-            let convertDataDownloaderItemOperation = ConvertCompatibleItemOperation(
-                item: item
-            ) { result in
-                switch result {
-                case .success(let response):
-                    self.createCompleteItem(
-                        item: item,
-                        url: response.url,
-                        waveformURL: response.waveformURL,
-                        duration: response.duration
-                    )
-                case .failure(let error):
-                    self.createFailedItem(
-                        item: item,
-                        error: error
-                    )
+            for item in items {
+                let convertDataDownloaderItemOperation = ConvertCompatibleItemOperation(
+                    item: item
+                ) { result in
+                    switch result {
+                    case .success(let response):
+                        self.createCompleteItem(
+                            item: item,
+                            url: response.url,
+                            waveformURL: response.waveformURL,
+                            duration: response.duration
+                        )
+                    case .failure(let error):
+                        self.createFailedItem(
+                            item: item,
+                            error: error
+                        )
+                    }
                 }
+                
+                fulfillPromiseOperation.addDependency(convertDataDownloaderItemOperation)
+                operations.append(convertDataDownloaderItemOperation)
             }
-            
-            fulfillPromiseOperation.addDependency(convertDataDownloaderItemOperation)
-            operations.append(convertDataDownloaderItemOperation)
             
             self.queue.addOperations(operations, waitUntilFinished: false)
         }

@@ -10,5 +10,5 @@ import Combine
 
 public protocol IRingtoneDataConverter {
     func convertDataImporterCompleteItems(_ items: [RingtoneDataImporterCompleteItem]) -> AnyPublisher<RingtoneDataConverterResult, Never>
-    func convertDataDownloaderCompleteItem(_ item: RingtoneDataDownloaderCompleteItem) -> AnyPublisher<RingtoneDataConverterResult, Never>
+    func convertDataDownloaderCompleteItems(_ items: [RingtoneDataDownloaderCompleteItem]) -> AnyPublisher<RingtoneDataConverterResult, Never>
 }
