@@ -37,6 +37,13 @@ public final class RingtoneAudioStore: IRingtoneAudioStore {
     }
     
     public func saveRingtoneAudio(_ audio: RingtoneAudio) -> AnyPublisher<RingtoneAudio, RingtoneAudioStoreError> {
+        guard audio.isFailed == false else {
+            return Fail<RingtoneAudio, RingtoneAudioStoreError>(
+                error: .triedToSaveFailedRingtoneAudio
+            )
+            .eraseToAnyPublisher()
+        }
+        
         if let index = items.firstIndex(where: { audio.id == $0.id }) {
             items[index] = .constrcutFromAudio(audio)
         } else {
