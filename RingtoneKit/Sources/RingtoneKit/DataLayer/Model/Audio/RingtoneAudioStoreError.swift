@@ -10,4 +10,5 @@ public enum RingtoneAudioStoreError: Error {
     case getFavoriteRingtoneAudios
     case getCreatedRingtoneAudios
     case toggleRingtoneAudioFavoriteStatus
+    case triedToSaveFailedRingtoneAudio
 }
