@@ -47,21 +47,45 @@ public final class RingtoneAudioRepository: IRingtoneAudioRepository {
     
     public func addRingtoneAudios(_ audios: [RingtoneAudio]) -> AnyPublisher<[RingtoneAudio], RingtoneAudioRepositoryError> {
         let completeAudios = audios.filter { $0.isFailed == false }
+        let failedAudios = audios.filter { $0.isFailed == true }
+        
+        guard !completeAudios.isEmpty else {
+            createdAudios.append(contentsOf: failedAudios)
+            
+            return Just<[RingtoneAudio]>(failedAudios)
+                .setFailureType(to: RingtoneAudioRepositoryError.self)
+                .eraseToAnyPublisher()
+        }
         
         return store.addRingtoneAudios(completeAudios)
             .map { [weak self] createdAudios in
                 guard let self = self else { return audios }
                 
-                self.createdAudios.append(contentsOf: audios)
+                self.createdAudios.append(contentsOf: createdAudios + failedAudios)
                 
-                return audios
+                return (audios + failedAudios)
             }
             .mapError { .storeError($0) }
             .eraseToAnyPublisher()
     }
     
     public func deleteRingtoneAudios(_ audios: [RingtoneAudio]) -> AnyPublisher<[RingtoneAudio], RingtoneAudioRepositoryError> {
-        store.deleteRingtoneAudios(audios)
+        let completeAudios = audios.filter { $0.isFailed == false }
+        let failedAudios = audios.filter { $0.isFailed == true }
+        
+        for audio in failedAudios {
+            if let index = createdAudios.firstIndex(where: { audio.id == $0.id }) {
+                createdAudios.remove(at: index)
+            }
+        }
+        
+        guard !completeAudios.isEmpty else {
+            return Just<[RingtoneAudio]>(failedAudios)
+                .setFailureType(to: RingtoneAudioRepositoryError.self)
+                .eraseToAnyPublisher()
+        }
+        
+        return store.deleteRingtoneAudios(completeAudios)
             .map { [weak self] deletedAudios in
                 guard let self = self else { return deletedAudios }
                 
@@ -81,7 +105,7 @@ public final class RingtoneAudioRepository: IRingtoneAudioRepository {
                 self.favoriteAudios = currentFavoriteAudios
                 self.createdAudios = currentCreatedAudios
                 
-                return deletedAudios
+                return (deletedAudios + failedAudios)
             }
             .mapError { .storeError($0) }
             .eraseToAnyPublisher()

@@ -168,20 +168,32 @@ extension RingtoneCreatedViewModel: RingtoneAudioImportResponder {
         audioImportResponder.importedAudiosPublisher
     }
     
-    public func clearFailedRingtoneAudios() {
-        audioImportResponder.clearFailedRingtoneAudios()
-    }
-    
     public func retryFailedRingtoneAudio(_ audio: RingtoneAudio) {
-        audioImportResponder.cleanFailedRingtoneAudio(audio)
+        createdAudiosMediator.deleteRingtoneAudios([audio])
+        
+        audioImportResponder.retryFailedRingtoneAudio(audio)
     }
     
     public func retryFailedRingtoneAudios() {
+        let failedAudios = audios.filter({ $0.isFailed })
+        
+        createdAudiosMediator.deleteRingtoneAudios(failedAudios)
+        
         audioImportResponder.retryFailedRingtoneAudios()
     }
     
     public func cleanFailedRingtoneAudio(_ audio: RingtoneAudio) {
-        audioImportResponder.retryFailedRingtoneAudio(audio)
+        createdAudiosMediator.deleteRingtoneAudios([audio])
+        
+        audioImportResponder.cleanFailedRingtoneAudio(audio)
+    }
+    
+    public func clearFailedRingtoneAudios() {
+        let failedAudios = audios.filter({ $0.isFailed })
+        
+        createdAudiosMediator.deleteRingtoneAudios(failedAudios)
+        
+        audioImportResponder.clearFailedRingtoneAudios()
     }
     
     private func observeAudioImportResponder() {

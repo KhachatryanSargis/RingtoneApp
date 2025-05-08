@@ -26,7 +26,6 @@ public final class RingtoneImportViewModel {
     
     private var failedImporterItems: [RingtoneDataImporterFailedItem] = []
     private var failedConverterItems: [RingtoneDataConverterFailedItem] = []
-    private var failedAudios: [RingtoneAudio] = []
     
     private let dataImporterFactory: () -> IRingtoneDataImporter
     private let dataDownloaderFactory: (_ url: URL) -> IRingtoneDataDownloader
@@ -103,7 +102,7 @@ public final class RingtoneImportViewModel {
                 case .complete(let item):
                     self.isLoadingSubject.send(true)
                     
-                    dataConverter.convertDataDownloaderCompleteItem(item)
+                    dataConverter.convertDataDownloaderCompleteItems([item])
                         .sink { converterResult in
                             
                             self.processConverterResult(converterResult)
@@ -132,20 +131,20 @@ public final class RingtoneImportViewModel {
 extension RingtoneImportViewModel {
     private func processImporterResult(_ result: RingtoneDataImporterResult) -> [RingtoneDataImporterCompleteItem] {
         let failedItems = result.failedItems
-        self.failedImporterItems = failedItems
+        self.failedImporterItems.append(contentsOf: failedItems)
         
         let failedAudios = failedItems.map { RingtoneAudio.importFailed(item: $0) }
-        self.failedAudios = failedAudios
+        
+        audiosSubject.send(failedAudios)
         
         return result.completeItems
     }
     
     private func processConverterResult(_ result: RingtoneDataConverterResult) {
         let failedItems = result.failedItems
-        self.failedConverterItems = failedItems
+        self.failedConverterItems.append(contentsOf: failedItems)
         
         let failedAudios = failedItems.map { RingtoneAudio.conversionFailed(item: $0) }
-        self.failedAudios.append(contentsOf: failedAudios)
         
         let completeItems = result.completeItems
         
@@ -159,9 +158,7 @@ extension RingtoneImportViewModel {
             )
         }
         
-        audiosSubject.send(completeAudios + self.failedAudios)
-        
-        self.failedAudios = []
+        audiosSubject.send(completeAudios + failedAudios)
     }
 }
 
@@ -175,22 +172,121 @@ extension RingtoneImportViewModel: RingtoneAudioImportResponder {
         isLoadingSubject.eraseToAnyPublisher()
     }
     
-    
     public func retryFailedRingtoneAudio(_ audio: RingtoneAudio) {
-        
+        if audio.failedToImport {
+            guard let failedIndex = failedImporterItems.firstIndex(where: { $0.id.uuidString == audio.id })
+            else { return }
+            
+            let failedItem = failedImporterItems[failedIndex]
+            failedImporterItems.remove(at: failedIndex)
+            
+            retryFailedImporterItems([failedItem])
+        } else if audio.failedToConvert {
+            guard let failedIndex = failedConverterItems.firstIndex(where: { $0.id.uuidString == audio.id })
+            else { return }
+            
+            let failedItem = failedConverterItems[failedIndex]
+            failedConverterItems.remove(at: failedIndex)
+            
+            retryFailedConverterItems([failedItem])
+        }
     }
     
     public func retryFailedRingtoneAudios() {
+        let failedImporterItems = failedImporterItems
+        self.failedImporterItems.removeAll()
         
+        retryFailedImporterItems(failedImporterItems)
+        
+        let failedConverterItems = self.failedConverterItems
+        self.failedConverterItems.removeAll()
+        
+        retryFailedConverterItems(failedConverterItems)
     }
     
     public func clearFailedRingtoneAudios() {
-        failedImporterItems = []
-        failedConverterItems = []
+        failedImporterItems.removeAll()
+        failedConverterItems.removeAll()
     }
     
     public func cleanFailedRingtoneAudio(_ audio: RingtoneAudio) {
         failedImporterItems.removeAll(where: { $0.id.uuidString == audio.id })
         failedConverterItems.removeAll(where: { $0.id.uuidString == audio.id })
+    }
+}
+
+// MARK: - Retry Failed Importer Items
+extension RingtoneImportViewModel {
+    private func retryFailedImporterItems(_ items: [RingtoneDataImporterFailedItem]) {
+        guard !items.isEmpty else { return }
+        
+        var itemProviders: [NSItemProvider] = []
+        var urls: [URL] = []
+        
+        for item in items {
+            switch item.source {
+            case .gallery(let itemProvider):
+                itemProviders.append(itemProvider)
+            case .documents(let url):
+                urls.append(url)
+            }
+        }
+        
+        if !itemProviders.isEmpty {
+            importDataFromGallery(itemProviders)
+        }
+        
+        if !urls.isEmpty {
+            importDataFromDocuments(urls)
+        }
+    }
+}
+
+// MARK: - Retry Failed Converter Items
+extension RingtoneImportViewModel {
+    private func retryFailedConverterItems(_ items: [RingtoneDataConverterFailedItem]) {
+        guard !items.isEmpty else { return }
+        
+        var downloaderItems: [RingtoneDataDownloaderCompleteItem] = []
+        var importerItems: [RingtoneDataImporterCompleteItem] = []
+        
+        for item in items {
+            switch item.souce {
+            case .importerItem(let importerItem):
+                importerItems.append(importerItem)
+            case .downloaderItem(let downloaderItem):
+                downloaderItems.append(downloaderItem)
+            }
+        }
+        
+        if !importerItems.isEmpty {
+            let dataConverter = dataConverterFactory()
+            
+            isLoadingSubject.send(true)
+            
+            dataConverter.convertDataImporterCompleteItems(importerItems)
+                .sink { converterResult in
+                    
+                    self.processConverterResult(converterResult)
+                    
+                    self.isLoadingSubject.send(false)
+                }
+                .store(in: &convertCancellables)
+        }
+        
+        if !downloaderItems.isEmpty {
+            let dataConverter = dataConverterFactory()
+            
+            isLoadingSubject.send(true)
+            
+            dataConverter.convertDataDownloaderCompleteItems(downloaderItems)
+                .sink { converterResult in
+                    
+                    self.processConverterResult(converterResult)
+                    
+                    self.isLoadingSubject.send(false)
+                }
+                .store(in: &convertCancellables)
+        }
     }
 }
