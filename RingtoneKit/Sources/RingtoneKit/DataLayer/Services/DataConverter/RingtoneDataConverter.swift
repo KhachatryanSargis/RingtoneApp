@@ -5,7 +5,7 @@
 //  Created by Sargis Khachatryan on 04.03.25.
 //
 
-import AVFoundation
+import Foundation
 import Combine
 
 public final class RingtoneDataConverter: IRingtoneDataConverter, @unchecked Sendable {
@@ -83,6 +83,12 @@ extension RingtoneDataConverter {
             guard let self = self else { return }
             
             self.promise = promise
+            
+            guard !items.isEmpty
+            else {
+                self.fulfillPromise()
+                return
+            }
             
             var operations: [Operation] = []
             
