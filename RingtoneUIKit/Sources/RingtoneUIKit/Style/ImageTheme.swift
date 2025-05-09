@@ -63,6 +63,9 @@ public struct ImageTheme {
     public let zoomOut = UIImage(systemName: "minus.magnifyingglass")!.withConfiguration(configuration)
     public let reset = UIImage(systemName: "1.magnifyingglass")!.withConfiguration(configuration)
     
+    // MARK: - RingtoneSettingsViewController
+    public let settings = UIImage(systemName: "gear")!.withConfiguration(configuration)
+    
     // MARK: - RingtoneSlider
     public let fadeIn = UIImage(systemName: "arrowtriangle.backward.fill")!.withConfiguration(configuration)
     public let fadeOut = UIImage(systemName: "arrowtriangle.forward.fill")!.withConfiguration(configuration)

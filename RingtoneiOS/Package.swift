@@ -18,6 +18,7 @@ let package = Package(
         .package(path: "RingtoneFavoritesScreen"),
         .package(path: "RingtoneCreatedScreen"),
         .package(path: "RingtoneEditScreen"),
+        .package(path: "RingtoneSettingsScreen"),
         .package(path: "RingtoneTutorialScreens")
     ],
     targets: [
@@ -29,6 +30,7 @@ let package = Package(
                 "RingtoneFavoritesScreen",
                 "RingtoneCreatedScreen",
                 "RingtoneEditScreen",
+                "RingtoneSettingsScreen",
                 "RingtoneTutorialScreens"
             ]
         ),

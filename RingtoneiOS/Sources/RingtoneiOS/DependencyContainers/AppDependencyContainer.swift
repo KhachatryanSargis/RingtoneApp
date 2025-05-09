@@ -12,6 +12,7 @@ import RingtoneFavoritesScreen
 import RingtoneCreatedScreen
 import RingtoneImportScreens
 import RingtoneEditScreen
+import RingtoneSettingsScreen
 import RingtoneTutorialScreens
 
 public final class AppDependencyContainer {
@@ -157,6 +158,14 @@ extension AppDependencyContainer {
         )
         
         return RingtoneEditViewController(viewModel: viewModel)
+    }
+}
+
+// MARK: Settings
+extension AppDependencyContainer {
+    @MainActor
+    internal func makeRingtoneSettingsViewController() -> RingtoneSettingsViewController {
+        RingtoneSettingsViewController()
     }
 }
 
