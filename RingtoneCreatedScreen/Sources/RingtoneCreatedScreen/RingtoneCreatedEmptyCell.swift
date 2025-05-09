@@ -24,7 +24,7 @@ final class RingtoneCreatedEmptyCell: NiblessCollectionViewCell {
         let label = UILabel()
         label.font = .theme.headline
         label.textColor = .theme.label
-        label.text = "You don't have created ringtones."
+        label.text = "No Created Ringtones"
         label.textAlignment = .center
         label.numberOfLines = 0
         return label
