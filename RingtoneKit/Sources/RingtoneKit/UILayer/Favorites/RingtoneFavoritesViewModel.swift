@@ -5,6 +5,7 @@
 //  Created by Sargis Khachatryan on 01.03.25.
 //
 
+import Foundation
 import Combine
 
 public protocol RingtoneFavoritesViewModelFactory {
@@ -63,21 +64,24 @@ extension RingtoneFavoritesViewModel: RingtoneAudioEditResponder {
 // MARK: - Export
 extension RingtoneFavoritesViewModel: RingtoneAudioExportResponder {
     public func exportRingtoneAudio(_ audio: RingtoneAudio) {
-        exportRingtoneAudios([audio])
+        let dataExporter = dataExporterFactory()
+        
+        dataExporter.createGarageBandProject(from: audio)
+            .receive(on: DispatchQueue.main)
+            .sink { completion in
+                guard case .failure(let error) = completion else { return }
+                
+                print(error)
+            } receiveValue: { [weak self] url in
+                guard let self = self else { return }
+                
+                self.action = .exportGarageBandProject(url, audio)
+            }
+            .store(in: &cancellables)
     }
     
     public func exportRingtoneAudios(_ audios: [RingtoneAudio]) {
-        let dataExporter = dataExporterFactory()
-        
-        return dataExporter.exportRingtoneAudios(audios)
-            .sink { [weak self] result in
-                guard let self = self else { return }
-                
-                let urls = result.completeItems.map { $0.url }
-                
-                self.action = .exportGarageBandProjects(urls)
-            }
-            .store(in: &cancellables)
+        action = .exportAudios(audios)
     }
 }
 
