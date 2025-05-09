@@ -65,11 +65,11 @@ final class TrimAudioOperation: AsyncOperation, @unchecked Sendable {
         }
         
         let outputURL = FileManager.default.temporaryDirectory.appendingPathComponent(
-            "\(temporaryID.uuidString).aiff"
+            "\(temporaryID.uuidString).m4a"
         )
         
         do {
-            writer = try AVAssetWriter(outputURL: outputURL, fileType: .aiff)
+            writer = try AVAssetWriter(outputURL: outputURL, fileType: .m4a)
         } catch {
             finish(with: .failedToCreateWriter(error))
             return
@@ -379,7 +379,7 @@ extension TrimAudioOperation {
 extension TrimAudioOperation {
     private func replaceOriginal() {
         let backupURL = FileManager.default.temporaryDirectory.appendingPathComponent(
-            "\(audio.id).aiff"
+            "\(audio.id).m4a"
         )
         
         // Deleting backup and trimmed audio files.
@@ -460,7 +460,7 @@ extension TrimAudioOperation {
     private func saveAsCopy() {
         // Saving changed audio file.
         let audioURL = FileManager.default.ringtonesDirectory.appendingPathComponent(
-            "\(temporaryID.uuidString).aiff"
+            "\(temporaryID.uuidString).m4a"
         )
         
         do {

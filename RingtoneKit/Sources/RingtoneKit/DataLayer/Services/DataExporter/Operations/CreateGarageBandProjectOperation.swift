@@ -94,7 +94,7 @@ final class CreateGarageBandProjectOperation: AsyncOperation, @unchecked Sendabl
         let destinationURL = projectURL
             .appendingPathComponent("Media")
             .appendingPathComponent("ringtone")
-            .appendingPathExtension(audio.url.pathExtension)
+            .appendingPathExtension("aiff")
         
         try fileManager.copyItem(at: audio.url, to: destinationURL)
     }

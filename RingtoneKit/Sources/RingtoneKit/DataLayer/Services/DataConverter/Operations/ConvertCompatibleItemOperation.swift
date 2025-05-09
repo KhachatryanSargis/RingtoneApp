@@ -40,11 +40,11 @@ final class ConvertCompatibleItemOperation: AsyncOperation, @unchecked Sendable 
         }
         
         let outputURL = FileManager.default.ringtonesDirectory.appendingPathComponent(
-            "\(item.id.uuidString).aiff"
+            "\(item.id.uuidString).m4a"
         )
         
         do {
-            writer = try AVAssetWriter(outputURL: outputURL, fileType: .aiff)
+            writer = try AVAssetWriter(outputURL: outputURL, fileType: .m4a)
         } catch {
             finish(with: .failedToCreateWriter(error))
             return

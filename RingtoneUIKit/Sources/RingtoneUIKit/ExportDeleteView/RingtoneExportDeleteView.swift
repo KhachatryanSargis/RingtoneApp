@@ -33,7 +33,7 @@ public final class RingtoneExportDeleteView: NiblessView {
         var configuration = UIButton.Configuration.bordered()
         configuration.imagePlacement = .top
         let attributedTitle = AttributedString(
-            "Export (aiff)",
+            "Export m4a",
             attributes: AttributeContainer([
                 .font: UIFont.theme.headline.bold()
             ])

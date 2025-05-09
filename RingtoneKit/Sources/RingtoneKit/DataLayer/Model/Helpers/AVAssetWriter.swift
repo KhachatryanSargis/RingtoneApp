@@ -10,13 +10,10 @@ import AVFoundation
 extension AVAssetWriter {
     static func settings(sampleRate: Double, channelCount: Int) -> [String: Any] {
         [
-            AVFormatIDKey: kAudioFormatLinearPCM,
+            AVFormatIDKey: kAudioFormatMPEG4AAC,
             AVSampleRateKey: sampleRate,
             AVNumberOfChannelsKey: channelCount,
-            AVLinearPCMBitDepthKey: 16,
-            AVLinearPCMIsNonInterleaved: false,
-            AVLinearPCMIsFloatKey: false,
-            AVLinearPCMIsBigEndianKey: true
+            AVEncoderBitRateKey: 192_000
         ]
     }
 }
