@@ -12,6 +12,10 @@ import RingtoneKit
 
 public final class RingtoneFavoritesViewController: NiblessViewController {
     // MARK: - Properties
+    public var actionPublisher: AnyPublisher<RingtoneFavoritesAction, Never> {
+        actionSubject.eraseToAnyPublisher()
+    }
+    private let actionSubject = PassthroughSubject<RingtoneFavoritesAction, Never>()
     private var cancellables = Set<AnyCancellable>()
     private let viewModelFactory: RingtoneFavoritesViewModelFactory
     
@@ -52,6 +56,25 @@ extension RingtoneFavoritesViewController {
             localized: "Favorites",
             comment: "The title of the ringtone favorites screen."
         )
+        
+        navigationItem.setLeftBarButton(
+            createUsageTutorialButtonItem(),
+            animated: false
+        )
+    }
+    
+    private func createUsageTutorialButtonItem() -> UIBarButtonItem {
+        UIBarButtonItem(
+            image: .theme.usage,
+            style: .plain,
+            target: self,
+            action: #selector(onUsageTutorial)
+        )
+    }
+    
+    @objc
+    private func onUsageTutorial() {
+        actionSubject.send(.showUsageTutorial)
     }
 }
 
@@ -65,26 +88,16 @@ extension RingtoneFavoritesViewController {
                 guard let self = self else { return }
                 
                 switch action {
-                case .exportGarageBandProjects(let urls):
-                    self.onExportGarageBandProjects(urls)
+                case .exportGarageBandProject(let url, let audio):
+                    self.actionSubject.send(.exportGarageBandProject(url, audio))
+                case .exportAudios(let audios):
+                    self.actionSubject.send(.exportAudios(audios))
                 case .editAudio(let audio):
-                    print(audio)
+                    self.actionSubject.send(.editAudio(audio))
+                case .showUsageTutorial:
+                    self.actionSubject.send(.showUsageTutorial)
                 }
             }
             .store(in: &cancellables)
-    }
-}
-
-// MARK: - Export
-extension RingtoneFavoritesViewController {
-    private func onExportGarageBandProjects(_ urls: [URL]) {
-        guard !urls.isEmpty else { return }
-        
-        let activityViewController = UIActivityViewController(
-            activityItems: urls,
-            applicationActivities: nil
-        )
-        
-        present(activityViewController,animated: true,completion: nil)
     }
 }
