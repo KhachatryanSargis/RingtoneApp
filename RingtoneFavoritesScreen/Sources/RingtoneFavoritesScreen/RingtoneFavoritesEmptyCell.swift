@@ -24,7 +24,7 @@ final class RingtoneFavoritesEmptyCell: NiblessCollectionViewCell {
         let label = UILabel()
         label.font = .theme.headline
         label.textColor = .theme.label
-        label.text = "You don't have favorite ringtones."
+        label.text = "No Favorite Ringtones"
         label.textAlignment = .center
         label.numberOfLines = 0
         return label
