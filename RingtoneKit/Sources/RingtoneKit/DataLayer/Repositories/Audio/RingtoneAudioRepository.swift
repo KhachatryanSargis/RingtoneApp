@@ -122,6 +122,8 @@ public final class RingtoneAudioRepository: IRingtoneAudioRepository {
                 
                 if let index = self.favoriteAudios.firstIndex(where: { savedAudio.id == $0.id }) {
                     self.favoriteAudios[index] = savedAudio
+                } else if savedAudio.isFavorite {
+                    self.favoriteAudios.append(savedAudio)
                 }
                 
                 if let index = self.createdAudios.firstIndex(where: { savedAudio.id == $0.id }) {
