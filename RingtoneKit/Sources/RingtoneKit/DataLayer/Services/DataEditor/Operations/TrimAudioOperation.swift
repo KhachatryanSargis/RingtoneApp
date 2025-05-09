@@ -448,7 +448,6 @@ extension TrimAudioOperation {
             .changeDescription(description)
             .changeURL(audioURL)
             .changeWaveformURL(waveformURL)
-            .unliked()
             .paused()
         
         self.finish(with: trimmedAudio)
@@ -499,7 +498,6 @@ extension TrimAudioOperation {
             .changeDescription(description)
             .changeURL(audioURL)
             .changeWaveformURL(waveformURL)
-            .unliked()
             .paused()
         
         self.finish(with: trimmedAudio)
