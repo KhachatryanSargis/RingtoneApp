@@ -16,6 +16,7 @@ public final class RingtoneSettingsViewController: NiblessViewController {
     public override func viewDidLoad() {
         super.viewDidLoad()
         configureTabBarItem()
+        configureNavigationItem()
     }
 }
 
@@ -25,5 +26,15 @@ extension RingtoneSettingsViewController {
         guard let tabBarItem = tabBarItem else { return }
         tabBarItem.title = "Settings"
         tabBarItem.image = .theme.settings
+    }
+}
+
+// MARK: - Navigation Item
+extension RingtoneSettingsViewController {
+    private func configureNavigationItem() {
+        navigationItem.title = String(
+            localized: "Settings",
+            comment: "The title of the ringtone settings screen."
+        )
     }
 }
