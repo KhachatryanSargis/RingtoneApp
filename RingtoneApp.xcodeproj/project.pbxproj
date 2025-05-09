@@ -12,6 +12,7 @@
 
 /* Begin PBXFileReference section */
 		0F0AD06F2DA405DA00E61047 /* RingtoneEditScreen */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = RingtoneEditScreen; sourceTree = "<group>"; };
+		0F27344A2DCE0F7A0048036F /* RingtoneSettingsScreen */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = RingtoneSettingsScreen; sourceTree = "<group>"; };
 		0FDD442D2DC8E7B900DE0257 /* RingtoneTutorialScreens */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = RingtoneTutorialScreens; sourceTree = "<group>"; };
 		0FE4EDD42D6A14B800BF3635 /* RingtoneFavoritesScreen */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = RingtoneFavoritesScreen; sourceTree = "<group>"; };
 		0FE4EDD52D6A1CD100BF3635 /* RingtoneCreatedScreen */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = RingtoneCreatedScreen; sourceTree = "<group>"; };
@@ -66,6 +67,7 @@
 				0FE4EDD52D6A1CD100BF3635 /* RingtoneCreatedScreen */,
 				0FE4EE2B2D70B1DA00BF3635 /* RingtoneImportScreens */,
 				0F0AD06F2DA405DA00E61047 /* RingtoneEditScreen */,
+				0F27344A2DCE0F7A0048036F /* RingtoneSettingsScreen */,
 				0FDD442D2DC8E7B900DE0257 /* RingtoneTutorialScreens */,
 				0FEBB7FF2D688B3100BB0043 /* RingtoneUIKit */,
 				0FEBB7FB2D68897600BB0043 /* RingtoneKit */,
