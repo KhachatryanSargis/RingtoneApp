@@ -29,7 +29,6 @@ public final class RingtoneCreatedViewController: NiblessViewController {
     public init(viewModelFactory: RingtoneCreatedViewModelFactory) {
         self.viewModelFactory = viewModelFactory
         super.init()
-        configureNavigationItem()
     }
     
     public override func loadView() {
@@ -45,6 +44,7 @@ public final class RingtoneCreatedViewController: NiblessViewController {
     public override func viewDidLoad() {
         super.viewDidLoad()
         configureTabBarItem()
+        configureNavigationItem()
         configureExportDeleteView()
     }
 }
