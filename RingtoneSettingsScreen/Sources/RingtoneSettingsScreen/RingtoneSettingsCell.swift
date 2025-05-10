@@ -56,6 +56,10 @@ final class RingtoneSettingsCell: NiblessCollectionViewCell {
     
     func setAction(_ action: RingtoneSettingsAction) {
         switch action {
+        case .getPremium:
+            imageView.image = .theme.getPremium
+            titleLabel.text = "Get Premium"
+            chevronImageView.isHidden = false
         case .changeTheme:
             imageView.image = .theme.changeTheme
             titleLabel.text = "Change Theme"
@@ -116,5 +120,35 @@ extension RingtoneSettingsCell {
         NSLayoutConstraint.activate([
             chevronImageView.widthAnchor.constraint(equalTo: chevronImageView.heightAnchor)
         ])
+    }
+}
+
+// MARK: - Tap Animation
+extension RingtoneSettingsCell {
+    func animateTap(from point: CGPoint) {
+        contentView.clipsToBounds = true
+        
+        let distances = [
+            hypot(point.x, point.y),
+            hypot(bounds.width - point.x, point.y),
+            hypot(point.x, bounds.height - point.y),
+            hypot(bounds.width - point.x, bounds.height - point.y)
+        ]
+        let maxRadius = distances.max() ?? 0
+        
+        let rippleView = UIView()
+        rippleView.frame = CGRect(x: 0, y: 0, width: maxRadius * 2, height: maxRadius * 2)
+        rippleView.center = point
+        rippleView.layer.cornerRadius = rippleView.bounds.width / 2
+        rippleView.backgroundColor = .theme.accent.withAlphaComponent(0.5)
+        rippleView.transform = CGAffineTransform(scaleX: 0.01, y: 0.01)
+        contentView.addSubview(rippleView)
+        
+        UIView.animate(withDuration: 0.5, delay: 0, options: [.curveEaseOut], animations: {
+            rippleView.transform = CGAffineTransform.identity
+            rippleView.alpha = 0
+        }) { _ in
+            rippleView.removeFromSuperview()
+        }
     }
 }
