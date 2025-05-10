@@ -7,7 +7,9 @@
 
 public enum RingtoneSettingsAction: CaseIterable {
     case changeTheme
+    case rateRingtoneKit
+    case sharRingtoneKit
     case showPrivacyPolicy
     case showTermsOfService
-    case rateApp
+    case contactSupport
 }
