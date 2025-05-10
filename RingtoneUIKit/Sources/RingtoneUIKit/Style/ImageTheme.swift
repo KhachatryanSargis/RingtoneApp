@@ -65,6 +65,13 @@ public struct ImageTheme {
     
     // MARK: - RingtoneSettingsViewController
     public let settings = UIImage(systemName: "gear")!.withConfiguration(configuration)
+    public let changeTheme = UIImage(systemName: "paintbrush.fill")!.withConfiguration(configuration)
+    public let rateApp = UIImage(systemName: "star.fill")!.withConfiguration(configuration)
+    public let shareApp = UIImage(systemName: "paperplane.fill")!.withConfiguration(configuration)
+    public let privacyPolicy = UIImage(systemName: "doc.plaintext.fill")!.withConfiguration(configuration)
+    public let termsOfService = UIImage(systemName: "doc.plaintext.fill")!.withConfiguration(configuration)
+    public let contactSupport = UIImage(systemName: "envelope.fill")!.withConfiguration(configuration)
+    public let rightChevron = UIImage(systemName: "chevron.right")!.withConfiguration(configuration)
     
     // MARK: - RingtoneSlider
     public let fadeIn = UIImage(systemName: "arrowtriangle.backward.fill")!.withConfiguration(configuration)
