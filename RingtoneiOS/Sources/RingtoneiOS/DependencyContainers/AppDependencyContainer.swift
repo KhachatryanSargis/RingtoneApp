@@ -162,10 +162,14 @@ extension AppDependencyContainer {
 }
 
 // MARK: Settings
-extension AppDependencyContainer {
+extension AppDependencyContainer: RingtoneSettingsViewModelFactory {
     @MainActor
     internal func makeRingtoneSettingsViewController() -> RingtoneSettingsViewController {
-        RingtoneSettingsViewController()
+        RingtoneSettingsViewController(viewModelFactory: self)
+    }
+    
+    public func makeSettingsViewModel() -> RingtoneKit.RingtoneSettingsViewModel {
+        RingtoneSettingsViewModel()
     }
 }
 
