@@ -1,3 +1,14 @@
+//
+//  RingtoneSettingsCell.swift
+//  RingtoneSettingsScreen
+//
+//  Created by Sargis Khachatryan on 10.05.25.
+//
+
+import UIKit
+import RingtoneUIKit
+import RingtoneKit
+
 final class RingtoneSettingsCell: NiblessCollectionViewCell {
     // MARK: - Properties
     static let reuseID = "RingtoneSettingsCell"
@@ -18,10 +29,17 @@ final class RingtoneSettingsCell: NiblessCollectionViewCell {
     
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.numberOfLines = 2
+        label.numberOfLines = 1
         label.font = .theme.headline
         label.textColor = .theme.label
         return label
+    }()
+    
+    private let chevronImageView: UIImageView = {
+        let imageView = UIImageView()
+        imageView.contentMode = .scaleAspectFit
+        imageView.image = .theme.rightChevron
+        return imageView
     }()
     
     // MARK: - Methods
@@ -36,9 +54,33 @@ final class RingtoneSettingsCell: NiblessCollectionViewCell {
         setLayerCornerRadius()
     }
     
-    func setImage(_ image: UIImage, andTitle title: String) {
-        imageView.image = image
-        titleLabel.text = title
+    func setAction(_ action: RingtoneSettingsAction) {
+        switch action {
+        case .changeTheme:
+            imageView.image = .theme.changeTheme
+            titleLabel.text = "Change Theme"
+            chevronImageView.isHidden = true
+        case .rateRingtoneKit:
+            imageView.image = .theme.rateApp
+            titleLabel.text = "Rate RingtoneKit"
+            chevronImageView.isHidden = true
+        case .sharRingtoneKit:
+            imageView.image = .theme.shareApp
+            titleLabel.text = "Share RingtoneKit"
+            chevronImageView.isHidden = true
+        case .showPrivacyPolicy:
+            imageView.image = .theme.privacyPolicy
+            titleLabel.text = "Privacy Policy"
+            chevronImageView.isHidden = false
+        case .showTermsOfService:
+            imageView.image = .theme.termsOfService
+            titleLabel.text = "Terms of Service"
+            chevronImageView.isHidden = false
+        case .contactSupport:
+            imageView.image = .theme.contactSupport
+            titleLabel.text = "Contact Support"
+            chevronImageView.isHidden = true
+        }
     }
 }
 
@@ -70,5 +112,9 @@ extension RingtoneSettingsCell {
             imageView.widthAnchor.constraint(equalTo: imageView.heightAnchor)
         ])
         stackView.addArrangedSubview(titleLabel)
+        stackView.addArrangedSubview(chevronImageView)
+        NSLayoutConstraint.activate([
+            chevronImageView.widthAnchor.constraint(equalTo: chevronImageView.heightAnchor)
+        ])
     }
 }
