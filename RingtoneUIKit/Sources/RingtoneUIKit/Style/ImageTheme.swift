@@ -65,8 +65,9 @@ public struct ImageTheme {
     
     // MARK: - RingtoneSettingsViewController
     public let settings = UIImage(systemName: "gear")!.withConfiguration(configuration)
+    public let getPremium = UIImage(systemName: "sparkles")!.withConfiguration(configuration)
     public let changeTheme = UIImage(systemName: "paintbrush.fill")!.withConfiguration(configuration)
-    public let rateApp = UIImage(systemName: "star.fill")!.withConfiguration(configuration)
+    public let rateApp = UIImage(systemName: "star.leadinghalf.filled")!.withConfiguration(configuration)
     public let shareApp = UIImage(systemName: "paperplane.fill")!.withConfiguration(configuration)
     public let privacyPolicy = UIImage(systemName: "doc.plaintext.fill")!.withConfiguration(configuration)
     public let termsOfService = UIImage(systemName: "doc.plaintext.fill")!.withConfiguration(configuration)
