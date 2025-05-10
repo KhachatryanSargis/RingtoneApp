@@ -78,7 +78,7 @@ extension RingtoneSettingsView: UICollectionViewDataSource {
             preconditionFailure("Unexpected cell type in RingtoneSettingsView")
         }
         
-        let action = actions[indexPath.row]
+        let action = actions[indexPath.item]
         
         cell.setAction(action)
         
