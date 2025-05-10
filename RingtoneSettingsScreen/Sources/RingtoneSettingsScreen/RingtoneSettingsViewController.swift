@@ -6,11 +6,21 @@
 //
 
 import RingtoneUIKit
+import RingtoneKit
 
 public final class RingtoneSettingsViewController: NiblessViewController {
+    // MARK: - Properties
+    private let viewModelFactory: RingtoneSettingsViewModelFactory
+    
     // MARK: - Methods
+    public init(viewModelFactory: RingtoneSettingsViewModelFactory) {
+        self.viewModelFactory = viewModelFactory
+        super.init()
+    }
+    
     public override func loadView() {
-        view = RingtoneSettingsView()
+        let viewModel = viewModelFactory.makeSettingsViewModel()
+        view = RingtoneSettingsView(viewModel: viewModel)
     }
     
     public override func viewDidLoad() {
